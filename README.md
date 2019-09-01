@@ -16,6 +16,13 @@ As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quest
 ## Features
 - Add a green check-circle at the end of a catalog item that has been completed.
 - Easy to execute and edit the userscript via Tampermonkey for Google Chrome
+- Add a green check-circle at the end of a lab title if the lab has been completed.
 
 ## Demo Screenshot
 ![demo image](/demo-image.png)
+Screenshot of a Catalog page
+
+<br>
+
+![demo image](/demo-image2.png)
+Screenshot of a Lab header
