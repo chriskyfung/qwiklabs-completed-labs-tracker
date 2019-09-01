@@ -8,6 +8,7 @@
 // @match        https://google.qwiklabs.com/catalog*
 // @match        https://www.qwiklabs.com/focuses/*
 // @match        https://google.qwiklabs.com/focuses/*
+
 // @grant        none
 // ==/UserScript==
 
