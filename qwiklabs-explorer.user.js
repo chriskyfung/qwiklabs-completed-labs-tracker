@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Qwiklabs Complete Indicator
-// @namespace    qwiklabs_web
+// @namespace    https://chriskyfung.github.io/
 // @version      0.3
-// @description  Label completed quests and labs on the Catalog page(s) on Qwiklabs (https://www.qwiklabs.com/catalog)
+// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
+// @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
 // @match        https://*.qwiklabs.com/catalog*
 // @match        https://*.qwiklabs.com/focuses/*
 // @match        https://*.qwiklabs.com/quests/*
