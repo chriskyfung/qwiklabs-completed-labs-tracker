@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Complete Indicator
 // @namespace    https://chriskyfung.github.io/
-// @version      0.4.7
+// @version      0.4.8
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
@@ -63,47 +63,50 @@
             setYellowBackground(title);
             appendNewIcon(title, "Lab") ;
         };
-    } else if (pathname == "/my_learning" || pathname == "/") {
+    } else if (pathname == "/" || pathname == "/my_learning" || pathname == "/my_learning/courses" || pathname == "/my_learning/labs") {
+        if (pathname == "/" || pathname == "/my_learning") {
         let cards = document.querySelectorAll(".favorite-cards .card-content-wrapper, .curated-cards .card-content-wrapper, .popular-cards .card-content-wrapper");
-        cards.forEach( i => {
-            try {
-                if (i.attributes["data-type"].value == "Lab") {
-                    if (getLabStatus(i.attributes["data-id"].value) == "finished") {
-                        appendCheckCircle(i.querySelector(".overline"), "Lab");
-                    };
-                } else if (i.attributes["data-type"].value == "LearningPath") {
-                    if (getQuestStatus(i.attributes["data-id"].value) == "finished") {
-                        appendCheckCircle(i.querySelector(".overline"), "Quest");
-                    };
-                };
-            } catch(e) {
-                console.warn("No database record\nid: " + i.attributes["data-id"].value, i.querySelector(".card__body").innerText);
-                appendNewIcon(i.querySelector(".overline"), "Item") ;
-            };
-        });
-    } else if (pathname == "/my_learning/courses" || pathname == "/my_learning/labs") {
-        let rows = document.querySelectorAll(".my-learning-table .flex-table__row");
-        rows.forEach( i => {
-            if (i.href) {
-                let results = i.href.match(/(\w*)\/(\d+)/);
+            cards.forEach( i => {
                 try {
-                    if (results[1]=="quests" && getQuestStatus(results[2]) == "finished") {
-                        setGreenBackground(i);
-                        appendCheckCircle_toRight(i.children[1], "Quest");
-                    } else if (results[1]=="games") {
-                        setPurpleBackground(i);
-                        appendGameIcon_toRight(i.children[1]);
-                    } else if (results[1]=="focuses" && i.firstChild.innerText == "check" && getLabStatus(results[2]) == "finished") {
-                        setGreenBackground(i);
-                        appendCheckCircle(i.children[1], "Lab");
+                    if (i.attributes["data-type"].value == "Lab") {
+                        if (getLabStatus(i.attributes["data-id"].value) == "finished") {
+                            appendCheckCircle(i.querySelector(".overline"), "Lab");
+                        };
+                    } else if (i.attributes["data-type"].value == "LearningPath") {
+                        if (getQuestStatus(i.attributes["data-id"].value) == "finished") {
+                            appendCheckCircle(i.querySelector(".overline"), "Quest");
+                        };
                     };
                 } catch(e) {
-                    console.warn("No database record\nid: " + results[2]);
-                    setYellowBackground(i);
-                    appendNewIcon(i.children[1], "Item") ;
+                    console.warn("No database record\nid: " + i.attributes["data-id"].value, i.querySelector(".card__body").innerText);
+                    appendNewIcon(i.querySelector(".overline"), "Item") ;
                 };
-            };
-        });
+            });
+        };
+        if (pathname == "/my_learning" || pathname == "/my_learning/courses" || pathname == "/my_learning/labs") {
+        let rows = document.querySelectorAll(".my-learning-table .flex-table__row");
+            rows.forEach( i => {
+                if (i.href) {
+                    let results = i.href.match(/(\w*)\/(\d+)/);
+                    try {
+                        if (results[1]=="quests" && getQuestStatus(results[2]) == "finished") {
+                            setGreenBackground(i);
+                            appendCheckCircle_toRight(i.children[1], "Quest");
+                        } else if (results[1]=="games") {
+                            setPurpleBackground(i);
+                            appendGameIcon_toRight(i.children[1]);
+                        } else if (results[1]=="focuses" && i.firstChild.innerText == "check" && getLabStatus(results[2]) == "finished") {
+                            setGreenBackground(i);
+                            appendCheckCircle_toRight(i.children[1], "Lab");
+                        };
+                    } catch(e) {
+                        console.warn("No database record\nid: " + results[2]);
+                        setYellowBackground(i);
+                        appendNewIcon(i.children[1], "Item") ;
+                    };
+                };
+            });
+        };
     } else {
         let titles = document.querySelectorAll('.catalog-item__title');
         var i;
