@@ -31,6 +31,10 @@ As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quest
 - Extend color schemes to the short tables of the _Completed Courses_ and _Completed Labs_ pages on the **My Learning** page.
 - Enhance the annotation scheme to the “Your Favorites”, “Featured Learning”, and “What’s Hots” sections on the Home page.
 
+**Ver >= 0.5.0:**
+- Store the labs and quests data locally with IndexedDB
+- Use Async Await in JavaScript
+
 ## Demo Screenshot
 ![demo image](/demo-image.png)
 Screenshot of a Catalog page
@@ -45,5 +49,4 @@ Screenshot of a Lab header
 
 - [Export Profile as Files](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/6) #6
 - [Import Downloaded Profile](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/1) #1
-- [Save local records in IndexedDB](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/4) #4
 - [Sync IndexedDB across computers](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/7) #7
