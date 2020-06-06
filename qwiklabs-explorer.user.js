@@ -110,7 +110,6 @@
         })[0];
         try {
             if (s != null) {
-                //console.log(id + ": " + s.status);
                 return await s.status;
             };
         } catch (e) {
