@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1
+// @version      0.5.1b
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
@@ -83,22 +83,35 @@
     async function bulkUpdateDb() {
         console.log("Bulk Update - start")
         let table, tables = document.querySelectorAll(".my-learning-table");
+        let count = { lab: 0, quests: 0 };
         for (table of tables) {
             let questsToUpdate = table.querySelectorAll(".unmarked-quest, .new-quest");
             let labsToUpdate = table.querySelectorAll(".unmarked-lab, .new-lab");
-            console.log(`Number of items required to update:\n${questsToUpdate.length} quests and ${labsToUpdate.length} labs`);
+            count.quests = questsToUpdate.length;
+            count.labs = labsToUpdate.length;
+            console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
             let q, l;
             for (q of questsToUpdate) {
                 let d = {"id": q.parentElement.href.match(/(\d+)/)[0], "name": q.innerText.split("\n")[0].trim(), "status":""};
                 let lastkey = await qdb.table("quests").put(d);
                 console.log("Updated quest" + JSON.stringify(d));
             }
+            for (l of labsToUpdate) {
+                let d = {"id": l.parentElement.href.match(/(\d+)/)[0], "name": l.innerText.split("\n")[0].trim(), "status":""};
+                let lastkey = await qdb.table("labs").put(d);
+                console.log("Updated quest" + JSON.stringify(d));
+            }
         };
         let snackbar = document.createElement("div");
         snackbar.id = "snackbar";
-        snackbar.innerText = "Bulk Update - finished : Please refresh the page!";
-        snackbar.style = "min-width:250px;margin-left: -125px;background-color: #f33;color: #fff; text-align: center;border-radius: 2px;padding: 16px;position: fixed;z-index: 99;left: 50%;top: 100px;"
+        if (count.labs + count.quests == 0) {
+            snackbar.innerText = "0 items to update";
+        } else {
+            snackbar.innerText = "Bulk Update - finished : Please refresh the page!";
+        }
+        snackbar.style = "visibility:visible;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 500px;box-shadow: 1px 2px 20px #2a7ce0;";
         document.body.appendChild(snackbar);
+        setTimeout(function(){snackbar.style.visibility="hidden";}, 5000);
         console.log("Bulk Update - finished : Please refresh the page!");
     }
     //
@@ -109,9 +122,7 @@
             return i.id == id;
         })[0];
         try {
-            if (s != null) {
                 return await s.status;
-            };
         } catch (e) {
             console.error (`${e}\nWhen handling lab id: ${id}`);
             console.warn (`DB does not contain id: ${id} in the labs table`);
@@ -123,7 +134,6 @@
             return i.id == id;
         })[0];
         try {
-            //console.log(id + ": " + s.status);
             return await s.status;
         } catch (e) {
             console.error (`${e}\nWhen handling quest id: ${id}`);
