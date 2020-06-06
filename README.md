@@ -8,6 +8,10 @@ For more information, please read my post "[Userscript for Labelling Completed Q
 - To indicate completed labs and quests in Qwiklabs Catalog pages, thereby easier to inspect the self-learning progress and look for unenrolled quests or incompleted labs.
 - To design a location to store and update the name list of the completed items.
 
+## Supoort this Project
+
+<a href="https://www.buymeacoffee.com/chrisfungky" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
+
 ## Why do you need this?
 
 Qwiklabs is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and quests for learn and practice.
@@ -35,6 +39,9 @@ As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quest
 - Store the labs and quests data locally with IndexedDB
 - Use Async Await in JavaScript
 
+**Ver >= 0.5.1b:**
+- One-click update the labs and quests status to databases
+
 ## Demo Screenshot
 ![demo image](/demo-image.png)
 Screenshot of a Catalog page
@@ -44,9 +51,6 @@ Screenshot of a Catalog page
 ![demo image](/demo-image2.png)
 Screenshot of a Lab header
 
-
 ## Future Plans
 
-- [Export Profile as Files](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/6) #6
-- [Import Downloaded Profile](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/1) #1
 - [Sync IndexedDB across computers](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/7) #7
