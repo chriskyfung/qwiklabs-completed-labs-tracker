@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.0
+// @version      0.5.1
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
@@ -47,11 +47,11 @@
         // Query Database
         //
         let lastLab = await qdb.labs.bulkAdd(qldata.labs);
-            console.log(`Done adding ${qldata.labs.length} labs to the Dexie database`);
-            console.log(`Last lab's id was: ${lastLab}`);
+        console.log(`Done adding ${qldata.labs.length} labs to the Dexie database`);
+        console.log(`Last lab's id was: ${lastLab}`);
         let lastQuest = await qdb.quests.bulkAdd(qldata.quests);
-            console.log(`Done adding ${qldata.quests.length} quests to the Dexie database`);
-            console.log(`Last quest's id was: ${lastQuest}`);
+        console.log(`Done adding ${qldata.quests.length} quests to the Dexie database`);
+        console.log(`Last quest's id was: ${lastQuest}`);
     }
     //
     // Load Database when the Program Starts
@@ -78,6 +78,30 @@
         tmpdb.quests = await qdb.table("quests").toArray();
     }
     //
+    // Update Quest Data
+    //
+    async function bulkUpdateDb() {
+        console.log("Bulk Update - start")
+        let table, tables = document.querySelectorAll(".my-learning-table");
+        for (table of tables) {
+            let questsToUpdate = table.querySelectorAll(".unmarked-quest, .new-quest");
+            let labsToUpdate = table.querySelectorAll(".unmarked-lab, .new-lab");
+            console.log(`Number of items required to update:\n${questsToUpdate.length} quests and ${labsToUpdate.length} labs`);
+            let q, l;
+            for (q of questsToUpdate) {
+                let d = {"id": q.parentElement.href.match(/(\d+)/)[0], "name": q.innerText.split("\n")[0].trim(), "status":""};
+                let lastkey = await qdb.table("quests").put(d);
+                console.log("Updated quest" + JSON.stringify(d));
+            }
+        };
+        let snackbar = document.createElement("div");
+        snackbar.id = "snackbar";
+        snackbar.innerText = "Bulk Update - finished : Please refresh the page!";
+        snackbar.style = "min-width:250px;margin-left: -125px;background-color: #f33;color: #fff; text-align: center;border-radius: 2px;padding: 16px;position: fixed;z-index: 99;left: 50%;top: 100px;"
+        document.body.appendChild(snackbar);
+        console.log("Bulk Update - finished : Please refresh the page!");
+    }
+    //
     // Status Query Methods
     //
     async function getLabStatus(id) {
@@ -86,8 +110,7 @@
         })[0];
         try {
             if (s != null) {
-            //console.log(id + ": " + s.status);
-            return await s.status;
+                return await s.status;
             };
         } catch (e) {
             console.error (`${e}\nWhen handling lab id: ${id}`);
@@ -134,6 +157,10 @@
     }
     function appendGameIcon_toRight(i) {
         i.innerHTML += `<span>&nbsp;<i class='fas fa-gamepad' style="color:purple;float:right;" title="Game"></i></span>`;
+    }
+    function appendUpdateBtn(e, t, f) {
+        e.innerHTML += '&nbsp;<button class="db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect" title="'+ t +'"><i class="material-icons">refresh</i></button>';
+        e.querySelector(".db-update-button").addEventListener("click", f);
     }
     //
     // Main Function of the Tracking Program
@@ -235,38 +262,38 @@
                     let t = i.attributes["data-type"].value,
                         id = i.attributes["data-id"].value,
                         e = i.querySelector(".overline");
-                        switch (t) {
-                            case "Lab":
-                                switch (await getLabStatus(id)) {
-                                    case "finished":
-                                        // Annotate as a Completed Lab
-                                        appendCheckCircle(e, "Lab");
-                                        continue;
-                                        break;
-                                    case null:
-                                        // Annotate as Unregistered
-                                        console.warn( `[ status = null ] for lab ${id}: ${i.querySelector(".card__body").innerText}`);
-                                        appendNewIcon(e, "Lab") ;
-                                        break;
-                                };
-                                break;
-                            case "LearningPath":
-                                switch (await getQuestStatus(id)) {
-                                    case "finished":
-                                        // Annotate as a Completed Quest
-                                        appendCheckCircle(e, "Quest");
-                                        continue;
-                                        break;
-                                    case null:
-                                        // Annotate as Unregistered
-                                        console.warn( `[ status = null ] for quest ${id}: ${i.querySelector(".card__body").innerText}`);
-                                        appendNewIcon(e, "Quest") ;
-                                        break;
-                                };
-                                break;
-                            default:
-                                break;
-                        };
+                    switch (t) {
+                        case "Lab":
+                            switch (await getLabStatus(id)) {
+                                case "finished":
+                                    // Annotate as a Completed Lab
+                                    appendCheckCircle(e, "Lab");
+                                    continue;
+                                    break;
+                                case null:
+                                    // Annotate as Unregistered
+                                    console.warn( `[ status = null ] for lab ${id}: ${i.querySelector(".card__body").innerText}`);
+                                    appendNewIcon(e, "Lab") ;
+                                    break;
+                            };
+                            break;
+                        case "LearningPath":
+                            switch (await getQuestStatus(id)) {
+                                case "finished":
+                                    // Annotate as a Completed Quest
+                                    appendCheckCircle(e, "Quest");
+                                    continue;
+                                    break;
+                                case null:
+                                    // Annotate as Unregistered
+                                    console.warn( `[ status = null ] for quest ${id}: ${i.querySelector(".card__body").innerText}`);
+                                    appendNewIcon(e, "Quest") ;
+                                    break;
+                            };
+                            break;
+                        default:
+                            break;
+                    };
                 };
             };
             //
@@ -274,6 +301,15 @@
             //
             if (pathname == "/my_learning" || pathname == "/my_learning/courses" || pathname == "/my_learning/labs") {
                 console.log("Under My Learning section");
+                // Append update button to headers
+                if (pathname == "/my_learning") {
+                    let h = document.querySelectorAll(".my-learning__group__header h2");
+                    appendUpdateBtn(h[0], "Update quests to DB", bulkUpdateDb);
+                    appendUpdateBtn(h[1], "Update quests to DB", bulkUpdateDb);
+                } else {
+                    appendUpdateBtn(document.querySelector(".headline-5"), "Update all to DB", bulkUpdateDb);
+                }
+                // Tracking tables under the My Learning section
                 let rows = document.querySelectorAll(".my-learning-table .flex-table__row");
                 for ( i of rows) {
                     if (i.href) {
@@ -281,33 +317,65 @@
                         let t = results[1],
                             id = results[2],
                             e = i.children[1];
-                            if ( t == "quests" ) {
-                                if (await getQuestStatus(id) == "finished") {
-                                    // Annotate as a Completed Quest
-                                    setGreenBackground(i);
-                                    appendCheckCircle_toRight(e, "Quest");
-                                    continue;
+                        switch (t) {
+                            case "quests":
+                                switch (await getQuestStatus(id)) {
+                                    case "finished":
+                                        // Annotate as a Completed Quest
+                                        setGreenBackground(i);
+                                        appendCheckCircle_toRight(e, "Quest");
+                                        e.classList.add("completed-quest");
+                                        continue;
+                                        break;
+                                    case "":
+                                        e.classList.add("unmarked-quest");
+                                        setYellowBackground(i);
+                                        continue;
+                                        break;
+                                    case null:
+                                        // Annotate as Unregistered
+                                        console.warn( `[ status = null ] for quest ${id}: ${e.innerText}`);
+                                        setYellowBackground(i);
+                                        appendNewIcon_toRight(e, "Quest");
+                                        e.classList.add("new-quest");
+                                        continue;
+                                        break;
                                 };
-                                // Annotate as Unregistered
-                                console.warn( `[ status = null ] for quest ${id}: ${e.innerText}`);
-                                setYellowBackground(i);
-                                appendNewIcon_toRight(e, "Quest");
-                            } else if ( t == "games" ) {
+                                break;
+                            case "games":
                                 // Annotate as a Game
                                 setPurpleBackground(i);
                                 appendGameIcon_toRight(e);
-                            } else if ( t == "focuses" && i.firstChild.innerText == "check") {
-                                if (await getLabStatus(id) == "finished") {
-                                    // Annotate as a Completed Lab
-                                    setGreenBackground(i);
-                                    appendCheckCircle_toRight(e, "Lab");
-                                    continue;
+                                e.classList.add("completed-game");
+                                continue;
+                                break;
+                            case "focuses":
+                                if ( i.firstChild.innerText == "check") {
+                                    switch (await getLabStatus(id)) {
+                                        case "finished":
+                                            // Annotate as a Completed Lab
+                                            setGreenBackground(i);
+                                            appendCheckCircle_toRight(e, "Lab");
+                                            e.classList.add("completed-lab");
+                                            continue;
+                                            break;
+                                        case "":
+                                            e.classList.add("unmarked-lab");
+                                            setYellowBackground(i);
+                                            continue;
+                                            break;
+                                        case null:
+                                            // Annotate as Unregistered
+                                            console.warn( `[ status = null ] for lab ${id}: ${e.innerText}`);
+                                            setYellowBackground(i);
+                                            appendNewIcon_toRight(e, "Lab");
+                                            e.classList.add("new-lab");
+                                            continue;
+                                            break;
+                                    };
+                                    break;
                                 };
-                                // Annotate as Unregistered
-                                console.warn( `[ status = null ] for lab ${id}: ${e.innerText}`);
-                                setYellowBackground(i);
-                                appendNewIcon_toRight(e, "Lab");
-                            };
+                        };
                     };
                 };
             };
