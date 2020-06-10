@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1c
+// @version      0.5.1d
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
@@ -92,12 +92,12 @@
             console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
             let q, l;
             for (q of questsToUpdate) {
-                let d = {"id": parseInt(q.parentElement.href.match(/(\d+)/)[0]), "name": q.innerText.split("\n")[0].trim(), "status":"finished"};
+                let d = {"id": parseInt(q.parentElement.href.match(/(\d+)/)[0]), "name": q.innerText.split("\n")[0].trim(), "status":""};
                 let lastkey = await qdb.table("quests").put(d);
                 console.log("Updated quest" + JSON.stringify(d));
             }
             for (l of labsToUpdate) {
-                let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":"finished"};
+                let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":""};
                 let lastkey = await qdb.table("labs").put(d);
                 console.log("Updated quest" + JSON.stringify(d));
             }
@@ -270,8 +270,9 @@
                 let cards = document.querySelectorAll(".favorite-cards .card-content-wrapper, .curated-cards .card-content-wrapper, .popular-cards .card-content-wrapper");
                 for ( i of cards) {
                     let t = i.attributes["data-type"].value,
-                        id = i.attributes["data-id"].value,
+                        id = i.querySelector("a").href.match(/\/(\d+)/)[1],
                         e = i.querySelector(".overline");
+                    console.log(id);
                     switch (t) {
                         case "Lab":
                             switch (await getLabStatus(id)) {
