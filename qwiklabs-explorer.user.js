@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1c
+// @version      0.5.1d
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
@@ -270,8 +270,9 @@
                 let cards = document.querySelectorAll(".favorite-cards .card-content-wrapper, .curated-cards .card-content-wrapper, .popular-cards .card-content-wrapper");
                 for ( i of cards) {
                     let t = i.attributes["data-type"].value,
-                        id = i.attributes["data-id"].value,
+                        id = i.querySelector("a").href.match(/\/(\d+)/)[1],
                         e = i.querySelector(".overline");
+                    console.log(id);
                     switch (t) {
                         case "Lab":
                             switch (await getLabStatus(id)) {

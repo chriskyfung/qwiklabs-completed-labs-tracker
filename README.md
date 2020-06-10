@@ -39,11 +39,11 @@ As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quest
 - Store the labs and quests data locally with IndexedDB
 - Use Async Await in JavaScript
 
-**Ver >= 0.5.1b:**
+**Ver >= 0.5.1d:**
 - One-click update the labs and quests status to databases
 
 ## Demo Screenshot
-![demo image](/demo-image.png)
+![demo image](/demo-image.png)<br>
 Screenshot of a Catalog page
 
 <br>
