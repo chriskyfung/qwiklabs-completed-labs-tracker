@@ -92,12 +92,12 @@
             console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
             let q, l;
             for (q of questsToUpdate) {
-                let d = {"id": parseInt(q.parentElement.href.match(/(\d+)/)[0]), "name": q.innerText.split("\n")[0].trim(), "status":""};
+                let d = {"id": parseInt(q.parentElement.href.match(/(\d+)/)[0]), "name": q.innerText.split("\n")[0].trim(), "status":"finished"};
                 let lastkey = await qdb.table("quests").put(d);
                 console.log("Updated quest" + JSON.stringify(d));
             }
             for (l of labsToUpdate) {
-                let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":""};
+                let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":"finished"};
                 let lastkey = await qdb.table("labs").put(d);
                 console.log("Updated quest" + JSON.stringify(d));
             }
