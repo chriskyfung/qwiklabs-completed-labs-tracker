@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1d
+// @version      0.5.1f
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @author       chriskyfung
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
@@ -107,12 +107,22 @@
         if (count.labs + count.quests == 0) {
             snackbar.innerText = "0 items to update";
         } else {
-            snackbar.innerText = "Bulk Update - finished : Please refresh the page!";
+            let txt = "";
+            txt += count.quests > 0 ? `${count.quests} quest` : "";
+            txt += ( count.quests > 0 && count.labs ) > 0 ? " and " : "";
+            txt += count.labs > 0 ? `${count.labs} lab` : "";
+            txt += ( count.labs + count.quests ) > 1 ? " records" : " record";
+            snackbar.innerHTML = `<h6>Updated ${txt}</h6><small>Press F5 to reload the page, or wait 10 seconds for automatically refresh!</small>`;
         }
-        snackbar.style = "visibility:visible;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 500px;box-shadow: 1px 2px 20px #2a7ce0;";
+        snackbar.style = "visibility:visible;max-width:300px;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 500px;box-shadow: 1px 2px 20px #2a7ce0;";
         document.body.appendChild(snackbar);
-        setTimeout(function(){snackbar.style.visibility="hidden";}, 5000);
-        console.log("Bulk Update - finished : Please refresh the page!");
+        setTimeout(function(){
+            snackbar.style.visibility="hidden";
+            setTimeout(function(){
+                location.reload();
+            }, 1000);
+        }, 9000);
+        console.log("Bulk Updated Finished\nPress F5 to reload the page or wait 10 seconds for automatically refresh!");
     }
     //
     // Status Query Methods
