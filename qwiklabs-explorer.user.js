@@ -1,16 +1,20 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1f
-// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
+// @version      0.5.1g
 // @author       chriskyfung
-// @supportUrl   https://github.com/chriskyfung/qwiklabs-complete-indicator/issues
-// @require      https://unpkg.com/dexie@latest/dist/dexie.js
+// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
+// @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
+// @icon         https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/tree/master/icons/favicon-32x32.png
+// @icon64       https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/tree/master/icons/favicon-64x64.png
+// @updateURL    https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js
+// @supportUrl   https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues
 // @match        https://*.qwiklabs.com/
 // @match        https://*.qwiklabs.com/catalog*
 // @match        https://*.qwiklabs.com/focuses/*
 // @match        https://*.qwiklabs.com/quests/*
 // @match        https://*.qwiklabs.com/my_learning*
+// @require      https://unpkg.com/dexie@latest/dist/dexie.js
 // ==/UserScript==
 
 (function() {
@@ -104,24 +108,27 @@
         };
         let snackbar = document.createElement("div");
         snackbar.id = "snackbar";
-        if (count.labs + count.quests == 0) {
+        let nUpdate = count.labs + count.quests;
+        if (nUpdate == 0) {
             snackbar.innerText = "0 items to update";
         } else {
             let txt = "";
             txt += count.quests > 0 ? `${count.quests} quest` : "";
             txt += ( count.quests > 0 && count.labs ) > 0 ? " and " : "";
             txt += count.labs > 0 ? `${count.labs} lab` : "";
-            txt += ( count.labs + count.quests ) > 1 ? " records" : " record";
+            txt += nUpdate > 1 ? " records" : " record";
             snackbar.innerHTML = `<h6>Updated ${txt}</h6><small>Press F5 to reload the page, or wait 10 seconds for automatically refresh!</small>`;
         }
         snackbar.style = "visibility:visible;max-width:300px;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 500px;box-shadow: 1px 2px 20px #2a7ce0;";
         document.body.appendChild(snackbar);
         setTimeout(function(){
             snackbar.style.visibility="hidden";
-            setTimeout(function(){
-                location.reload();
-            }, 1000);
-        }, 9000);
+            if (nUpdate) {
+                setTimeout(function(){
+                    location.reload();
+                }, 1000);
+            };
+        }, nUpdate ? 9000 : 3000);
         console.log("Bulk Updated Finished\nPress F5 to reload the page or wait 10 seconds for automatically refresh!");
     }
     //
