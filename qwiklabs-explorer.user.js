@@ -5,8 +5,8 @@
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
-// @icon         https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/tree/master/icons/favicon-32x32.png
-// @icon64       https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/tree/master/icons/favicon-64x64.png
+// @icon         https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-32x32.png
+// @icon64       https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-64x64.png
 // @updateURL    https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues
 // @match        https://*.qwiklabs.com/
