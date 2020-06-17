@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1g
+// @version      0.5.1h
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -87,13 +87,12 @@
     async function bulkUpdateDb() {
         console.log("Bulk Update - start")
         let table, tables = document.querySelectorAll(".my-learning-table");
-        let count = { lab: 0, quests: 0 };
+        let count = { labs: 0, quests: 0 };
         for (table of tables) {
             let questsToUpdate = table.querySelectorAll(".unmarked-quest, .new-quest");
             let labsToUpdate = table.querySelectorAll(".unmarked-lab, .new-lab");
-            count.quests = questsToUpdate.length;
-            count.labs = labsToUpdate.length;
-            console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
+            count.quests += questsToUpdate.length;
+            count.labs += labsToUpdate.length;
             let q, l;
             for (q of questsToUpdate) {
                 let d = {"id": parseInt(q.parentElement.href.match(/(\d+)/)[0]), "name": q.innerText.split("\n")[0].trim(), "status":"finished"};
@@ -108,18 +107,20 @@
         };
         let snackbar = document.createElement("div");
         snackbar.id = "snackbar";
+        console.log (count)
+        console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
         let nUpdate = count.labs + count.quests;
         if (nUpdate == 0) {
             snackbar.innerText = "0 items to update";
         } else {
             let txt = "";
             txt += count.quests > 0 ? `${count.quests} quest` : "";
-            txt += ( count.quests > 0 && count.labs ) > 0 ? " and " : "";
+            txt += ( count.quests > 0 && count.labs > 0 ) ? " and " : "";
             txt += count.labs > 0 ? `${count.labs} lab` : "";
             txt += nUpdate > 1 ? " records" : " record";
             snackbar.innerHTML = `<h6>Updated ${txt}</h6><small>Press F5 to reload the page, or wait 10 seconds for automatically refresh!</small>`;
         }
-        snackbar.style = "visibility:visible;max-width:300px;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 500px;box-shadow: 1px 2px 20px #2a7ce0;";
+        snackbar.style = "visibility:visible;max-width:300px;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 50%;box-shadow: 1px 2px 20px #2a7ce0;";
         document.body.appendChild(snackbar);
         setTimeout(function(){
             snackbar.style.visibility="hidden";
