@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Qwiklabs Completed Labs Tracker
+// @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.1h
+// @version      0.5.2a
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -111,25 +112,24 @@
         console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
         let nUpdate = count.labs + count.quests;
         if (nUpdate == 0) {
-            snackbar.innerText = "0 items to update";
+            snackbar.innerHTML = '<p class="alert__message js-alert-message">0 items to update</p><a class="alert__close js-alert-close"><i class="fa fa-times"></i></a>';
         } else {
             let txt = "";
             txt += count.quests > 0 ? `${count.quests} quest` : "";
             txt += ( count.quests > 0 && count.labs > 0 ) ? " and " : "";
             txt += count.labs > 0 ? `${count.labs} lab` : "";
             txt += nUpdate > 1 ? " records" : " record";
-            snackbar.innerHTML = `<h6>Updated ${txt}</h6><small>Press F5 to reload the page, or wait 10 seconds for automatically refresh!</small>`;
+            snackbar.innerHTML = `<p class="alert__message js-alert-message" style="margin-right:16px;">Updated ${txt}</p><a class="alert__close js-alert-close">Refresh</a>`;
         }
-        snackbar.style = "visibility:visible;max-width:300px;min-width:250px;margin-left: -125px;margin-bottom:-26px;background-color: #2a7ce0;color: #fff; text-align: center;border-radius: 5px;padding: 16px;position: fixed;z-index: 99;left: 50%;bottom: 50%;box-shadow: 1px 2px 20px #2a7ce0;";
+        snackbar.classList = "alert alert--fake js-alert alert-success";
+        snackbar.style = "display:flex;max-width:360px;min-width:250px;width:auto;margin-left: -125px;margin-bottom:-26px; text-align: center;position: fixed;left: 50%;top: 76px;";
         document.body.appendChild(snackbar);
+        snackbar.querySelector(".js-alert-close").addEventListener( "click", function() {
+            nUpdate ? location.reload() : snackbar.remove();
+        });
         setTimeout(function(){
-            snackbar.style.visibility="hidden";
-            if (nUpdate) {
-                setTimeout(function(){
-                    location.reload();
-                }, 1000);
-            };
-        }, nUpdate ? 9000 : 3000);
+            nUpdate ? location.reload() : snackbar.remove();
+        }, 10000);
         console.log("Bulk Updated Finished\nPress F5 to reload the page or wait 10 seconds for automatically refresh!");
     }
     //
