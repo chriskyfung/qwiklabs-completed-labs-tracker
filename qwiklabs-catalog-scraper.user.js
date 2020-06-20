@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Qwiklabs Catalog Scraper
 // @namespace    https://chriskyfung.github.io/
-// @version      0.1
+// @version      0.2
 // @author       chriskyfung
 // @description  Scraping labs and quests from Qwiklabs Catalog and save as CSV files
 // @match        https://www.qwiklabs.com/catalog
@@ -77,7 +77,7 @@
                 dur = getInnerText(i, ".catalog-item-duration"),
                 level = getInnerText(i, ".catalog-item-level"),
                 cost = getInnerText(i, ".catalog-item-cost");
-            let line = `${name},${id},${dur},${level},${cost},${platformName}\n`;
+            let line = `${id},${name},${dur},${level},${cost},${type},${platformName}\n`;
             console.log(line);
             csvData += line;
         }
