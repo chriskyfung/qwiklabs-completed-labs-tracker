@@ -42,13 +42,15 @@ As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quest
 **Ver >= 0.5.1d:**
 - One-click update the labs and quests status to databases
 
+![Update to DB](/screenshots/qwiklab-complete-indicator-group-update-button.png)
+
 ## Demo Screenshot
-![demo image](/demo-image.png)<br>
+![demo image](/demo-image.png)  
 Screenshot of a Catalog page
 
 <br>
 
-![demo image](/demo-image2.png)
+![demo image](/demo-image2.png)  
 Screenshot of a Lab header
 
 ## Future Plans
