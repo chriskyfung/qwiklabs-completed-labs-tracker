@@ -10,7 +10,7 @@ For more information, please read my post "[Userscript for Labelling Completed Q
 
 ## Supoort this Project
 
-<a href="https://www.buymeacoffee.com/chrisfungky" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
+<a href="https://www.buymeacoffee.com/chriskyfung" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
 
 ## Why do you need this?
 
