@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.2b
+// @version      0.5.2c
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -243,7 +243,7 @@
                     t = results[1],
                     e = titles[i];
                 switch (t) {
-                    case "Hands-On Lab":
+                    case "Lab":
                         // tracking a lab on catalog page
                         switch (await getLabStatus(id)) {
                             case "finished":
