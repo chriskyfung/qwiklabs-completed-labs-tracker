@@ -1,61 +1,80 @@
 # Qwiklabs Completed Labs Tracker
-Label completed quests and labs on the Catalog page(s) on Qwiklabs (https://www.qwiklabs.com/catalog)
 
-For more information, please read my post "[Userscript for Labelling Completed Qwiklabs](https://chriskyfung.github.io/blog/qwiklabs/Qwiklabs-User-Tips-for-Learning_Google_Cloud_Platform)" on my GitHub Pages.
+💡 **Label completed quests and labs on Qwiklabs webpages**
 
-### Objectives of this project
+[Qwiklabs](https://www.qwiklabs.com) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and quests for learn and practice.
+
+As a Qwiklabs user, I figure out it is messy and damp to look up unenrolled quests or incompleted labs from the Qwiklabs Catalog page or Search Results. I desired to make a straight-forward way to identify the catalog items, by adding a green check-circle next to those completed.
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/chriskyfung/qwiklabs-completed-labs-tracker) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) ![GitHub Release Date
+](https://img.shields.io/github/release-date/chriskyfung/qwiklabs-completed-labs-tracker) ![GitHub issues
+](https://img.shields.io/github/issues-raw/chriskyfung/qwiklabs-completed-labs-tracker)
+
+🎯 **Objectives of this project**
+
 - To develop a handy way to implement the enhancement to Qwiklabs website in a web browser.
 - To indicate completed labs and quests in Qwiklabs Catalog pages, thereby easier to inspect the self-learning progress and look for unenrolled quests or incompleted labs.
 - To design a location to store and update the name list of the completed items.
 
-## Supoort this Project
+For more information, please read [**this post**](https://chriskyfung.github.io/blog/qwiklabs/Qwiklabs-User-Tips-for-Learning_Google_Cloud_Platform) on my GitHub Pages.
 
-<a href="https://www.buymeacoffee.com/chriskyfung" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
+ ![chriskyfung.github.io](https://img.shields.io/website?down_message=offline&up_message=online&url=https%3A%2F%2Fchriskyfung.github.io%2Fblog%2Fqwiklabs%2Fuserscript-for-labelling-completed-qwiklabs)
+## 🛴 How to Use
 
-## Why do you need this?
+This script requires an userscript manager to run it in your browser, such as [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) for Google Chrome. Click on the following button to download and install the script via your userscript manager.
 
-Qwiklabs is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and quests for learn and practice.
+[![Custom badge](https://img.shields.io/badge/-Install%20Script-brightgreen?color=green&logo=tampermonkey&style=for-the-badge)](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js)
 
-As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quests or incompleted labs from the Qwiklabs Catalog page or Search Results. I desired to make a straight-forward way to identify the catalog items, by adding a green check-circle next to those completed.
+## 🎠Features
 
+### 🌈 on Home pages
 
-## Features
-- Add a green check-circle at the end of a catalog item that has been completed.
-- Easy to execute and edit the userscript via Tampermonkey for Google Chrome
-- Add a green check-circle at the end of a lab title if the lab has been completed.
+Retrieve the local records and annotate each card in “My Favorites”, “Featured Learning”, and “What’s Hots” sections with badges.
 
-**Ver >= 0.4.5:**
-- Improve performance by using JSON-markup for storing lab and quest data.
-- Add green highlights to the completed items
-- Add annotations to _Your Favorites_ in the **My Learning** page.
-- Add color backgrounds to each row in tables of the _Completed Courses_ and _Completed Labs_ pages under the **My Learning** section for cross-checking.
+- Screenshot:
 
-**Ver >= 0.4.8:**
-- Add yellow highlights and badges to any labs and quests unregistered to the JSON-markup data.
-- Extend color schemes to the short tables of the _Completed Courses_ and _Completed Labs_ pages on the **My Learning** page.
-- Enhance the annotation scheme to the “Your Favorites”, “Featured Learning”, and “What’s Hots” sections on the Home page.
+  ![badges added to What's Hot cards](/screenshots/qwiklabs-complete-indicator-home-hots.png)
 
-**Ver >= 0.5.0:**
-- Store the labs and quests data locally with IndexedDB
-- Use Async Await in JavaScript
+### 🌈 on Catalog pages
 
-**Ver >= 0.5.1d:**
-- One-click update the labs and quests status to databases
+Retrieve the local records and annotate each lab and quest item as the following:
 
-![Update to DB](/screenshots/qwiklab-complete-indicator-group-update-button.png)
+- Label the completed labs and quests with a green check-circle.
+- Highlight any new labs and quests that you have not yet explored in yellow color.
 
-**Ver >= 0.5.2c:**
-- Updated to adopt the new Qwiklabs web design
+  ![Screenshot of a Catalog page](/demo-image.png)
 
-## Demo Screenshot
-![demo image](/demo-image.png)  
-Screenshot of a Catalog page
+### 🌈 on Quest pages
+
+- Automatically add a record for the quest or update the info to the local database
+- Add a green check-circle at the end of the page title if the quest is completed.
+
+### 🌈 on Lab pages
+
+- Automatically add a record for the lab or update the info to the local database.
+- Add a green check-circle at the end of the lab title if the lab is completed.
+
+  ![Screenshot of a Lab header](/demo-image2.png)
+
+### 🌈 on My Learning page
+
+- Add badges to cards in **My Favorites** section
+- Annotate each row in **My Learning Activity** table with colors
+- Quick link to view all **My Learning Activity** results
+- One-click update the labs and quests status from the activity table to the local database
+
+  ![Quick link and bu](/screenshots/my-qwiklabs-learning-activity-tracker-v0.5.4.png)
 
 <br>
 
-![demo image](/demo-image2.png)  
-Screenshot of a Lab header
+## 👀 Future Plans
 
-## Future Plans
+[ ] [Sync IndexedDB across computers](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/7) (#7)
 
-- [Sync IndexedDB across computers](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/7) #7
+## 🤝 Contributing
+
+Pull requests for new features, bug fixes, and suggestions are welcome!
+
+## ⚖ License
+
+Distributed under the [GNU General Public License v3.0](LICENSE)
