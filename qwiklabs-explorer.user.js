@@ -371,8 +371,7 @@
                             name = i.children[0].innerText;
                         switch (t.innerText) {
                             case "Quest":
-                                console.log(await getQuestStatusByTitle(name));
-                                switch ("finished") {
+                                switch (await getQuestStatusByTitle(name)) {
                                     case "finished":
                                         // Annotate as a Completed Quest
                                         setGreenBackground(i);
