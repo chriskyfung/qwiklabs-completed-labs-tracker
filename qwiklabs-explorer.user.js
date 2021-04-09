@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.3
+// @version      0.5.4
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -83,27 +83,53 @@
         tmpdb.quests = await qdb.table("quests").toArray();
     }
     //
-    // Update Quest Data
+    // Create a new db record
+    //
+    async function createRecord(table,id, obj) {
+        obj.id = id;
+        const added = await qdb.table(table).add(obj);
+        if (added) {
+            console.log(`Added ${JSON.stringify(obj)} to ${table} with`);
+        }
+        return added;
+    }
+    //
+    // Update a single db record
+    //
+    async function updateRecordById(table,id, obj) {
+        obj.id = id;
+        const updated = await qdb.table(table).update(id, obj);
+        if (updated) {
+            console.log(`Updated ${JSON.stringify(obj)} to ${table}`);
+        }
+        return updated;
+    }
+    //
+    // Batch Update My Learning Activities to Database
     //
     async function bulkUpdateDb() {
         console.log("Bulk Update - start")
-        let table, tables = document.querySelectorAll(".my-learning-table");
+        let table, tables = document.querySelectorAll(".flex-table.organization-membership-table");
         let count = { labs: 0, quests: 0 };
         for (table of tables) {
-            let questsToUpdate = table.querySelectorAll(".unmarked-quest, .new-quest");
-            let labsToUpdate = table.querySelectorAll(".unmarked-lab, .new-lab");
+            let questsToUpdate = table.querySelectorAll(".unmarked-quest");/*, .new-quest*/
+            let labsToUpdate = table.querySelectorAll(".unmarked-lab");/*, .new-lab*/
             count.quests += questsToUpdate.length;
             count.labs += labsToUpdate.length;
             let q, l;
             for (q of questsToUpdate) {
-                let d = {"id": parseInt(q.parentElement.href.match(/(\d+)/)[0]), "name": q.innerText.split("\n")[0].trim(), "status":"finished"};
-                let lastkey = await qdb.table("quests").put(d);
-                console.log("Updated quest" + JSON.stringify(d));
+                let tmp = { "name": q.children[0].innerText };
+                const updated = await qdb.table("quests").where("name").equals(tmp.name).modify({"status":"finished"});
+                if (updated) {
+                    console.log("Updated quest" + JSON.stringify(tmp));
+                }
             }
             for (l of labsToUpdate) {
-                let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":"finished"};
-                let lastkey = await qdb.table("labs").put(d);
-                console.log("Updated quest" + JSON.stringify(d));
+                let tmp = { "name": l.children[0].innerText };
+                const updated = await qdb.table("labs").where("name").equals(tmp.name).modify({"status":"finished"});
+                if (updated) {
+                    console.log("Updated lab" + JSON.stringify(tmp));
+                }
             }
         };
         let snackbar = document.createElement("div");
@@ -140,7 +166,7 @@
             return i.id == id;
         })[0];
         try {
-                return await s.status;
+            return await s.status;
         } catch (e) {
             console.error (`${e}\nWhen handling lab id: ${id}`);
             console.warn (`DB does not contain id: ${id} in the labs table`);
@@ -152,7 +178,7 @@
             return i.name == title;
         })[0];
         try {
-                return await s.status;
+            return await s.status;
         } catch (e) {
             console.error (`${e}\nWhen handling lab name: ${title}`);
             console.warn (`DB does not contain name: ${title} in the quests table`);
@@ -237,25 +263,50 @@
         if (pathRe[1] == "/focuses") {
             console.log("On a lab page");
             let e = document.querySelector("div.header__title > h1");
-            let id = pathRe[2];
+            const id = pathRe[2];
+            const title = e.innerText;
             switch (await getLabStatusById(id)) {
                 case "finished":
                     // Annotate as Completed
                     setGreenBackground(e);
                     appendCheckCircle(e, "Lab");
+                    updateRecordById('labs', id, {"name": title});
                     break;
                 case null:
                     // Annotate as Unregistered;
                     console.log(`[ status = null ] for lab ${id}: ${e.innerText}`);
                     setYellowBackground(e);
                     appendNewIcon(e, "Lab") ;
+                    createRecord('labs', id, {"name": title, "status": ""});
                     break;
             };
         } else if ( pathRe[0].startsWith("/catalog") || pathRe[1] == "/quests" ) {
             //
             // Check if the current page is a catalog page or a quest page
             //
-            console.log("On a catalog or quest page");
+            if (pathRe[1] == "/quests") {
+                console.log("On a quest page");
+                let e = document.querySelector(".headline-1");
+                const id = pathRe[2];
+                const title = e.innerText;
+                switch (await getQuestStatusById(id)) {
+                    case "finished":
+                        // Annotate as Completed
+                        setGreenBackground(e);
+                        appendCheckCircle(e, "Lab");
+                        updateRecordById('quests', id, {"name": title});
+                        break;
+                    case null:
+                        // Annotate as Unregistered;
+                        console.log(`[ status = null ] for lab ${id}: ${e.innerText}`);
+                        setYellowBackground(e);
+                        appendNewIcon(e, "Lab") ;
+                        createRecord('quests', id, {"name": title, "status": ""});
+                        break;
+                };
+            } else {
+                console.log("On a catalog page");
+            }
             let titles = document.querySelectorAll('.catalog-item__title');
             var i;
             for (i=0; i < titles.length; i++) {
@@ -355,13 +406,10 @@
             if (pathname == "/my_learning") {
                 console.log("Under My Learning Activity section");
                 // Append update button to headers
-                /* if (pathname == "/my_learning") {
-                    let h = document.querySelectorAll(".my-learning__group__header h2");
-                    appendUpdateBtn(h[0], "Update quests to DB", bulkUpdateDb);
-                    appendUpdateBtn(h[1], "Update quests to DB", bulkUpdateDb);
-                } else {
-                    appendUpdateBtn(document.querySelector(".headline-5"), "Update all to DB", bulkUpdateDb);
-                } */
+                let pResults = document.querySelector(".ql-headline-4~p"); // p element that shows #### results
+                let totalResults = parseInt(pResults.innerText);
+                pResults.innerHTML = `<a href="https://www.qwiklabs.com/my_learning?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
+                appendUpdateBtn(pResults, "Update to DB", bulkUpdateDb);
                 // Tracking tables under the My Learning section
                 let rows = document.querySelectorAll(".flex-table__row");
                 for (i of rows) {
@@ -386,7 +434,7 @@
                                         break;
                                     case null:
                                         // Annotate as Unregistered
-                                        console.warn( `[ status = null ] for quest ${id}: ${e.innerText}`);
+                                        console.warn( `[ status = null ] for quest : ${name}`);
                                         setYellowBackground(i);
                                         appendNewIcon(t, "Quest");
                                         i.classList.add("new-quest");
@@ -401,7 +449,7 @@
                                 i.classList.add("completed-game");
                                 continue;
                                 break;
-                           case "Lab":
+                            case "Lab":
                                 if ( i.children[5].innerText == "check") {
                                     switch (await getLabStatusByTitle(name)) {
                                         case "finished":
