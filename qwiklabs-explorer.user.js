@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.2c
+// @version      0.5.3
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -135,7 +135,7 @@
     //
     // Status Query Methods
     //
-    async function getLabStatus(id) {
+    async function getLabStatusById(id) {
         const s = await tmpdb.labs.filter(function(i) {
             return i.id == id;
         })[0];
@@ -147,7 +147,19 @@
             return null;
         };
     }
-    async function getQuestStatus(id) {
+    async function getLabStatusByTitle(title) {
+        const s = await tmpdb.labs.filter(function(i) {
+            return i.name == title;
+        })[0];
+        try {
+                return await s.status;
+        } catch (e) {
+            console.error (`${e}\nWhen handling lab name: ${title}`);
+            console.warn (`DB does not contain name: ${title} in the quests table`);
+            return null;
+        };
+    }
+    async function getQuestStatusById(id) {
         const s = await tmpdb.quests.filter(function(i) {
             return i.id == id;
         })[0];
@@ -156,6 +168,18 @@
         } catch (e) {
             console.error (`${e}\nWhen handling quest id: ${id}`);
             console.warn (`DB does not contain id: ${id} in the quests table`);
+            return null;
+        };
+    }
+    async function getQuestStatusByTitle(title) {
+        const s = await tmpdb.quests.filter(function(i) {
+            return i.name == title;
+        })[0];
+        try {
+            return await s.status;
+        } catch (e) {
+            console.error (`${e}\nWhen handling quest name: ${title}`);
+            console.warn (`DB does not contain name: ${title} in the quests table`);
             return null;
         };
     }
@@ -183,8 +207,8 @@
     function appendNewIcon_toRight(i, t) {
         i.innerHTML += `<span>&nbsp;<i class="material-icons" style="color:orange;float:right;" title="New ${t}">fiber_new</i></span>`;
     }
-    function appendGameIcon_toRight(i) {
-        i.innerHTML += `<span>&nbsp;<i class='fas fa-gamepad' style="color:purple;float:right;" title="Game"></i></span>`;
+    function appendGameIcon(i) {
+        i.innerHTML += `<span>&nbsp;<i class='fas fa-gamepad' style="color:purple;" title="Game"></i></span>`;
     }
     function appendUpdateBtn(e, t, f) {
         e.innerHTML += '&nbsp;<button class="db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect" title="'+ t +'"><i class="material-icons">sync</i></button>';
@@ -214,7 +238,7 @@
             console.log("On a lab page");
             let e = document.querySelector("div.header__title > h1");
             let id = pathRe[2];
-            switch (await getLabStatus(id)) {
+            switch (await getLabStatusById(id)) {
                 case "finished":
                     // Annotate as Completed
                     setGreenBackground(e);
@@ -245,7 +269,7 @@
                 switch (t) {
                     case "Lab":
                         // tracking a lab on catalog page
-                        switch (await getLabStatus(id)) {
+                        switch (await getLabStatusById(id)) {
                             case "finished":
                                 // Annotate as a Completed Lab
                                 setGreenBackground(titles[i]);
@@ -262,7 +286,7 @@
                         break;
                     case "Quest":
                         // tracking a quest on catalog page
-                        switch (await getQuestStatus(id)) {
+                        switch (await getQuestStatusById(id)) {
                             case "finished":
                                 // Annotate as a Completed Quest
                                 setGreenBackground(e);
@@ -279,7 +303,7 @@
                         break;
                 };
             };
-        } else if (pathname == "/" || pathname == "/my_learning" || pathname == "/my_learning/courses" || pathname == "/my_learning/labs") {
+        } else if (pathname == "/" || pathname == "/my_learning") {
             //
             // Check if the current page is the Home or My Learning page
             //
@@ -293,7 +317,7 @@
                     console.log(id);
                     switch (t) {
                         case "Lab":
-                            switch (await getLabStatus(id)) {
+                            switch (await getLabStatusById(id)) {
                                 case "finished":
                                     // Annotate as a Completed Lab
                                     appendCheckCircle(e, "Lab");
@@ -307,7 +331,7 @@
                             };
                             break;
                         case "LearningPath":
-                            switch (await getQuestStatus(id)) {
+                            switch (await getQuestStatusById(id)) {
                                 case "finished":
                                     // Annotate as a Completed Quest
                                     appendCheckCircle(e, "Quest");
@@ -326,38 +350,38 @@
                 };
             };
             //
-            // Check if the current page is the pages under My Leanring section
+            // Check if the current page is the My Learning
             //
-            if (pathname == "/my_learning" || pathname == "/my_learning/courses" || pathname == "/my_learning/labs") {
-                console.log("Under My Learning section");
+            if (pathname == "/my_learning") {
+                console.log("Under My Learning Activity section");
                 // Append update button to headers
-                if (pathname == "/my_learning") {
+                /* if (pathname == "/my_learning") {
                     let h = document.querySelectorAll(".my-learning__group__header h2");
                     appendUpdateBtn(h[0], "Update quests to DB", bulkUpdateDb);
                     appendUpdateBtn(h[1], "Update quests to DB", bulkUpdateDb);
                 } else {
                     appendUpdateBtn(document.querySelector(".headline-5"), "Update all to DB", bulkUpdateDb);
-                }
+                } */
                 // Tracking tables under the My Learning section
-                let rows = document.querySelectorAll(".my-learning-table .flex-table__row");
-                for ( i of rows) {
-                    if (i.href) {
-                        let results = i.href.match(/(\w*)\/(\d+)/);
-                        let t = results[1],
-                            id = results[2],
-                            e = i.children[1];
-                        switch (t) {
-                            case "quests":
-                                switch (await getQuestStatus(id)) {
+                let rows = document.querySelectorAll(".flex-table__row");
+                for (i of rows) {
+                    if (i.className == "flex-table__row") {
+                        //let results = i.href.match(/(\w*)\/(\d+)/);
+                        let t = i.children[1], //results[1],
+                            name = i.children[0].innerText;
+                        switch (t.innerText) {
+                            case "Quest":
+                                console.log(await getQuestStatusByTitle(name));
+                                switch ("finished") {
                                     case "finished":
                                         // Annotate as a Completed Quest
                                         setGreenBackground(i);
-                                        appendCheckCircle_toRight(e, "Quest");
-                                        e.classList.add("completed-quest");
+                                        appendCheckCircle(t, "Quest");
+                                        i.classList.add("completed-quest");
                                         continue;
                                         break;
                                     case "":
-                                        e.classList.add("unmarked-quest");
+                                        i.classList.add("unmarked-quest");
                                         setYellowBackground(i);
                                         continue;
                                         break;
@@ -365,45 +389,48 @@
                                         // Annotate as Unregistered
                                         console.warn( `[ status = null ] for quest ${id}: ${e.innerText}`);
                                         setYellowBackground(i);
-                                        appendNewIcon_toRight(e, "Quest");
-                                        e.classList.add("new-quest");
+                                        appendNewIcon(t, "Quest");
+                                        i.classList.add("new-quest");
                                         continue;
                                         break;
                                 };
                                 break;
-                            case "games":
+                            case "Game":
                                 // Annotate as a Game
                                 setPurpleBackground(i);
-                                appendGameIcon_toRight(e);
-                                e.classList.add("completed-game");
+                                appendGameIcon(t);
+                                i.classList.add("completed-game");
                                 continue;
                                 break;
-                            case "focuses":
-                                if ( i.firstChild.innerText == "check") {
-                                    switch (await getLabStatus(id)) {
+                           case "Lab":
+                                if ( i.children[5].innerText == "check") {
+                                    switch (await getLabStatusByTitle(name)) {
                                         case "finished":
                                             // Annotate as a Completed Lab
                                             setGreenBackground(i);
-                                            appendCheckCircle_toRight(e, "Lab");
-                                            e.classList.add("completed-lab");
+                                            appendCheckCircle(t, "Lab");
+                                            i.classList.add("completed-lab");
                                             continue;
                                             break;
                                         case "":
-                                            e.classList.add("unmarked-lab");
+                                            i.classList.add("unmarked-lab");
                                             setYellowBackground(i);
                                             continue;
                                             break;
                                         case null:
                                             // Annotate as Unregistered
-                                            console.warn( `[ status = null ] for lab ${id}: ${e.innerText}`);
+                                            console.warn( `[ status = null ] for lab : ${name}`);
                                             setYellowBackground(i);
-                                            appendNewIcon_toRight(e, "Lab");
-                                            e.classList.add("new-lab");
+                                            appendNewIcon(t, "Lab");
+                                            i.classList.add("new-lab");
                                             continue;
                                             break;
                                     };
                                     break;
                                 };
+                                break;
+                            default:
+                                break;
                         };
                     };
                 };

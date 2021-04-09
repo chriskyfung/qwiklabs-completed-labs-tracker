@@ -45,7 +45,7 @@ As a Qwiklabs user, I figure out it is messy and damp to lookup unenrolled quest
 ![Update to DB](/screenshots/qwiklab-complete-indicator-group-update-button.png)
 
 **Ver >= 0.5.2c:**
-- Updated for adopting the new Qwiklabs web design
+- Updated to adopt the new Qwiklabs web design
 
 ## Demo Screenshot
 ![demo image](/demo-image.png)  
