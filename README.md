@@ -71,7 +71,7 @@ Retrieve the local records and annotate each lab and quest item as the following
 
 [ ] [Sync IndexedDB across computers](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/7) (#7)
 
-## Like my stuff?
+## 💗 Support Me
 
 Would you like to buy me a coffee? I would really appreciate it if you could support me for this projects.
 
