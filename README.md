@@ -1,4 +1,4 @@
-# Qwiklabs Completed Labs Tracker
+# Qwiklabs Lab Completion Tracker
 
 💡 **Label completed quests and labs on Qwiklabs webpages**
 
