@@ -63,13 +63,19 @@ Retrieve the local records and annotate each lab and quest item as the following
 - Quick link to view all **My Learning Activity** results
 - One-click update the labs and quests status from the activity table to the local database
 
-  ![Quick link and bu](/screenshots/my-qwiklabs-learning-activity-tracker-v0.5.4.png)
+  ![Quick link and batch update My Learning Activity to database](/screenshots/my-qwiklabs-learning-activity-tracker-v0.5.4.png)
 
 <br>
 
 ## 👀 Future Plans
 
 [ ] [Sync IndexedDB across computers](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues/7) (#7)
+
+## Like my stuff?
+
+Would you like to buy me a coffee? I would really appreciate it if you could support me for this projects.
+
+<a href="https://www.buymeacoffee.com/chrisfungky"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" target="_blank"></a>
 
 ## 🤝 Contributing
 
