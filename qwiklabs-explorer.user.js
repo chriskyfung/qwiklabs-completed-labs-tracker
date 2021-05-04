@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.4
+// @version      0.5.5
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -86,7 +86,7 @@
     // Create a new db record
     //
     async function createRecord(table,id, obj) {
-        obj.id = id;
+        obj.id = parseInt(id);
         const added = await qdb.table(table).add(obj);
         if (added) {
             console.log(`Added ${JSON.stringify(obj)} to ${table} with`);
@@ -118,18 +118,26 @@
             count.labs += labsToUpdate.length;
             let q, l;
             for (q of questsToUpdate) {
-                let tmp = { "name": q.children[0].innerText };
-                const updated = await qdb.table("quests").where("name").equals(tmp.name).modify({"status":"finished"});
+                let tmp = { "id": parseInt(q.getAttribute('data-id')) };
+                const updated = await qdb.table("quests").where("id").equals(tmp.id).modify({"status":"finished"});
                 if (updated) {
                     console.log("Updated quest" + JSON.stringify(tmp));
-                }
+                } /*else {
+                    tmp.status = "finished";
+                    tmp.id = "";
+                    let lastkey = await qdb.table("quests").put(tmp);
+                    console.log("Created quest" + JSON.stringify(tmp));
+                }*/
             }
             for (l of labsToUpdate) {
-                let tmp = { "name": l.children[0].innerText };
-                const updated = await qdb.table("labs").where("name").equals(tmp.name).modify({"status":"finished"});
+                let tmp = { "id": parseInt(l.getAttribute('data-id')) };
+                const updated = await qdb.table("labs").where("id").equals(tmp.id).modify({"status":"finished"});
                 if (updated) {
                     console.log("Updated lab" + JSON.stringify(tmp));
                 }
+                /* let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":"finished"};
+                let lastkey = await qdb.table("labs").put(d);
+                console.log("Updated lab" + JSON.stringify(d));*/
             }
         };
         let snackbar = document.createElement("div");
@@ -168,20 +176,29 @@
         try {
             return await s.status;
         } catch (e) {
-            console.error (`${e}\nWhen handling lab id: ${id}`);
-            console.warn (`DB does not contain id: ${id} in the labs table`);
+            console.error (`${e}\nWhen handling lab id: "${id}"`);
+            console.warn (`DB does not contain id: "${id}" in the labs table`);
             return null;
         };
     }
-    async function getLabStatusByTitle(title) {
+    async function getLabByTitle(title) {
+        let altTitle;
+        if (title.includes(': ')) {
+            altTitle = title.replace(': ',':');
+        }
         const s = await tmpdb.labs.filter(function(i) {
+            if (altTitle && i.name.includes(':')) {
+                if (i.name == altTitle) {
+                    return true;
+                };
+            }
             return i.name == title;
         })[0];
         try {
-            return await s.status;
+            return s? s : { status: null };
         } catch (e) {
-            console.error (`${e}\nWhen handling lab name: ${title}`);
-            console.warn (`DB does not contain name: ${title} in the quests table`);
+            console.error (`${e}\nWhen handling lab name: "${title}"`);
+            console.warn (`DB does not contain name: "${title}" in the quests table`);
             return null;
         };
     }
@@ -192,20 +209,20 @@
         try {
             return await s.status;
         } catch (e) {
-            console.error (`${e}\nWhen handling quest id: ${id}`);
-            console.warn (`DB does not contain id: ${id} in the quests table`);
+            console.error (`${e}\nWhen handling quest id: "${id}"`);
+            console.warn (`DB does not contain id: "${id}" in the quests table`);
             return null;
         };
     }
-    async function getQuestStatusByTitle(title) {
+    async function getQuestByTitle(title) {
         const s = await tmpdb.quests.filter(function(i) {
             return i.name == title;
         })[0];
         try {
-            return await s.status;
+            return s? s : { status: null };
         } catch (e) {
-            console.error (`${e}\nWhen handling quest name: ${title}`);
-            console.warn (`DB does not contain name: ${title} in the quests table`);
+            console.error (`${e}\nWhen handling quest name: "${title}"`);
+            console.warn (`DB does not contain name: "${title}" in the quests table`);
             return null;
         };
     }
@@ -365,7 +382,6 @@
                     let t = i.attributes["data-type"].value,
                         id = i.querySelector("a").href.match(/\/(\d+)/)[1],
                         e = i.querySelector(".overline");
-                    console.log(id);
                     switch (t) {
                         case "Lab":
                             switch (await getLabStatusById(id)) {
@@ -414,12 +430,13 @@
                 let rows = document.querySelectorAll(".flex-table__row");
                 for (i of rows) {
                     if (i.className == "flex-table__row") {
-                        //let results = i.href.match(/(\w*)\/(\d+)/);
                         let t = i.children[1], //results[1],
-                            name = i.children[0].innerText;
+                            name = i.children[0].innerText,
+                            record;
                         switch (t.innerText) {
                             case "Quest":
-                                switch (await getQuestStatusByTitle(name)) {
+                                record = await getQuestByTitle(name);
+                                switch (record.status) {
                                     case "finished":
                                         // Annotate as a Completed Quest
                                         setGreenBackground(i);
@@ -430,11 +447,12 @@
                                     case "":
                                         i.classList.add("unmarked-quest");
                                         setYellowBackground(i);
+                                        i.setAttribute('data-id', record.id);
                                         continue;
                                         break;
                                     case null:
                                         // Annotate as Unregistered
-                                        console.warn( `[ status = null ] for quest : ${name}`);
+                                        console.warn( `[ status = null ] for quest : "${name}"`);
                                         setYellowBackground(i);
                                         appendNewIcon(t, "Quest");
                                         i.classList.add("new-quest");
@@ -449,27 +467,30 @@
                                 i.classList.add("completed-game");
                                 continue;
                                 break;
-                            case "Lab":
-                                if ( i.children[5].innerText == "check") {
-                                    switch (await getLabStatusByTitle(name)) {
+                           case "Lab":
+                                if ( i.children[5].innerText == 'check') {
+                                    record = await getLabByTitle(name);
+                                    console.log(record);
+                                    switch (record.status) {
                                         case "finished":
                                             // Annotate as a Completed Lab
                                             setGreenBackground(i);
-                                            appendCheckCircle(t, "Lab");
-                                            i.classList.add("completed-lab");
+                                            appendCheckCircle(t, 'Lab');
+                                            i.classList.add('completed-lab');
                                             continue;
                                             break;
                                         case "":
-                                            i.classList.add("unmarked-lab");
+                                            i.classList.add('unmarked-lab');
                                             setYellowBackground(i);
+                                            i.setAttribute('data-id', record.id);
                                             continue;
                                             break;
                                         case null:
                                             // Annotate as Unregistered
-                                            console.warn( `[ status = null ] for lab : ${name}`);
+                                            console.warn( `[ status = null ] for lab : "${name}"`);
                                             setYellowBackground(i);
-                                            appendNewIcon(t, "Lab");
-                                            i.classList.add("new-lab");
+                                            appendNewIcon(t, 'Lab');
+                                            i.classList.add('new-lab');
                                             continue;
                                             break;
                                     };
