@@ -23,7 +23,7 @@ For more information, please read [**this post**](https://chriskyfung.github.io/
 
 This script requires an userscript manager to run it in your browser, such as [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) for Google Chrome. Click on the following button to download and install the script via your userscript manager.
 
-[![Custom badge](https://img.shields.io/badge/-Install%20Script-brightgreen?color=green&logo=tampermonkey&style=for-the-badge)](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js)
+[![Install Script with Tampermonkey](https://img.shields.io/badge/-Install%20Script-brightgreen?color=green&logo=tampermonkey&style=for-the-badge)](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js)
 
 ## 🎠Features
 
