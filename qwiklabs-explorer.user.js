@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      0.5.5
+// @version      1.0.0
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -14,7 +14,7 @@
 // @match        https://*.qwiklabs.com/catalog*
 // @match        https://*.qwiklabs.com/focuses/*
 // @match        https://*.qwiklabs.com/quests/*
-// @match        https://*.qwiklabs.com/my_learning*
+// @match        https://*.qwiklabs.com/profile/activity*
 // @require      https://unpkg.com/dexie@latest/dist/dexie.js
 // ==/UserScript==
 
@@ -371,11 +371,11 @@
                         break;
                 };
             };
-        } else if (pathname == "/" || pathname == "/my_learning") {
+        } else if (pathname == "/" || pathname == "/profile/activity") {
             //
             // Check if the current page is the Home or My Learning page
             //
-            if (pathname == "/" || pathname == "/my_learning") {
+            if (pathname == "/" || pathname == "/profile/activity") {
                 console.log("On a dashboard page");
                 let cards = document.querySelectorAll(".favorite-cards .card-content-wrapper, .curated-cards .card-content-wrapper, .popular-cards .card-content-wrapper");
                 for ( i of cards) {
@@ -419,12 +419,12 @@
             //
             // Check if the current page is the My Learning
             //
-            if (pathname == "/my_learning") {
+            if (pathname == "/profile/activity") {
                 console.log("Under My Learning Activity section");
                 // Append update button to headers
-                let pResults = document.querySelector(".ql-headline-4~p"); // p element that shows #### results
-                let totalResults = parseInt(pResults.innerText);
-                pResults.innerHTML = `<a href="https://www.qwiklabs.com/my_learning?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
+                let pResults = document.querySelector(".pagination__page"); // element that shows 1 - 10 of N
+                let totalResults = parseInt(pResults.innerText.split('of')[1]);
+                pResults.innerHTML = `<a href="https://www.qwiklabs.com/profile/activity?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
                 appendUpdateBtn(pResults, "Update to DB", bulkUpdateDb);
                 // Tracking tables under the My Learning section
                 let rows = document.querySelectorAll(".flex-table__row");
