@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      1.0.0
+// @version      2.0.0
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -303,7 +303,7 @@
             //
             if (pathRe[1] == "/quests") {
                 console.log("On a quest page");
-                let e = document.querySelector(".headline-1");
+                let e = document.querySelector(".ql-headline-1");
                 const id = pathRe[2];
                 const title = e.innerText;
                 switch (await getQuestStatusById(id)) {
