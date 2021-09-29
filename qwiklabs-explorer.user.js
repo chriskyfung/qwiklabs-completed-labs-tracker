@@ -230,18 +230,10 @@
             return null;
         };
     }
+
     //
     // Annotation Methods
     //
-    function setGreenBackground(i) {
-        i.style.background = "#efe";
-    }
-    function setYellowBackground(i) {
-        i.style.background = "#ffc";
-    }
-    function setPurpleBackground(i) {
-        i.style.background = "#fef";
-    }
 
     /**
      * Set the background color of an element by a predefined color key.
@@ -414,7 +406,6 @@
             const name = record.name,
                   type = record.type.toLowerCase(),
                   row = rows[i];
-            console.log([type, name, row])
             const foo = fooMap[type];
             foo(row, name, type);
         };
@@ -447,14 +438,14 @@
             switch (await getLabStatusById(id)) {
                 case "finished":
                     // Annotate as Completed
-                    setGreenBackground(e);
+                    setBackgroundColor(e , 'green');
                     appendCheckCircle(e, "Lab");
                     updateRecordById('labs', id, {"name": title});
                     break;
                 case null:
                     // Annotate as Unregistered;
                     console.log(`[ status = null ] for lab ${id}: ${e.innerText}`);
-                    setYellowBackground(e);
+                    setBackgroundColor(e , 'yellow');
                     appendNewIcon(e, "Lab") ;
                     createRecord('labs', id, {"name": title, "status": ""});
                     break;
@@ -471,14 +462,14 @@
                 switch (await getQuestStatusById(id)) {
                     case "finished":
                         // Annotate as Completed
-                        setGreenBackground(e);
+                        setBackgroundColor(e , 'green');
                         appendCheckCircle(e, "Lab");
                         updateRecordById('quests', id, {"name": title});
                         break;
                     case null:
                         // Annotate as Unregistered;
                         console.log(`[ status = null ] for lab ${id}: ${e.innerText}`);
-                        setYellowBackground(e);
+                        setBackgroundColor(e , 'yellow');
                         appendNewIcon(e, "Lab") ;
                         createRecord('quests', id, {"name": title, "status": ""});
                         break;
@@ -502,14 +493,14 @@
                         switch (await getLabStatusById(id)) {
                             case "finished":
                                 // Annotate as a Completed Lab
-                                setGreenBackground(titles[i]);
+                                setBackgroundColor(titles[i] , 'green');
                                 appendCheckCircle(e, t);
                                 continue;
                                 break;
                             case null:
                                 // Annotate as Unregistered
                                 console.warn( `[ status = null ] for lab ${id}: ${e.innerText}`);
-                                setYellowBackground(e);
+                                setBackgroundColor(e , 'yellow');
                                 appendNewIcon(e, "Lab") ;
                                 break;
                         };
@@ -519,14 +510,14 @@
                         switch (await getQuestStatusById(id)) {
                             case "finished":
                                 // Annotate as a Completed Quest
-                                setGreenBackground(e);
+                                setBackgroundColor(e , 'green');
                                 appendCheckCircle(e, t);
                                 continue;
                                 break;
                             case null:
                                 // Annotate as Unregistered
                                 console.warn( `[ status = null ] for quest ${id}: ${e.innerText}`);
-                                setYellowBackground(e);
+                                setBackgroundColor(e , 'yellow');
                                 appendNewIcon(e, "Quest") ;
                                 break;
                         };
