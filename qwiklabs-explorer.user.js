@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      2.0.4
+// @version      2.0.5
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -20,6 +20,8 @@
 
 (function() {
   'use strict';
+
+  const debug_mode = false;
 
   const dbName = 'qwiklabs-db-test-1';
   const qdb = new Dexie(dbName);
@@ -713,47 +715,29 @@
   }
 
   /**
-   * Batch Update My Learning Activities to Database
+   * Batch update Activity records to the database
    */
-  async function bulkUpdateDb() {
-    console.log('Bulk Update - start');
-    let table;
-    const tables = document.querySelectorAll('.flex-table.organization-membership-table');
+  async function batchUpdateToDb() {
+    const qlTable = document.querySelector('ql-table');
+    const newRecords = JSON.parse(qlTable.getAttribute('untracked-records'));
+    console.log('Batch Update - start');
     const count = {labs: 0, quests: 0};
-    for (table of tables) {
-      const questsToUpdate = table.querySelectorAll('.untracked-quest');/* , .new-quest*/
-      const labsToUpdate = table.querySelectorAll('.untracked-lab');/* , .new-lab*/
-      count.quests += questsToUpdate.length;
-      count.labs += labsToUpdate.length;
-      let q; let l;
-      for (q of questsToUpdate) {
-        const tmp = {'id': parseInt(q.getAttribute('data-id'))};
-        const updated = await qdb.table('quests').where('id').equals(tmp.id).modify({'status': 'finished'});
-        if (updated) {
-          console.log('Updated quest' + JSON.stringify(tmp));
-        } /* else {
-            tmp.status = "finished";
-            tmp.id = "";
-            let lastkey = await qdb.table("quests").put(tmp);
-            console.log("Created quest" + JSON.stringify(tmp));
-          }*/
+    const labsToUpdate = [];
+    const questsToUpdate = [];
+    for (const newRecord of newRecords) {
+      const id = newRecord.id;
+      const type = newRecord.type;
+      const type_s = type + 's';
+      count[type_s] += 1;
+      const updated = await qdb.table(type_s).where('id').equals(id).modify({'status': 'finished'});
+      if (updated) {
+        console.log(`Updated ${type}: {id: ${id}, name: '${newRecord.name}', 'status': 'finished'}`);
       }
-      for (l of labsToUpdate) {
-        const tmp = {'id': parseInt(l.getAttribute('data-id'))};
-        const updated = await qdb.table('labs').where('id').equals(tmp.id).modify({'status': 'finished'});
-        if (updated) {
-          console.log('Updated lab' + JSON.stringify(tmp));
-        }
-        /* let d = {"id": parseInt(l.parentElement.href.match(/(\d+)/)[0]), "name": l.innerText.split("\n")[0].trim(), "status":"finished"};
-          let lastkey = await qdb.table("labs").put(d);
-          console.log("Updated lab" + JSON.stringify(d));*/
-      }
-    };
+    }
+    console.log(`Number of items updated: ${count.quests} quests and ${count.labs} labs`);
+    const nUpdate = count.labs + count.quests;
     const snackbar = document.createElement('div');
     snackbar.id = 'snackbar';
-    console.log(count);
-    console.log(`Number of items required to update: ${count.quests} quests and ${count.labs} labs`);
-    const nUpdate = count.labs + count.quests;
     if (nUpdate == 0) {
       snackbar.innerHTML = '<p class="alert__message js-alert-message">0 items to update</p><a class="alert__close js-alert-close"><i class="fa fa-times"></i></a>';
     } else {
@@ -765,15 +749,15 @@
       snackbar.innerHTML = `<p class="alert__message js-alert-message" style="margin-right:16px;">Updated ${txt}</p><a class="alert__close js-alert-close">Refresh</a>`;
     }
     snackbar.classList = 'alert alert--fake js-alert alert-success';
-    snackbar.style = 'display:flex;max-width:360px;min-width:250px;width:auto;margin-left: -125px;margin-bottom:-26px; text-align: center;position: fixed;left: 50%;top: 76px;';
+    snackbar.style = 'display:flex; max-width:360px; min-width:250px; width:auto; margin-left: -125px; margin-bottom:-26px; text-align: center; position: fixed; left: 50%; bottom: 76px;';
     document.body.appendChild(snackbar);
     snackbar.querySelector('.js-alert-close').addEventListener( 'click', function() {
-        nUpdate ? location.reload() : snackbar.remove();
+      nUpdate ? location.reload() : snackbar.remove();
     });
     setTimeout(function() {
-        nUpdate ? location.reload() : snackbar.remove();
+      nUpdate ? location.reload() : snackbar.remove();
     }, 10000);
-    console.log('Bulk Updated Finished\nPress F5 to reload the page or wait 10 seconds for automatically refresh!');
+    console.log('Batch updated - finished\nPress F5 to reload the page or wait 10 seconds for automatically refresh!');
   }
 
   /**
@@ -900,17 +884,6 @@
     newElm.innerHTML = icon;
     element.appendChild(newElm);
     return icon;
-  }
-
-  /**
-   * Add a icon buton to run database update.
-   * @param {Object} el - A DOM element
-   * @param {string} text - A string to display as button title text
-   * @param {*} foo - A function to call when the button is clicked
-   */
-  function appendDbUpdateBtn(el, text, foo) {
-    el.innerHTML += '&nbsp;<button class="db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect" title="'+ text +'"><i class="material-icons">sync</i></button>';
-    el.querySelector('.db-update-button').addEventListener('click', foo);
   }
 
   /**
@@ -1059,13 +1032,38 @@
   }
 
   /**
+  * Create the DOM element of the icon buton to run database update.
+  * @param {string} text - A string to display as button title text
+  * @param {function} foo - A function to call when the button is clicked
+  */
+  function createDbUpdateBtn(text, foo) {
+    const button = document.createElement('button');
+    button.classList = 'db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect';
+    button.title = text;
+    button.innerHTML = '<i class="material-icons">sync</i>';
+    button.addEventListener('click', foo);
+    return button;
+  }
+
+  /**
     * Append an update button to an Activities tab.
     */
   function appendUpdateButtonToActivitiesTab() {
-    const pResults = document.querySelector('.pagination__page'); // element that shows 1 - 10 of N
-    const totalResults = parseInt(pResults.innerText.split('of')[1]);
-    pResults.innerHTML = `<a href="https://www.qwiklabs.com/profile/activity?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
-    appendDbUpdateBtn(pResults, 'Update to DB', bulkUpdateDb);
+    const activityNav = document.querySelector('#learning_activity_search');
+    const url = window.location.href;
+    const delim = url.includes('?') ? '&' : '?';
+    const pageLink = document.createElement('a');
+    pageLink.href = url + delim + 'per_page=100';
+    pageLink.style.cssText = 'border: 1px solid lightgray; border-radius: 8px; padding: 6.5px 13px; margin-right: 12px;'
+    pageLink.title = 'View last 100 results';
+    pageLink.innerText = '100';
+    const button = createDbUpdateBtn('Update to DB', batchUpdateToDb);
+    const wrapper = document.createElement('div');
+    wrapper.id = 'qclt-buttons';
+    wrapper.style.cssText = 'float: right;';
+    wrapper.appendChild(pageLink);
+    wrapper.appendChild(button);
+    activityNav.insertAdjacentElement('beforebegin', wrapper);
   }
 
   /**
@@ -1094,11 +1092,13 @@
         const record = await getLabByTitle(name);
         const foo = fooMap[record.status];
         foo(el, name, 'lab');
+        return record;
       },
       'quest': async function(el, name) {
         const record = await getQuestByTitle(name);
         const foo = fooMap[record.status];
         foo(el, name, 'quest');
+        return record;
       },
       // Annotate a record marked as finished in database
       'finished': function(el, name, type) {
@@ -1118,14 +1118,33 @@
         el.classList.add(`new-${type}`);
       },
     };
-    const rows = document.querySelector('ql-table').shadowRoot.querySelectorAll('tbody > tr');
+    const qlTable = document.querySelector('ql-table');
+    const rows = qlTable.shadowRoot.querySelectorAll('tbody > tr');
+    let dbRecords = [];
+    let untrackedRecords = [];
+    let unregisteredRecords = [];
     for (const [i, record] of records.entries()) {
-      const name = record.name;
       const type = record.type.toLowerCase();
+      const name = record.name;
       const row = rows[i];
       const foo = fooMap[type];
-      foo(row, name, type);
+      const dbRecord = await foo(row, name, type);
+      if (type != 'game') {
+        dbRecords.push({i, type, ...dbRecord});
+        if (dbRecord.status === '' && (record.passed || type == 'quest')) {
+          untrackedRecords.push({i, type, ...dbRecord});
+        }
+        if (dbRecord.status === null) {
+          unregisteredRecords.push({i, type, name});
+        }
+      }
     };
+    if (debug_mode) {
+      console.log(dbRecords);
+      console.log(untrackedRecords);
+      console.log(unregisteredRecords);
+    }
+    qlTable.setAttribute('untracked-records', JSON.stringify(untrackedRecords));
   }
 
   /**
@@ -1174,6 +1193,7 @@
       console.log('Activities tab On Profle page');
       const qlData = parseActivities();
       await trackActivities(qlData);
+      appendUpdateButtonToActivitiesTab();
     } else {
       // Currect page URL doesn't match any above URL path patterns
       console.error('Out of Scope!');
