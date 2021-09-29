@@ -257,6 +257,55 @@
         e.innerHTML += '&nbsp;<button class="db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect" title="'+ t +'"><i class="material-icons">sync</i></button>';
         e.querySelector(".db-update-button").addEventListener("click", f);
     }
+    async function trackActivityCards() {
+        const cards = document.querySelectorAll("ql-activity-card");
+        const svgCheckCircle = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check-circle" role="img" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>';
+        const svgFiberNew = '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>';
+        for (let i of cards ) {
+            const type = i.getAttribute('type'),
+                    id = i.getAttribute('path').match(/\/(\d+)/)[1],
+                    e = document.createElement('div');
+            e.classList = "qclt-badge";
+            const shadow = i.shadowRoot.querySelector('ql-card');
+            shadow.appendChild(e);
+            switch (type) {
+                case "lab":
+                    switch (await getLabStatusById(id)) {
+                        case "finished":
+                            // Annotate as a Completed Lab
+                            //appendCheckCircle(e, "Lab");
+                            e.innerHTML = svgCheckCircle;
+                            continue;
+                            break;
+                        case null:
+                            // Annotate as Unregistered
+                            console.warn( `[ status = null ] for lab ${id}: ${i.getAttribute('name')}`);
+                            // appendNewIcon(e, "Lab") ;
+                            e.innerHTML = svgFiberNew;
+                            break;
+                    };
+                    break;
+                case "quest":
+                    switch (await getQuestStatusById(id)) {
+                        case "finished":
+                            // Annotate as a Completed Quest
+                            // appendCheckCircle(e, "Quest");
+                            e.innerHTML = svgCheckCircle;
+                            continue;
+                            break;
+                        case null:
+                            // Annotate as Unregistered
+                            console.warn( `[ status = null ] for quest ${id}: ${i.getAttribute('name')}`);
+                            // appendNewIcon(e, "Quest") ;
+                            e.innerHTML = svgFiberNew;
+                            break;
+                    };
+                    break;
+                default:
+                    break;
+            };
+        };
+    }
     //
     // Main Function of the Tracking Program
     //
@@ -377,54 +426,7 @@
             //
             if (pathname == "/") {
                 console.log("On Home page");
-                const cards = document.querySelectorAll("ql-activity-card");
-                const svgCheckCircle = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check-circle" role="img" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>';
-                const svgFiberNew = '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>';
-                for ( i of cards ) {
-                    const type = i.attributes["type"].value,
-                        id = i.attributes["path"].value.match(/\/(\d+)/)[1],
-                        e = document.createElement('div'); // i.querySelector(`.${type}`);
-                    e.classList = "qclt-badge";
-                    const shadow = i.shadowRoot.querySelector('ql-card');
-                    shadow.appendChild(e);
-                    //console.log([type, id, e, await getLabStatusById(id)])
-                    switch (type) {
-                        case "lab":
-                            switch (await getLabStatusById(id)) {
-                                case "finished":
-                                    // Annotate as a Completed Lab
-                                    //appendCheckCircle(e, "Lab");
-                                    e.innerHTML = svgCheckCircle;
-                                    continue;
-                                    break;
-                                case null:
-                                    // Annotate as Unregistered
-                                    console.warn( `[ status = null ] for lab ${id}: ${i.attributes["name"].value}`);
-                                    // appendNewIcon(e, "Lab") ;
-                                    e.innerHTML = svgFiberNew;
-                                    break;
-                            };
-                            break;
-                        case "quest":
-                            switch (await getQuestStatusById(id)) {
-                                case "finished":
-                                    // Annotate as a Completed Quest
-                                    // appendCheckCircle(e, "Quest");
-                                    e.innerHTML = svgCheckCircle;
-                                    continue;
-                                    break;
-                                case null:
-                                    // Annotate as Unregistered
-                                    console.warn( `[ status = null ] for quest ${id}: ${i.attributes["name"].value}`);
-                                    // appendNewIcon(e, "Quest") ;
-                                    e.innerHTML = svgFiberNew;
-                                    break;
-                            };
-                            break;
-                        default:
-                            break;
-                    };
-                };
+                await trackActivityCards();
             };
             //
             // Check if the current page is the My Learning
