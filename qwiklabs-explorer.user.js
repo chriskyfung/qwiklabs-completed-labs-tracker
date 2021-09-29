@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      2.0.0
+// @version      2.0.1
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -21,6 +21,10 @@
 (function() {
     'use strict';
 
+    const svgCheckCircle = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check-circle" role="img" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>';
+    const svgFiberNew = '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>';
+    const svgGamepad = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="gamepad" width="24" height="19" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 -100 640 512"><path fill="currentColor" d="M480.07 96H160a160 160 0 1 0 114.24 272h91.52A160 160 0 1 0 480.07 96zM248 268a12 12 0 0 1-12 12h-52v52a12 12 0 0 1-12 12h-24a12 12 0 0 1-12-12v-52H84a12 12 0 0 1-12-12v-24a12 12 0 0 1 12-12h52v-52a12 12 0 0 1 12-12h24a12 12 0 0 1 12 12v52h52a12 12 0 0 1 12 12zm216 76a40 40 0 1 1 40-40 40 40 0 0 1-40 40zm64-96a40 40 0 1 1 40-40 40 40 0 0 1-40 40z"></path></svg>';
+    
     const dbName = 'qwiklabs-db-test-1';
     var qdb = new  Dexie(dbName);
 
@@ -112,8 +116,8 @@
         let table, tables = document.querySelectorAll(".flex-table.organization-membership-table");
         let count = { labs: 0, quests: 0 };
         for (table of tables) {
-            let questsToUpdate = table.querySelectorAll(".unmarked-quest");/*, .new-quest*/
-            let labsToUpdate = table.querySelectorAll(".unmarked-lab");/*, .new-lab*/
+            let questsToUpdate = table.querySelectorAll(".untracked-quest");/*, .new-quest*/
+            let labsToUpdate = table.querySelectorAll(".untracked-lab");/*, .new-lab*/
             count.quests += questsToUpdate.length;
             count.labs += labsToUpdate.length;
             let q, l;
@@ -176,6 +180,7 @@
         try {
             return await s.status;
         } catch (e) {
+            //console.error (`${e}\nWhen handling lab id: "${id}"`);
             console.warn (`DB does not contain id: "${id}" in the labs table`);
             return null;
         };
@@ -196,6 +201,7 @@
         try {
             return s? s : { status: null };
         } catch (e) {
+            //console.error (`${e}\nWhen handling lab name: "${title}"`);
             console.warn (`DB does not contain name: "${title}" in the quests table`);
             return null;
         };
@@ -207,6 +213,7 @@
         try {
             return await s.status;
         } catch (e) {
+            //console.error (`${e}\nWhen handling quest id: "${id}"`);
             console.warn (`DB does not contain id: "${id}" in the quests table`);
             return null;
         };
@@ -218,6 +225,7 @@
         try {
             return s? s : { status: null };
         } catch (e) {
+            //console.error (`${e}\nWhen handling quest name: "${title}"`);
             console.warn (`DB does not contain name: "${title}" in the quests table`);
             return null;
         };
@@ -234,6 +242,43 @@
     function setPurpleBackground(i) {
         i.style.background = "#fef";
     }
+
+    /**
+     * Set the background color of an element by a predefined color key.
+     * @param {DOM element}
+     * @param {string} A key from colorMAP
+     * @returns {string} A hex color code from colorMAP
+     */
+    function setBackgroundColor(element, color_key) {
+        const colorMap = {
+            "green" : "#efe",
+            "yellow": "#ffc",
+            "purple": "#fef"
+        };
+        if (color_key in colorMap === false) { return null };
+        const color = colorMap[color_key];
+        element.style.background = color;
+        return color;
+    }
+
+    /**
+     * Set the background color of an element by a predefined color key.
+     * @param {DOM element}
+     * @param {string} A key from iconMap
+     * @returns {string} The XML code of a SVG from iconMap
+     */
+    function appendIcon(element, icon_key) {
+        const iconMap = {
+            "check": svgCheckCircle,
+            "game" : svgGamepad,
+            "new"  : svgFiberNew
+        }
+        if (icon_key in iconMap === false) { return null };
+        const icon = iconMap[icon_key];
+        element.innerHTML += ' ' + icon;
+        return icon;
+    }
+
     function appendCheckCircle(i, t) {
         i.innerHTML += `<span>&nbsp;<i class="fas fa-check-circle" style="color:green;" title="Completed ${t}"></i></span>`;
     }
@@ -253,14 +298,16 @@
         e.innerHTML += '&nbsp;<button class="db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect" title="'+ t +'"><i class="material-icons">sync</i></button>';
         e.querySelector(".db-update-button").addEventListener("click", f);
     }
+
+    /**
+     * Scan through activity cards on a page, get the db record by activity ID and label the recorded status on each card.
+     */
     async function trackActivityCards() {
         const cards = document.querySelectorAll("ql-activity-card");
-        const svgCheckCircle = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check-circle" role="img" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>';
-        const svgFiberNew = '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>';
         for (let i of cards ) {
             const type = i.getAttribute('type'),
-                    id = i.getAttribute('path').match(/\/(\d+)/)[1],
-                    e = document.createElement('div');
+                  id = i.getAttribute('path').match(/\/(\d+)/)[1],
+                  e = document.createElement('div');
             e.classList = "qclt-badge";
             const shadow = i.shadowRoot.querySelector('ql-card');
             shadow.appendChild(e);
@@ -300,6 +347,76 @@
                 default:
                     break;
             };
+        };
+    }
+
+    /**
+     * Append an update button to an Activities tab.
+     */
+    function appendUpdateButtonToActivitiesTab(){
+        let pResults = document.querySelector(".pagination__page"); // element that shows 1 - 10 of N
+        let totalResults = parseInt(pResults.innerText.split('of')[1]);
+        pResults.innerHTML = `<a href="https://www.qwiklabs.com/profile/activity?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
+        appendUpdateBtn(pResults, "Update to DB", bulkUpdateDb);
+    }
+
+    /**
+     * Extract and handle the data from an Activities table.
+     * @returns {Object[]} JSON-formatted data from the Activity table
+     */
+    function parseActivities() {
+        // Tracking tables under the My Learning section
+        const qlTable = document.querySelector('ql-table');
+        return JSON.parse(qlTable.getAttribute('data'));
+    }
+    /**
+     * Track and annotate each activity row according to the records from DOM and database
+     * @param {Object[]} JSON-formatted data from the Activity table
+     */
+    async function trackActivities(records) {
+        const fooMap = {
+            // Specify a class, change the background in purple color, and add a Gamepad icon to the second column to the row of a Game record.
+            "game" : function(el) {
+                setBackgroundColor(el, 'purple');
+                appendIcon(el.children[1], 'game');
+                el.classList.add("completed-game");
+            },
+            "lab"  : async function(el, name) {
+                const record = await getLabByTitle(name);
+                const foo = fooMap[record.status];
+                foo(el, name, 'lab');
+            },
+            "quest"  : async function(el, name) {
+                const record = await getQuestByTitle(name);
+                const foo = fooMap[record.status];
+                foo(el, name, 'quest');
+            },
+            // Annotate a record marked as finished in database
+            "finished": function(el, name, type) {
+                setBackgroundColor(el, 'green');
+                el.classList.add(`completed-${type}`);
+            },
+            // Annotate a record not updated in database
+            "": function(el, name, type) {
+                setBackgroundColor(el, 'yellow');
+                el.classList.add(`untracked-${type}`);
+            },
+            // Annotate an unregistered record
+            null: function(el, name, type) {
+                console.warn( `[ status = null ] for ${type} : "${name}"`);
+                setBackgroundColor(el, 'yellow');
+                appendIcon(el.children[1], 'new');
+                el.classList.add(`new-${type}`);
+            }
+        }
+        const rows = document.querySelector('ql-table').shadowRoot.querySelectorAll('tbody > tr');
+        for (let [i,record] of records.entries()) {
+            const name = record.name,
+                  type = record.type.toLowerCase(),
+                  row = rows[i];
+            console.log([type, name, row])
+            const foo = fooMap[type];
+            foo(row, name, type);
         };
     }
     //
@@ -416,101 +533,19 @@
                         break;
                 };
             };
-        } else if (pathname == "/" || pathname == "/profile/activity") {
+        } else if (pathname == "/") {
             //
             // Check if the current page is the Home page
             //
-            if (pathname == "/") {
-                console.log("On Home page");
-                await trackActivityCards();
-            };
+            console.log("On Home page");
+            await trackActivityCards();
+        } else if (pathname == "/profile/activity") {
             //
             // Check if the current page is the My Learning
             //
-            if (pathname == "/profile/activity") {
-                console.log("Under My Learning Activity section");
-                // Append update button to headers
-                let pResults = document.querySelector(".pagination__page"); // element that shows 1 - 10 of N
-                let totalResults = parseInt(pResults.innerText.split('of')[1]);
-                pResults.innerHTML = `<a href="https://www.qwiklabs.com/profile/activity?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
-                appendUpdateBtn(pResults, "Update to DB", bulkUpdateDb);
-                // Tracking tables under the My Learning section
-                let rows = document.querySelectorAll(".flex-table__row");
-                for (i of rows) {
-                    if (i.className == "flex-table__row") {
-                        let t = i.children[1], //results[1],
-                            name = i.children[0].innerText,
-                            record;
-                        switch (t.innerText) {
-                            case "Quest":
-                                record = await getQuestByTitle(name);
-                                switch (record.status) {
-                                    case "finished":
-                                        // Annotate as a Completed Quest
-                                        setGreenBackground(i);
-                                        appendCheckCircle(t, "Quest");
-                                        i.classList.add("completed-quest");
-                                        continue;
-                                        break;
-                                    case "":
-                                        i.classList.add("unmarked-quest");
-                                        setYellowBackground(i);
-                                        i.setAttribute('data-id', record.id);
-                                        continue;
-                                        break;
-                                    case null:
-                                        // Annotate as Unregistered
-                                        console.warn( `[ status = null ] for quest : "${name}"`);
-                                        setYellowBackground(i);
-                                        appendNewIcon(t, "Quest");
-                                        i.classList.add("new-quest");
-                                        continue;
-                                        break;
-                                };
-                                break;
-                            case "Game":
-                                // Annotate as a Game
-                                setPurpleBackground(i);
-                                appendGameIcon(t);
-                                i.classList.add("completed-game");
-                                continue;
-                                break;
-                           case "Lab":
-                                if ( i.children[5].innerText == 'check') {
-                                    record = await getLabByTitle(name);
-                                    console.log(record);
-                                    switch (record.status) {
-                                        case "finished":
-                                            // Annotate as a Completed Lab
-                                            setGreenBackground(i);
-                                            appendCheckCircle(t, 'Lab');
-                                            i.classList.add('completed-lab');
-                                            continue;
-                                            break;
-                                        case "":
-                                            i.classList.add('unmarked-lab');
-                                            setYellowBackground(i);
-                                            i.setAttribute('data-id', record.id);
-                                            continue;
-                                            break;
-                                        case null:
-                                            // Annotate as Unregistered
-                                            console.warn( `[ status = null ] for lab : "${name}"`);
-                                            setYellowBackground(i);
-                                            appendNewIcon(t, 'Lab');
-                                            i.classList.add('new-lab');
-                                            continue;
-                                            break;
-                                    };
-                                    break;
-                                };
-                                break;
-                            default:
-                                break;
-                        };
-                    };
-                };
-            };
+            console.log("Activities tab On Profle page");
+            const qlData = parseActivities();
+            await trackActivities(qlData);
         } else {
             //
             // Currect page URL doesn't match any above URL path patterns
