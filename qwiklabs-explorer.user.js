@@ -176,7 +176,6 @@
         try {
             return await s.status;
         } catch (e) {
-            console.error (`${e}\nWhen handling lab id: "${id}"`);
             console.warn (`DB does not contain id: "${id}" in the labs table`);
             return null;
         };
@@ -197,7 +196,6 @@
         try {
             return s? s : { status: null };
         } catch (e) {
-            console.error (`${e}\nWhen handling lab name: "${title}"`);
             console.warn (`DB does not contain name: "${title}" in the quests table`);
             return null;
         };
@@ -209,7 +207,6 @@
         try {
             return await s.status;
         } catch (e) {
-            console.error (`${e}\nWhen handling quest id: "${id}"`);
             console.warn (`DB does not contain id: "${id}" in the quests table`);
             return null;
         };
@@ -221,7 +218,6 @@
         try {
             return s? s : { status: null };
         } catch (e) {
-            console.error (`${e}\nWhen handling quest name: "${title}"`);
             console.warn (`DB does not contain name: "${title}" in the quests table`);
             return null;
         };
