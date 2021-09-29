@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      2.0.3
+// @version      2.0.4
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -658,7 +658,7 @@
   /**
    * Load Database when the Program Starts
    */
-   async function loadDB() {
+  async function loadDB() {
     if (!(await Dexie.exists(qdb.name))) {
       console.log('Db does not exist');
       await initDB().catch(Dexie.BulkError, function(e) {
@@ -829,6 +829,7 @@
     };
   }
 
+  /** */
   async function getQuestByTitle(title) {
     const s = await tmpdb.quests.filter(function(i) {
       return i.name == title;
@@ -870,20 +871,22 @@
     * Set the background color of an element by a predefined color key.
     * @param {Object} element - A DOM element
     * @param {string} icon_key - A key from iconMap
-    * @param {number} format_key - The key of icon format to load, where 0 specifies for icon font and 1 for SVG image
+    * @param {Object} options - The key of icon format to load, where 0 specifies for icon font and 1 for SVG image
     * @return {string} The XML code of a SVG from iconMap
     */
-  function appendIcon(element, icon_key, format_key=0) {
+  function appendIcon(element, icon_key, options={}) {
+    const format_key = options.format_key ? options.format_key : 0;
+    const elementType = options.elementType ? options.elementType : 'p';
     const iconMap = {
-      'check': {
+      check: {
         0: '<i class="fas fa-check-circle" style="color:green"></i>',
         1: '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check-circle" role="img" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>',
       },
-      'game': {
+      game: {
         0: '<i class="fas fa-gamepad" style="color:purple"></i>',
         1: '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="gamepad" width="24" height="19" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 -100 640 512"><path fill="purple" d="M480.07 96H160a160 160 0 1 0 114.24 272h91.52A160 160 0 1 0 480.07 96zM248 268a12 12 0 0 1-12 12h-52v52a12 12 0 0 1-12 12h-24a12 12 0 0 1-12-12v-52H84a12 12 0 0 1-12-12v-24a12 12 0 0 1 12-12h52v-52a12 12 0 0 1 12-12h24a12 12 0 0 1 12 12v52h52a12 12 0 0 1 12 12zm216 76a40 40 0 1 1 40-40 40 40 0 0 1-40 40zm64-96a40 40 0 1 1 40-40 40 40 0 0 1-40 40z"></path></svg>',
       },
-      'new': {
+      new: {
         0: '<i class="material-icons" style="color:orange">fiber_new</i>',
         1: '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>',
       },
@@ -892,14 +895,20 @@
       return null;
     };
     const icon = iconMap[icon_key][format_key];
-    const newElm = document.createElement('p');
+    const newElm = document.createElement(elementType);
     newElm.classList = 'qclt-icon';
     newElm.innerHTML = icon;
     element.appendChild(newElm);
     return icon;
   }
 
-  function appendUpdateBtn(el, text, foo) {
+  /**
+   * Add a icon buton to run database update.
+   * @param {Object} el - A DOM element
+   * @param {string} text - A string to display as button title text
+   * @param {*} foo - A function to call when the button is clicked
+   */
+  function appendDbUpdateBtn(el, text, foo) {
     el.innerHTML += '&nbsp;<button class="db-update-button mdl-button mdl-button--icon mdl-button--primary mdl-js-button mdl-js-ripple-effect" title="'+ text +'"><i class="material-icons">sync</i></button>';
     el.querySelector('.db-update-button').addEventListener('click', foo);
   }
@@ -918,15 +927,14 @@
           switch (await getLabStatusById(id)) {
             case 'finished':
             // Annotate as a Completed Lab
-            // appendIcon(e, 'check', 1);
-              appendIcon(shadow, 'check', 1);
+              appendIcon(shadow, 'check', { format_key: 1 });
               continue;
               break;
             case null:
             // Annotate as Unregistered
               console.warn( `[ status = null ] for lab ${id}: ${i.getAttribute('name')}`);
               // Append New Icon;
-              appendIcon(shadow, 'new', 1);
+              appendIcon(shadow, 'new', { format_key: 1 });
               break;
           };
           break;
@@ -934,18 +942,117 @@
           switch (await getQuestStatusById(id)) {
             case 'finished':
             // Annotate as a Completed Quest
-              appendIcon(shadow, 'check', 1);
+              appendIcon(shadow, 'check', { format_key: 1 });
               continue;
               break;
             case null:
             // Annotate as Unregistered
               console.warn( `[ status = null ] for quest ${id}: ${i.getAttribute('name')}`);
               // append New Icon
-              appendIcon(shadow, 'new', 1);
+              appendIcon(shadow, 'new', { format_key: 1 });
               break;
           };
           break;
         default:
+          break;
+      };
+    };
+  }
+
+  /**
+   * Label the title on a lab page based on the recorded status from the database
+   * @param {number} id - The id to query the record from the database.
+   */
+  async function trackLabTitle(id) {
+    const el = document.querySelector('div.header__title > h1');
+    const title = el.innerText;
+    switch (await getLabStatusById(id)) {
+      case 'finished':
+        // Annotate as Completed
+        setBackgroundColor(el, 'green');
+        appendIcon(el, 'check', { elementType: 'span' });
+        updateRecordById('labs', id, {'name': title});
+        break;
+      case null:
+        // Annotate as Unregistered;
+        console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
+        setBackgroundColor(el, 'yellow');
+        appendIcon(el, 'new', { elementType: 'span' });
+        createRecord('labs', id, {'name': title, 'status': ''});
+        break;
+    };
+  }
+
+  /**
+   * Label the title on a quest page based on the recorded status from the database
+   * @param {number} id - The id to query the record from the database.
+   */
+  async function trackQuestTitle(id) {
+    const el = document.querySelector('.ql-headline-1');
+    const title = el.innerText;
+    switch (await getQuestStatusById(id)) {
+      case 'finished':
+        // Annotate as Completed
+        setBackgroundColor(el, 'green');
+        appendIcon(el, 'check', { elementType: 'span' });
+        updateRecordById('quests', id, {'name': title});
+        break;
+      case null:
+        // Annotate as Unregistered;
+        console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
+        setBackgroundColor(el, 'yellow');
+        appendIcon(el, 'new', { elementType: 'span' });
+        createRecord('quests', id, {'name': title, 'status': ''});
+        break;
+    };
+  }
+
+  /**
+   * Extract ids from the title links, label the titles based on the recorded status from the database
+   * @param {Object[]} titles - An array of the DOM elements that contain lab/quest titles
+   */
+  async function trackListOfTitles(titles) {
+    for (const title of titles) {
+      const matches = title.innerHTML.match(/data-type="(.+)" \D+(\d+)/);
+      if (matches == null) {
+        continue;
+      };
+      const id = matches[2];
+      const type = matches[1].toLowerCase();
+      switch (type) {
+        case 'lab':
+          // tracking a lab on catalog page
+          switch (await getLabStatusById(id)) {
+            case 'finished':
+            // Annotate as a Completed Lab
+              setBackgroundColor(title, 'green');
+              appendIcon(title, 'check');
+              continue;
+              break;
+            case null:
+            // Annotate as Unregistered
+              console.warn( `[ status = null ] for lab ${id}: ${title.innerText}`);
+              setBackgroundColor(title, 'yellow');
+              appendIcon(title, 'new');
+              break;
+          };
+          break;
+        case 'quest':
+          // tracking a quest on catalog page
+          switch (await getQuestStatusById(id)) {
+            case 'finished':
+            // Annotate as a Completed Quest
+              setBackgroundColor(title, 'green');
+              appendIcon(title, 'check');
+              continue;
+              break;
+            case null:
+            // Annotate as Unregistered
+              console.warn( `[ status = null ] for quest ${id}: ${title.innerText}`);
+              setBackgroundColor(title, 'yellow');
+              appendIcon(title, 'new');
+              break;
+          };
           break;
       };
     };
@@ -958,7 +1065,7 @@
     const pResults = document.querySelector('.pagination__page'); // element that shows 1 - 10 of N
     const totalResults = parseInt(pResults.innerText.split('of')[1]);
     pResults.innerHTML = `<a href="https://www.qwiklabs.com/profile/activity?&per_page=${totalResults}" title="View all results">${pResults.innerHTML}</a>`;
-    appendUpdateBtn(pResults, 'Update to DB', bulkUpdateDb);
+    appendDbUpdateBtn(pResults, 'Update to DB', bulkUpdateDb);
   }
 
   /**
@@ -980,7 +1087,7 @@
       // Specify a class, change the background in purple color, and add a Gamepad icon to the second column to the row of a Game record.
       'game': function(el) {
         setBackgroundColor(el, 'purple');
-        appendIcon(el.children[1], 'game', 1);
+        appendIcon(el.children[1], 'game', { format_key: 1 });
         el.classList.add('completed-game');
       },
       'lab': async function(el, name) {
@@ -1007,7 +1114,7 @@
       'null': function(el, name, type) {
         //console.warn(`[ status = null ] for ${type} : "${name}"`);
         setBackgroundColor(el, 'yellow');
-        appendIcon(el.children[1], 'new', 1);
+        appendIcon(el.children[1], 'new', { format_key: 1 });
         el.classList.add(`new-${type}`);
       },
     };
@@ -1043,96 +1150,21 @@
     //
     if (pathRe[1] == '/focuses') {
       console.log('On a lab page');
-      const el = document.querySelector('div.header__title > h1');
       const id = pathRe[2];
-      const title = el.innerText;
-      switch (await getLabStatusById(id)) {
-        case 'finished':
-          // Annotate as Completed
-          setBackgroundColor(el, 'green');
-          appendIcon(el, 'check');
-          updateRecordById('labs', id, {'name': title});
-          break;
-        case null:
-          // Annotate as Unregistered;
-          console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
-          setBackgroundColor(el, 'yellow');
-          appendIcon(el, 'new');
-          createRecord('labs', id, {'name': title, 'status': ''});
-          break;
-      };
+      await trackLabTitle(id);
     } else if ( pathRe[0].startsWith('/catalog') || pathRe[1] == '/quests' ) {
       //
       // Check if the current page is a catalog page or a quest page
       //
       if (pathRe[1] == '/quests') {
         console.log('On a quest page');
-        const el = document.querySelector('.ql-headline-1');
         const id = pathRe[2];
-        const title = el.innerText;
-        switch (await getQuestStatusById(id)) {
-          case 'finished':
-            // Annotate as Completed
-            setBackgroundColor(el, 'green');
-            appendIcon(el, 'check');
-            updateRecordById('quests', id, {'name': title});
-            break;
-          case null:
-            // Annotate as Unregistered;
-            console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
-            setBackgroundColor(el, 'yellow');
-            appendIcon(el, 'new');
-            createRecord('quests', id, {'name': title, 'status': ''});
-            break;
-        };
+        await trackQuestTitle(id);
       } else {
         console.log('On a catalog page');
       }
       const titles = document.querySelectorAll('.catalog-item__title');
-      for (const title of titles) {
-        const matches = title.innerHTML.match(/data-type="(.+)" \D+(\d+)/);
-        if (matches == null) {
-          continue;
-        };
-        const id = matches[2];
-        const type = matches[1].toLowerCase();
-        switch (type) {
-          case 'lab':
-            // tracking a lab on catalog page
-            switch (await getLabStatusById(id)) {
-              case 'finished':
-              // Annotate as a Completed Lab
-                setBackgroundColor(title, 'green');
-                appendIcon(title, 'check');
-                continue;
-                break;
-              case null:
-              // Annotate as Unregistered
-                console.warn( `[ status = null ] for lab ${id}: ${title.innerText}`);
-                setBackgroundColor(title, 'yellow');
-                appendIcon(title, 'new');
-                break;
-            };
-            break;
-          case 'quest':
-            // tracking a quest on catalog page
-            switch (await getQuestStatusById(id)) {
-              case 'finished':
-              // Annotate as a Completed Quest
-                setBackgroundColor(title, 'green');
-                appendIcon(title, 'check');
-                continue;
-                break;
-              case null:
-              // Annotate as Unregistered
-                console.warn( `[ status = null ] for quest ${id}: ${title.innerText}`);
-                setBackgroundColor(title, 'yellow');
-                appendIcon(title, 'new');
-                break;
-            };
-            break;
-        };
-      };
+      await trackListOfTitles(titles);
     } else if (pathname == '/') {
       // Check if the current page is the Home page
       console.log('On Home page');
