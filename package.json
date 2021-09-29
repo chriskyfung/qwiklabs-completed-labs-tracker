@@ -1,0 +1,29 @@
+{
+  "name": "qwiklabs-completed-labs-tracker",
+  "version": "2.0.3",
+  "description": "Label completed labs and quests on Qwiklabs",
+  "main": "qwiklabs-explorer.user.js",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chriskyfung/qwiklabs-completed-labs-tracker.git"
+  },
+  "keywords": [
+    "userscript",
+    "qwiklabs",
+    "labs-tracker"
+  ],
+  "author": "Chris K.Y. Fung",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues"
+  },
+  "homepage": "https://github.com/chriskyfung/qwiklabs-completed-labs-tracker#readme"
+}
