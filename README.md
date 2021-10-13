@@ -19,6 +19,7 @@ As a Qwiklabs user, I figure out it is messy and damp to look up unenrolled ques
 For more information, please read [**this post**](https://chriskyfung.github.io/blog/qwiklabs/Qwiklabs-User-Tips-for-Learning_Google_Cloud_Platform) on my GitHub Pages.
 
  ![chriskyfung.github.io](https://img.shields.io/website?down_message=offline&up_message=online&url=https%3A%2F%2Fchriskyfung.github.io%2Fblog%2Fqwiklabs%2Fuserscript-for-labelling-completed-qwiklabs)
+
 ## 🛴 How to Use
 
 This script requires an userscript manager to run it in your browser, such as [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) for Google Chrome. Click on the following button to download and install the script via your userscript manager.
@@ -33,7 +34,7 @@ Retrieve the local records and annotate each card in “My Favorites”, “Feat
 
 - Screenshot:
 
-  ![badges added to What's Hot cards](/screenshots/qwiklabs-complete-indicator-home-hots.png)
+  ![badges added to What's Hot cards](screenshots/v2.x/new-activity-cards-on-qwiklabs-home_768x689.png)
 
 ### 🌈 on Catalog pages
 
@@ -56,14 +57,13 @@ Retrieve the local records and annotate each lab and quest item as the following
 
   ![Screenshot of a Lab header](/demo-image2.png)
 
-### 🌈 on My Learning page
+### 🌈 on Profile page
 
-- Add badges to cards in **My Favorites** section
-- Annotate each row in **My Learning Activity** table with colors
-- Quick link to view all **My Learning Activity** results
-- One-click update the labs and quests status from the activity table to the local database
+- Annotate each table row in **Activities** tab with colors.
+- Offer a quick link that expands the table to show your latest 100 activity records.
+- One-click update the labs and quests status from the activity table to the local database.
 
-  ![Quick link and batch update My Learning Activity to database](/screenshots/my-qwiklabs-learning-activity-tracker-v0.5.4.png)
+  ![Quick link and batch update My Learning Activity to database](/screenshots/v2.x/features-in-qwiklabs-activities-tab.png)
 
 <br>
 
