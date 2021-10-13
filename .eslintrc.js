@@ -11,9 +11,11 @@ module.exports = {
     'sourceType': 'module',
   },
   'rules': {
-    "ignoreUrls": true,
-    "ignoreStrings": true,
-    "ignoreTemplateLiterals": true,
-    "ignoreRegExpLiterals": true,
+    'max-len': [1, {
+      'ignoreUrls': true,
+      'ignoreStrings': true,
+      'ignoreTemplateLiterals': true,
+      'ignoreRegExpLiterals': true,
+    }],
   },
 };

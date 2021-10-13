@@ -3,12 +3,18 @@
   "version": "2.0.3",
   "description": "Label completed labs and quests on Qwiklabs",
   "main": "qwiklabs-explorer.user.js",
-  "dependencies": {},
+  "dependencies": {
+    "dexie": "^3.0.3"
+  },
   "devDependencies": {
     "eslint": "^7.32.0",
-    "eslint-config-google": "^0.14.0"
+    "eslint-config-google": "^0.14.0",
+    "prettier": "^2.4.1"
   },
   "scripts": {
+    "lint": "npm run eslint && npm run prettier",
+    "eslint": "eslint --ext .js --fix .",
+    "prettier": "prettier '**/*.js' --write --ignore-path .eslintignore",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
