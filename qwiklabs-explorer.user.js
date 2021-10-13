@@ -21,7 +21,7 @@
 (function() {
   'use strict';
 
-  const debug_mode = false;
+  const isDebugMode = false;
 
   const dbName = 'qwiklabs-db-test-1';
   const qdb = new Dexie(dbName);
@@ -722,14 +722,12 @@
     const newRecords = JSON.parse(qlTable.getAttribute('untracked-records'));
     console.log('Batch Update - start');
     const count = {labs: 0, quests: 0};
-    const labsToUpdate = [];
-    const questsToUpdate = [];
     for (const newRecord of newRecords) {
       const id = newRecord.id;
       const type = newRecord.type;
-      const type_s = type + 's';
-      count[type_s] += 1;
-      const updated = await qdb.table(type_s).where('id').equals(id).modify({'status': 'finished'});
+      const tableName = type + 's';
+      count[tableName] += 1;
+      const updated = await qdb.table(tableName).where('id').equals(id).modify({'status': 'finished'});
       if (updated) {
         console.log(`Updated ${type}: {id: ${id}, name: '${newRecord.name}', 'status': 'finished'}`);
       }
@@ -775,56 +773,64 @@
       // console.error (`${e}\nWhen handling lab id: "${id}"`);
       console.warn(`DB does not contain id: "${id}" in the labs table`);
       return null;
-    };
-  }
-
-  async function getLabByTitle(title) {
-    let altTitle;
-    if (title.includes(': ')) {
-      altTitle = title.replace(': ', ':');
     }
-    const s = await tmpdb.labs.filter(function(i) {
-      if (altTitle && i.name.includes(':')) {
-        if (i.name == altTitle) {
-          return true;
-        };
-      }
-      return i.name == title;
-    })[0];
-    try {
-      return s? s : {status: null};
-    } catch (e) {
-      // console.error (`${e}\nWhen handling lab name: "${title}"`);
-      console.warn(`DB does not contain name: "${title}" in the quests table`);
-      return null;
-    };
   }
 
+  /**
+   * Retrieve a lab record from the database by passsing the title.
+   * @param {string} title - A lab title.
+   * @return {Object|null} A lab record or null if not found.
+   */
+  async function getLabByTitle(title) {
+    let formattedTitle;
+    // Format the text if the lab title contains a colon
+    if (title.includes(': ')) {
+      formattedTitle = title.replace(': ', ':');
+    }
+    //
+    const record = await tmpdb.labs.filter((record) => {
+      return record.name == title || record.name == formattedTitle;
+    })[0];
+    try {
+      return record || {status: null};
+    } catch (e) {
+      console.warn(`No lab record named "${title}" in the database`);
+      return null;
+    }
+  }
+
+  /**
+   * Retrieve a lab record from the database by passsing the ID.
+   * @param {number} id - A lab identifier.
+   * @return {string|null} The lab status or null if not found.
+   */
   async function getQuestStatusById(id) {
-    const s = await tmpdb.quests.filter(function(i) {
-      return i.id == id;
+    const record = await tmpdb.quests.filter((record) => {
+      return record.id == id;
     })[0];
     try {
-      return await s.status;
+      return await record.status;
     } catch (e) {
-      // console.error (`${e}\nWhen handling quest id: "${id}"`);
-      console.warn(`DB does not contain id: "${id}" in the quests table`);
+      console.warn(`No quest record has an ID of ${id} in the database`);
       return null;
-    };
+    }
   }
 
-  /** */
+  /**
+   * Retrieve a quest record from the database by passsing the title.
+   * @param {string} title - A quest title.
+   * @return {Object|null} A quest record or null if not found.
+   */
   async function getQuestByTitle(title) {
-    const s = await tmpdb.quests.filter(function(i) {
-      return i.name == title;
+    const record = await tmpdb.quests.filter((record) => {
+      return record.name == title;
     })[0];
     try {
-      return s? s : {status: null};
+      return record || {status: null};
     } catch (e) {
-      // console.error (`${e}\nWhen handling quest name: "${title}"`);
-      console.warn(`DB does not contain name: "${title}" in the quests table`);
+      console.warn(`No quest record named "${title}" in the database`);
       return null;
-    };
+    }
   }
 
   //
@@ -834,32 +840,33 @@
   /**
     * Set the background color of an element by a predefined color key.
     * @param {Object} element - A DOM element
-    * @param {string} color_key - A key from colorMAP
+    * @param {string} colorKey - A key from colorMAP
     * @return {string} A hex color code from colorMAP
     */
-  function setBackgroundColor(element, color_key) {
+  function setBackgroundColor(element, colorKey) {
     const colorMap = {
       'green': '#efe',
       'yellow': '#ffc',
       'purple': '#fef',
     };
-    if (color_key in colorMap === false) {
+    if (colorKey in colorMap === false) {
       return null;
     };
-    const color = colorMap[color_key];
+    const color = colorMap[colorKey];
     element.style.background = color;
     return color;
   }
 
   /**
     * Set the background color of an element by a predefined color key.
-    * @param {Object} element - A DOM element
-    * @param {string} icon_key - A key from iconMap
-    * @param {Object} options - The key of icon format to load, where 0 specifies for icon font and 1 for SVG image
-    * @return {string} The XML code of a SVG from iconMap
+    * @param {Object} element - A DOM element.
+    * @param {string} iconKey - A key from iconMap.
+    * @param {Object} options - The key of icon format to load,
+    *           where 0 specifies for icon font and 1 for SVG image.
+    * @return {string} The XML code of a SVG from iconMap.
     */
-  function appendIcon(element, icon_key, options={}) {
-    const format_key = options.format_key ? options.format_key : 0;
+  function appendIcon(element, iconKey, options={}) {
+    const formatKey = options.format_key ? options.format_key : 0;
     const elementType = options.elementType ? options.elementType : 'p';
     const iconMap = {
       check: {
@@ -875,10 +882,10 @@
         1: '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>',
       },
     };
-    if (icon_key in iconMap === false) {
+    if (iconKey in iconMap === false) {
       return null;
     };
-    const icon = iconMap[icon_key][format_key];
+    const icon = iconMap[iconKey][formatKey];
     const newElm = document.createElement(elementType);
     newElm.classList = 'qclt-icon';
     newElm.style.height = 0;
@@ -888,7 +895,8 @@
   }
 
   /**
-    * Scan through activity cards on a page, get the db record by activity ID and label the recorded status on each card.
+    * Scan through each activity card on a page, get the db record
+    * by activity ID and label the recorded status on each card.
     */
   async function trackActivityCards() {
     const cards = document.querySelectorAll('ql-activity-card');
@@ -901,14 +909,14 @@
           switch (await getLabStatusById(id)) {
             case 'finished':
             // Annotate as a Completed Lab
-              appendIcon(shadow, 'check', { format_key: 1 });
+              appendIcon(shadow, 'check', {format_key: 1});
               continue;
               break;
             case null:
             // Annotate as Unregistered
               console.warn( `[ status = null ] for lab ${id}: ${i.getAttribute('name')}`);
               // Append New Icon;
-              appendIcon(shadow, 'new', { format_key: 1 });
+              appendIcon(shadow, 'new', {format_key: 1});
               break;
           };
           break;
@@ -916,14 +924,14 @@
           switch (await getQuestStatusById(id)) {
             case 'finished':
             // Annotate as a Completed Quest
-              appendIcon(shadow, 'check', { format_key: 1 });
+              appendIcon(shadow, 'check', {format_key: 1});
               continue;
               break;
             case null:
             // Annotate as Unregistered
               console.warn( `[ status = null ] for quest ${id}: ${i.getAttribute('name')}`);
               // append New Icon
-              appendIcon(shadow, 'new', { format_key: 1 });
+              appendIcon(shadow, 'new', {format_key: 1});
               break;
           };
           break;
@@ -934,7 +942,7 @@
   }
 
   /**
-   * Label the title on a lab page based on the recorded status from the database
+   * Label a lab page title based on the recorded status from the database.
    * @param {number} id - The id to query the record from the database.
    */
   async function trackLabTitle(id) {
@@ -944,21 +952,21 @@
       case 'finished':
         // Annotate as Completed
         setBackgroundColor(el, 'green');
-        appendIcon(el, 'check', { elementType: 'span' });
+        appendIcon(el, 'check', {elementType: 'span'});
         updateRecordById('labs', id, {'name': title});
         break;
       case null:
         // Annotate as Unregistered;
         console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
         setBackgroundColor(el, 'yellow');
-        appendIcon(el, 'new', { elementType: 'span' });
+        appendIcon(el, 'new', {elementType: 'span'});
         createRecord('labs', id, {'name': title, 'status': ''});
         break;
     };
   }
 
   /**
-   * Label the title on a quest page based on the recorded status from the database
+   * Label a quest page title based on the recorded status from the database.
    * @param {number} id - The id to query the record from the database.
    */
   async function trackQuestTitle(id) {
@@ -968,22 +976,23 @@
       case 'finished':
         // Annotate as Completed
         setBackgroundColor(el, 'green');
-        appendIcon(el, 'check', { elementType: 'span' });
+        appendIcon(el, 'check', {elementType: 'span'});
         updateRecordById('quests', id, {'name': title});
         break;
       case null:
         // Annotate as Unregistered;
         console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
         setBackgroundColor(el, 'yellow');
-        appendIcon(el, 'new', { elementType: 'span' });
+        appendIcon(el, 'new', {elementType: 'span'});
         createRecord('quests', id, {'name': title, 'status': ''});
         break;
     };
   }
 
   /**
-   * Extract ids from the title links, label the titles based on the recorded status from the database
-   * @param {Object[]} titles - An array of the DOM elements that contain lab/quest titles
+   * Extract ids from the title links and label the titles based on the
+   * recorded status from the database.
+   * @param {Object[]} titles - The DOM elements that contain lab/quest titles.
    */
   async function trackListOfTitles(titles) {
     for (const title of titles) {
@@ -1036,6 +1045,7 @@
   * Create the DOM element of the icon buton to run database update.
   * @param {string} text - A string to display as button title text
   * @param {function} foo - A function to call when the button is clicked
+  * @return {Element} The button to activate database update.
   */
   function createDbUpdateBtn(text, foo) {
     const button = document.createElement('button');
@@ -1055,7 +1065,7 @@
     const delim = url.includes('?') ? '&' : '?';
     const pageLink = document.createElement('a');
     pageLink.href = url + delim + 'per_page=100';
-    pageLink.style.cssText = 'border: 1px solid lightgray; border-radius: 8px; padding: 6.5px 13px; margin-right: 12px;'
+    pageLink.style.cssText = 'border: 1px solid lightgray; border-radius: 8px; padding: 6.5px 13px; margin-right: 12px;';
     pageLink.title = 'View last 100 results';
     pageLink.innerText = '100';
     const button = createDbUpdateBtn('Update to DB', batchUpdateToDb);
@@ -1078,15 +1088,17 @@
   }
 
   /**
-    * Track and annotate each activity row according to the records from DOM and database.
+    * Track and annotate each activity row based on the data attributes and
+    * the database records.
     * @param {Object[]} records - JSON-formatted data from the Activity table
     */
   async function trackActivities(records) {
     const fooMap = {
-      // Specify a class, change the background in purple color, and add a Gamepad icon to the second column to the row of a Game record.
+      /* Specify a class, change the background in purple color, and add a
+         Gamepad icon to the second column to the row of a Game record.    */
       'game': function(el) {
         setBackgroundColor(el, 'purple');
-        appendIcon(el.children[1], 'game', { format_key: 1 });
+        appendIcon(el.children[1], 'game', {format_key: 1});
         el.classList.add('completed-game');
       },
       'lab': async function(el, name) {
@@ -1113,17 +1125,17 @@
       },
       // Annotate an unregistered record
       'null': function(el, name, type) {
-        //console.warn(`[ status = null ] for ${type} : "${name}"`);
+        // console.warn(`[ status = null ] for ${type} : "${name}"`);
         setBackgroundColor(el, 'yellow');
-        appendIcon(el.children[1], 'new', { format_key: 1 });
+        appendIcon(el.children[1], 'new', {format_key: 1});
         el.classList.add(`new-${type}`);
       },
     };
     const qlTable = document.querySelector('ql-table');
     const rows = qlTable.shadowRoot.querySelectorAll('tbody > tr');
-    let dbRecords = [];
-    let untrackedRecords = [];
-    let unregisteredRecords = [];
+    const dbRecords = [];
+    const untrackedRecords = [];
+    const unregisteredRecords = [];
     for (const [i, record] of records.entries()) {
       const type = record.type.toLowerCase();
       const name = record.name;
@@ -1140,7 +1152,7 @@
         }
       }
     };
-    if (debug_mode) {
+    if (isDebugMode) {
       console.log(dbRecords);
       console.log(untrackedRecords);
       console.log(unregisteredRecords);
@@ -1206,9 +1218,9 @@
   //
   // Call and Catch the Main Function of the Program
   //
-  main().catch(Dexie.MissingAPIError, e => {
+  main().catch(Dexie.MissingAPIError, (e) => {
     console.error('Couldn\'t find indexedDB API');
-  }).catch(e => {
+  }).catch((e) => {
     // Always catch your promises in the topmost scope:
     console.error(e);
   });
