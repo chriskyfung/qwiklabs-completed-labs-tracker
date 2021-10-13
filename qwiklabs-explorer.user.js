@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      2.0.6
+// @version      2.0.7
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -706,8 +706,8 @@
    * @return {Object}
    */
   async function updateRecordById(table, id, obj) {
-    obj.id = id;
-    const updated = await qdb.table(table).update(id, obj);
+    obj.id = parseInt(id);
+    const updated = await qdb.table(table).update(obj.id, obj);
     if (updated) {
       console.log(`Updated ${JSON.stringify(obj)} to ${table}`);
     }
@@ -759,6 +759,15 @@
   }
 
   /**
+   * Standardize the string to be stored in the database
+   * @param {string} title - A lab/quest title
+   * @return {string}
+   */
+  function formatTitle(title) {
+    return title.replace(/:\S/g, ': ').replace(/\s\s+/g, ' ').trim();
+  }
+
+  /**
    * Status Query Methods.
    * @param {number} id
    * @return {boolean}
@@ -782,14 +791,10 @@
    * @return {Object|null} A lab record or null if not found.
    */
   async function getLabByTitle(title) {
-    let formattedTitle;
-    // Format the text if the lab title contains a colon
-    if (title.includes(': ')) {
-      formattedTitle = title.replace(': ', ':');
-    }
+    const formattedTitle = formatTitle(title);
     //
     const record = await tmpdb.labs.filter((record) => {
-      return record.name == title || record.name == formattedTitle;
+      return record.name == formattedTitle;
     })[0];
     try {
       return record || {status: null};
@@ -822,8 +827,9 @@
    * @return {Object|null} A quest record or null if not found.
    */
   async function getQuestByTitle(title) {
+    const formattedTitle = formatTitle(title);
     const record = await tmpdb.quests.filter((record) => {
-      return record.name == title;
+      return record.name == formattedTitle;
     })[0];
     try {
       return record || {status: null};
@@ -953,14 +959,14 @@
         // Annotate as Completed
         setBackgroundColor(el, 'green');
         appendIcon(el, 'check', {elementType: 'span'});
-        updateRecordById('labs', id, {'name': title});
+        updateRecordById('labs', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
         console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
         setBackgroundColor(el, 'yellow');
         appendIcon(el, 'new', {elementType: 'span'});
-        createRecord('labs', id, {'name': title, 'status': ''});
+        createRecord('labs', id, {'name': formatTitle(title), 'status': ''});
         break;
     };
   }
@@ -977,14 +983,14 @@
         // Annotate as Completed
         setBackgroundColor(el, 'green');
         appendIcon(el, 'check', {elementType: 'span'});
-        updateRecordById('quests', id, {'name': title});
+        updateRecordById('quests', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
         console.log(`[ status = null ] for lab ${id}: ${el.innerText}`);
         setBackgroundColor(el, 'yellow');
         appendIcon(el, 'new', {elementType: 'span'});
-        createRecord('quests', id, {'name': title, 'status': ''});
+        createRecord('quests', id, {'name': formatTitle(title), 'status': ''});
         break;
     };
   }
