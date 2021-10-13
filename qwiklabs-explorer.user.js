@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      2.0.5
+// @version      2.0.6
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -881,6 +881,7 @@
     const icon = iconMap[icon_key][format_key];
     const newElm = document.createElement(elementType);
     newElm.classList = 'qclt-icon';
+    newElm.style.height = 0;
     newElm.innerHTML = icon;
     element.appendChild(newElm);
     return icon;
