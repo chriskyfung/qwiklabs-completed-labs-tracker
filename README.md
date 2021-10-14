@@ -60,10 +60,15 @@ Retrieve the local records and annotate each lab and quest item as the following
 ### 🌈 on Profile page
 
 - Annotate each table row in **Activities** tab with colors.
-- Offer a quick link that expands the table to show your latest 100 activity records.
-- One-click update the labs and quests status from the activity table to the local database.
+- Offer pagination links for you to view all previous activities.
+- One-click update the labs and quests status from the activity table to your browser database.
+- Show 🔍 quick links to search activities that are ⚠ mismatched with database records.
 
-  ![Quick link and batch update My Learning Activity to database](/screenshots/v2.x/features-in-qwiklabs-activities-tab.png)
+  [![Batch Update Activities to Your Database](/screenshots/v2.x/v210-update-activities-to-database.gif)](https://www.youtube.com/watch?v=gEwvgWuUHe4)
+
+  [![Look Up Your Older Activities With Pagination Links](/screenshots/v2.x/v210-activities-pagination.gif)](https://www.youtube.com/watch?v=dYLPFfmZVtY)
+
+  [![Investigate Conflicting Records with Quick Search](/screenshots/v2.x/v210-search-unrecognized-activity.gif)](https://www.youtube.com/watch?v=g0b7jyxdHJ8)
 
 <br>
 
