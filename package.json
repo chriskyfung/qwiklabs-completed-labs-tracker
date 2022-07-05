@@ -4,7 +4,7 @@
   "description": "Label completed labs and quests on Qwiklabs",
   "main": "qwiklabs-explorer.user.js",
   "dependencies": {
-    "dexie": "^3.0.3"
+    "dexie": "^3.2.2"
   },
   "devDependencies": {
     "eslint": "^7.32.0",
