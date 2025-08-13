@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      2.1.0
+// @version      2.1.1
 // @author       chriskyfung
 // @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
@@ -32,7 +32,7 @@
    * Initialize Database if not yet exist
    */
   async function initDB() {
-    console.log('initDB - start');
+    console.debug('initDB - start');
     //
     // Define database
     //
@@ -40,7 +40,7 @@
       labs: '&id,name,status',
       quests: '&id,name,status',
     });
-    console.log('Using Dexie v' + Dexie.semVer);
+    console.debug('Using Dexie v' + Dexie.semVer);
 
     const qldata = {
       'labs': [
@@ -662,7 +662,7 @@
    */
   async function loadDB() {
     if (!(await Dexie.exists(qdb.name))) {
-      console.log('Db does not exist');
+      console.debug('qdb does not exist. Initialize a new database...');
       await initDB().catch(Dexie.BulkError, function(e) {
         // Explicitely catching the bulkAdd() operation makes those successful
         // additions commit despite that there were errors.
@@ -1232,8 +1232,8 @@
         await handler(row, name, passed);
       };
       if (isDebugMode) {
-        console.log(staging.untrackedRecords);
-        console.log(staging.unregisteredRecords);
+        console.table(staging.untrackedRecords);
+        console.table(staging.unregisteredRecords);
       }
       return {
         counts: {
@@ -1269,14 +1269,14 @@
       '/': {
         identifier: 'home',
         exec: async () => {
-          console.log('Tracking card data on Home');
+          console.debug('Tracking card data on Home');
           await trackActivityCards();
         },
       },
       '/catalog': {
         identifier: 'catalog',
         exec: async () => {
-          console.log('Tracking data on Catalog');
+          console.debug('Tracking data on Catalog');
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
         },
@@ -1284,7 +1284,7 @@
       '/focuses': {
         identifier: 'lab',
         exec: async () => {
-          console.log('Tracking a lab page');
+          console.debug('Tracking a lab page');
           const id = m[2];
           await trackLabTitle(id);
         },
@@ -1292,7 +1292,7 @@
       '/profile/activity': {
         identifier: 'activities',
         exec: async () => {
-          console.log('Tracking activity data on Profle');
+          console.debug('Tracking activity data on Profle');
           const qlData = parseActivities();
           const results = await trackActivities(qlData);
           const button = createUpdateButton(results);
@@ -1313,7 +1313,7 @@
       '/quests': {
         identifier: 'quest',
         exec: async () => {
-          console.log('Tracking a quest page');
+          console.debug('Tracking a quest page');
           const id = m[2];
           await trackQuestTitle(id);
           const titles = document.querySelectorAll('.catalog-item__title');
@@ -1338,7 +1338,7 @@
     await handler?.exec();
 
     tmpdb = [];
-    console.log('Tracking - end');
+    console.debug('Tracking - end');
   }
 
   //
