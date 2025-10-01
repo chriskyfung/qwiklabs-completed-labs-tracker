@@ -27,6 +27,7 @@
   const ACTIVITY_TABLE_SELECTOR = '.activities-table';
   const COURSE_PAGE_TITLE_SELECTOR = '.title-text';
   const LAB_PAGE_TITLE_SELECTOR = '.header__title';
+  const SEARCH_RESULT_CONTAINER_SELECTOR = 'ql-search-result-container';
 
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
 
@@ -987,15 +988,32 @@
     */
   async function trackActivityCards(cards) {
     for (const card of cards) {
-      const type = card.getAttribute('type');
-      const title = card.getAttribute('name');
-      const id = card.getAttribute('path').match(/\/(\d+)/)[1];
+      if (!card.shadowRoot) {
+        console.warn('No shadowRoot found for this card element. Skip it.');
+        continue;
+      }
+      const params = {
+        id: null,
+        name: null,
+        type: null,
+      };
+      if (card.attributes.length === 0) {
+        const {href, title} = card.shadowRoot.firstElementChild.attributes;
+        const type = card.shadowRoot.querySelector('.content-type').innerText.toLowerCase();
+        params.id = href.value.match(/\/(\d+)/)[1];
+        params.name = title.value;
+        params.type = type;
+      } else {
+        params.id = card.getAttribute('path').match(/\/(\d+)/)[1];
+        params.name = card.getAttribute('title');
+        params.type = card.getAttribute('type').toLowerCase();
+      }
       const cardTitle = card.shadowRoot.querySelector('h3');
       const options = {format_key: 1, elementType: 'span', style: 'margin-left: 4px'};
-      switch (type) {
+      switch (params.type) {
         case 'lab':
-          const record = await getLabFromDbById(id);
-          console.log(`Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
+          const record = await getLabFromDbById(params.id);
+          console.log(`Lab ID: ${params.id}, Title: "${params.name}", Record: ${JSON.stringify(record)}`);
           switch (record.status) {
             case 'finished':
               // Annotate as a Completed Lab
@@ -1009,8 +1027,8 @@
           };
           break;
         case 'course':
-          const courseRecord = await getCourseFromDbById(id);
-          console.log(`Course ID: ${id}, Record: ${JSON.stringify(courseRecord)}`);
+          const courseRecord = await getCourseFromDbById(params.id);
+          console.log(`Course ID: ${params.id}, Title: "${params.name}", Record: ${JSON.stringify(courseRecord)}`);
           switch (courseRecord.status) {
             case 'finished':
               // Annotate as a Completed course
@@ -1363,8 +1381,9 @@
         identifier: 'catalog',
         exec: async () => {
           console.debug('Tracking data on Catalog');
-          const titles = document.querySelectorAll('.catalog-item__title');
-          await trackListOfTitles(titles);
+          const container = document.querySelector(SEARCH_RESULT_CONTAINER_SELECTOR);
+          const cards = container.shadowRoot.querySelectorAll(ACTIVITY_CARD_SELECTOR);
+          await trackActivityCards(cards);
         },
       },
       '/focuses': {
