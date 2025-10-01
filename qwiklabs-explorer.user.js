@@ -24,7 +24,7 @@
 
   const isDebugMode = false;
   const ACTIVITY_TABLE_SELECTOR = '.activities-table';
-  const LAB_PAGE_TITLE_SELECTOR = '.header__title > h1';
+  const LAB_PAGE_TITLE_SELECTOR = '.header__title';
 
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
 
@@ -933,11 +933,9 @@
     *           where 0 specifies for icon font and 1 for SVG image.
     * @return {string} The XML code of a SVG from iconMap.
     */
-  function appendIcon(element, iconKey, options = {}) {
-    const formatKey = options.format_key || 0;
-    const elementType = options.elementType || 'p';
-    const beforeIcon = options.before || '';
-    const tooltip = options.tooltip || iconKey;
+  function appendIcon(element, iconKey, options = {format_key: 0, elementType: 'p'}) {
+    const formatKey = options.format_key;
+    const elementType = options.elementType;
     const iconMap = {
       check: {
         0: '<i class="fas fa-check-circle" style="color:green"></i>',
@@ -964,13 +962,14 @@
       return null;
     };
     const icon = iconMap[iconKey][formatKey];
-    const newElm = document.createElement(elementType);
-    newElm.classList = 'qclt-icon';
-    newElm.style.height = 0;
-    newElm.title = tooltip;
-    newElm.innerText = beforeIcon;
-    newElm.innerHTML += icon;
-    element.appendChild(newElm);
+    const iconElement = document.createElement(elementType);
+    iconElement.classList = 'qclt-icon';
+    iconElement.setAttribute('aria-hidden', 'true');
+    options.tooltip !== undefined && iconElement.setAttribute('title', options.tooltip);
+    options.style && iconElement.setAttribute('style', options.style);
+    options.beforeIcon && (iconElement.innerText = options.beforeIcon);
+    iconElement.innerHTML += icon;
+    element.append(iconElement);
     return icon;
   }
 
@@ -1024,18 +1023,19 @@
    */
   async function trackTitleOnLabPage(id) {
     const labPageTitle = document.querySelector(LAB_PAGE_TITLE_SELECTOR);
-    const title = labPageTitle.innerText;
-    const options = {elementType: 'span', before: ' '};
+    const h1 = labPageTitle.querySelector('h1');
+    const title = h1.innerText;
+    const options = {format_key: 1, elementType: 'span', style: 'margin-left: 4px'};
     switch (await getLabStatusFromDbById(id)) {
       case 'finished':
         // Annotate as Completed
-        setBackgroundColor(labPageTitle, 'green');
+        setBackgroundColor(h1, 'green');
         appendIcon(labPageTitle, 'check', options);
         updateRecordById('lab', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
-        setBackgroundColor(labPageTitle, 'yellow');
+        setBackgroundColor(h1, 'yellow');
         appendIcon(labPageTitle, 'new', options);
         createRecord('lab', id, {'name': formatTitle(title), 'status': ''});
         break;
