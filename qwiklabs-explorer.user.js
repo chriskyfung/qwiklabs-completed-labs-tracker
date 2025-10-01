@@ -1346,8 +1346,9 @@
    * @return {Object} The handler object.
    */
   const router = (path) => {
-    const m = path.match(/^(\/\w+)\/(\d+)$/);
-    const route = m ? m[1] : path;
+    const matches = path.match(/^(?<route>\/\w+)\/(?<id>\d+)$/);
+    const route = matches?.groups?.route || path;
+    const id = matches?.groups?.id || null;
     const handler = {
       '/': {
         identifier: 'home',
@@ -1368,7 +1369,6 @@
         identifier: 'lab',
         exec: async () => {
           console.debug('Tracking a lab page');
-          const id = m[2];
           await trackTitleOnLabPage(id);
         },
       },
@@ -1396,7 +1396,6 @@
         identifier: 'course',
         exec: async () => {
           console.debug('Tracking a course page');
-          const id = m[2];
           await trackTitleOnCoursePage(id);
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
