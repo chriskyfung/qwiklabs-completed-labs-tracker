@@ -882,6 +882,7 @@
     const formatKey = options.format_key || 0;
     const elementType = options.elementType || 'p';
     const beforeIcon = options.before || '';
+    const tooltip = options.tooltip || iconKey;
     const iconMap = {
       check: {
         0: '<i class="fas fa-check-circle" style="color:green"></i>',
@@ -911,6 +912,7 @@
     const newElm = document.createElement(elementType);
     newElm.classList = 'qclt-icon';
     newElm.style.height = 0;
+    newElm.title = tooltip;
     newElm.innerText = beforeIcon;
     newElm.innerHTML += icon;
     element.appendChild(newElm);
@@ -1166,7 +1168,7 @@
       untrackedRecords: [],
       unregisteredRecords: [],
     };
-    const options = {format_key: 1, elementType: 'span', before: ' '};
+    const options = {format_key: 1, elementType: 'span'};
     const statusHandler = {
       // Annotate a record marked as finished in database
       'finished': (el, record, type) => {
@@ -1183,10 +1185,9 @@
       'null': (el, record, type) => {
         setBackgroundColor(el, 'yellow');
         const col1 = el.children[0];
-        const col2 = el.children[1];
-        const searchIcon = appendSeachLink(col2, col1.innerText);
-        appendIcon(searchIcon, 'search', {format_key: 1, elementType: 'span'});
-        appendIcon(col2, 'warning', options);
+                const searchIcon = appendSeachLink(col1, col1.innerText);
+        appendIcon(searchIcon, 'search', {...options, tooltip: 'Search this activity'});
+        appendIcon(col1, 'warning', {...options, before: ' ', tooltip: 'Unregistered activity'});
         el.classList.add(`new-${type}`);
         staging.unregisteredRecords.push({type, record});
       },
