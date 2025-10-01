@@ -670,7 +670,7 @@
       await initDB().catch(Dexie.BulkError, function(e) {
         // Explicitely catching the bulkAdd() operation makes those successful
         // additions commit despite that there were errors.
-        console.error(e.failures.length + ' items did not succeed.' );
+        console.error(e.failures.length + ' items did not succeed.');
       });
     }
     if (!qdb.isOpen()) {
@@ -931,7 +931,7 @@
     *           where 0 specifies for icon font and 1 for SVG image.
     * @return {string} The XML code of a SVG from iconMap.
     */
-  function appendIcon(element, iconKey, options={}) {
+  function appendIcon(element, iconKey, options = {}) {
     const formatKey = options.format_key || 0;
     const elementType = options.elementType || 'p';
     const beforeIcon = options.before || '';
@@ -987,12 +987,12 @@
         case 'lab':
           switch (await getLabStatusById(id)) {
             case 'finished':
-            // Annotate as a Completed Lab
+              // Annotate as a Completed Lab
               appendIcon(shadow, 'check', options);
               continue;
               break;
             case null:
-            // Append New Icon for unregistered Activity
+              // Append New Icon for unregistered Activity
               appendIcon(shadow, 'new', options);
               break;
           };
@@ -1083,13 +1083,13 @@
           // tracking a lab on catalog page
           switch (await getLabStatusById(id)) {
             case 'finished':
-            // Annotate as a Completed Lab
+              // Annotate as a Completed Lab
               setBackgroundColor(title, 'green');
               appendIcon(title, 'check', options);
               continue;
               break;
             case null:
-            // Annotate as Unregistered
+              // Annotate as Unregistered
               setBackgroundColor(title, 'yellow');
               appendIcon(title, 'new', options);
               break;
@@ -1105,7 +1105,7 @@
               continue;
               break;
             case null:
-            // Annotate as Unregistered
+              // Annotate as Unregistered
               setBackgroundColor(title, 'yellow');
               appendIcon(title, 'new', options);
               break;
@@ -1125,7 +1125,7 @@
     button.type = 'button';
     button.id = 'db-update';
     button.classList = 'db-update-button mdl-button mdl-button--icon' +
-                      ' mdl-button--primary mdl-js-button mdl-js-ripple-effect';
+      ' mdl-button--primary mdl-js-button mdl-js-ripple-effect';
     button.title = 'Update Database Records';
     button.innerHTML = '<i class="material-icons">sync</i>';
     button.addEventListener('click', batchUpdateToDb);
@@ -1172,7 +1172,7 @@
     }
     if (perPage > onPage) {
       pagination.innerHTML += '<span class="next_page disabled" aria-disabled="true">' +
-            '<i class="material-icons" aria-label="Next page">navigate_next</i></span>';
+        '<i class="material-icons" aria-label="Next page">navigate_next</i></span>';
     } else {
       const nextPage = document.createElement('a');
       nextPage.className = 'next_page';
@@ -1238,7 +1238,7 @@
       'null': (el, record, type) => {
         setBackgroundColor(el, 'yellow');
         const col1 = el.children[0];
-                const searchIcon = appendSeachLink(col1, col1.innerText);
+        const searchIcon = appendSeachLink(col1, col1.innerText);
         appendIcon(searchIcon, 'search', {...options, tooltip: 'Search this activity'});
         appendIcon(col1, 'warning', {...options, before: ' ', tooltip: 'Unregistered activity'});
         el.classList.add(`new-${type}`);
@@ -1247,7 +1247,7 @@
     };
     const typeHandler = (type) => {
       const handlerObj = {
-                'lab': async (el, name, passed) => {
+        'lab': async (el, name, passed) => {
           const record = await getLabFromDbByTitle(name);
           const handler = statusHandler[record.status];
           if (passed) {
@@ -1321,7 +1321,6 @@
    * @param {string} path - A path name, e.g. '/', '/catalog'.
    * @return {Object} The handler object.
    */
-  // TODO: Update `trackAndAnnotateActivities()` for '/profile/activity'
   const router = (path) => {
     const m = path.match(/^(\/\w+)\/(\d+)$/);
     const route = m ? m[1] : path;
