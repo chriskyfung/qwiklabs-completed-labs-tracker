@@ -721,6 +721,67 @@
   }
 
   /**
+   * Shows a snackbar notification.
+   * @param {object} options - The options for the snackbar.
+   * @param {string} options.message - The message to display.
+   * @param {string} [options.actionText] - The text for the action button.
+   * @param {Function} [options.onAction] - The callback for the action button.
+   * @param {number} [options.autoDismissDelay=10000] - Delay in ms to auto-dismiss.
+   */
+  function showSnackbar({message, actionText, onAction, autoDismissDelay = 10000}) {
+    const snackbar = document.createElement('div');
+    snackbar.id = 'snackbar';
+    snackbar.classList.add('alert', 'alert--fake', 'js-alert', 'alert-success');
+    // Apply Material Design styles
+    Object.assign(snackbar.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '14px 24px',
+      color: '#FFFFFF',
+      borderRadius: '4px',
+      position: 'fixed',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      minWidth: '344px',
+      maxWidth: '568px',
+      zIndex: '1000',
+    });
+
+    const messageEl = document.createElement('p');
+    messageEl.classList.add('alert__message', 'js-alert-message');
+    messageEl.style.margin = '0';
+    messageEl.style.flexGrow = '1';
+
+    const actionEl = document.createElement('a');
+    actionEl.classList.add('alert__close', 'js-alert-close');
+    actionEl.href = '#'; // for accessibility
+    actionEl.textContent = actionText || '✕';
+    if (actionText) {
+      messageEl.style.marginRight = '16px';
+      Object.assign(actionEl.style, {
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+      });
+    } else {
+      actionEl.style.cursor = 'pointer';
+    }
+    actionEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      onAction ? onAction() : snackbar.remove();
+    });
+
+    messageEl.textContent = message;
+    snackbar.appendChild(messageEl);
+    snackbar.appendChild(actionEl);
+
+    document.body.appendChild(snackbar);
+
+    setTimeout(() => onAction ? onAction() : snackbar.remove(), autoDismissDelay);
+  }
+
+  /**
    * Batch update Activity records to the database.
    */
   const batchUpdateToDb = async () => {
@@ -739,30 +800,21 @@
     }
     console.log(`Number of items updated: ${count.courses} courses and ${count.labs} labs`);
     const nUpdate = count.labs + count.courses;
-    const snackbar = document.createElement('div');
-    snackbar.id = 'snackbar';
-    if (nUpdate == 0) {
-      snackbar.innerHTML = '<p class="alert__message js-alert-message">0 items to update</p>' +
-        '<a class="alert__close js-alert-close"><i class="fa fa-times"></i></a>';
+
+    if (nUpdate === 0) {
+      showSnackbar({message: '0 items to update'});
     } else {
       let txt = '';
       txt += count.courses > 0 ? `${count.courses} course` : '';
       txt += (count.courses > 0 && count.labs > 0) ? ' and ' : '';
       txt += count.labs > 0 ? `${count.labs} lab` : '';
       txt += nUpdate > 1 ? ' records' : ' record';
-      snackbar.innerHTML = `<p class="alert__message js-alert-message" style="margin-right:16px;">` +
-        `Updated ${txt}</p><a class="alert__close js-alert-close">Refresh</a>`;
+      showSnackbar({
+        message: `Updated ${txt}`,
+        actionText: 'Refresh',
+        onAction: () => location.reload(),
+      });
     }
-    snackbar.classList = 'alert alert--fake js-alert alert-success';
-    snackbar.style = 'display:flex; max-width:360px; min-width:250px; width:auto; margin-left: -125px;' +
-      'margin-bottom:-26px; text-align: center; position: fixed; left: 50%; bottom: 76px;';
-    document.body.appendChild(snackbar);
-    snackbar.querySelector('.js-alert-close').addEventListener( 'click', function() {
-      nUpdate ? location.reload() : snackbar.remove();
-    });
-    setTimeout(function() {
-      nUpdate ? location.reload() : snackbar.remove();
-    }, 10000);
     console.log('Batch updated - finished');
   };
 
