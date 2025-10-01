@@ -1227,8 +1227,18 @@
     if (activityTable) {
       const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
       for (const [i, record] of records.entries()) {
-        const type = record.type.toLowerCase();
-        const name = record.name;
+        /**
+          Example of `record`:{
+            "name": "<a href=\"/quizzes/409\">Quiz: Getting Started with Go</a>",
+            "type": "<ql-activity-label activity=\"quiz\">Quiz: Getting Started with Go</ql-activity-label>",
+            "started": "2020-01-01T00:00:00.000-00:00",
+            "ended": "2020-01-01T00:01:00.000-00:00",
+            "score": "Assessment 100.0%",
+            "passed": true
+          }
+        */
+        const type = record.type.match(/activity="(\w+)"/)[1].toLowerCase();
+        const name = record.name.match(/>([^<]+)</)[1];
         const passed = record.passed;
         const row = rows[i];
         const handler = typeHandler(type);
