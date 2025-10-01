@@ -23,6 +23,7 @@
   'use strict';
 
   const isDebugMode = false;
+  const ACTIVITY_CARD_SELECTOR = 'ql-activity-card';
   const ACTIVITY_TABLE_SELECTOR = '.activities-table';
   const COURSE_PAGE_TITLE_SELECTOR = '.title-text';
   const LAB_PAGE_TITLE_SELECTOR = '.header__title';
@@ -984,26 +985,26 @@
     * Scan through each activity card on a page, get the db record
     * by activity ID and label the recorded status on each card.
     */
-  async function trackActivityCards() {
-    const cards = document.querySelectorAll('ql-activity-card');
+  async function trackActivityCards(cards) {
     for (const card of cards) {
       const type = card.getAttribute('type');
+      const title = card.getAttribute('name');
       const id = card.getAttribute('path').match(/\/(\d+)/)[1];
-      const shadow = card.shadowRoot.querySelector('ql-card');
-      const options = {format_key: 1};
+      const cardTitle = card.shadowRoot.querySelector('h3');
+      const options = {format_key: 1, elementType: 'span', style: 'margin-left: 4px'};
       switch (type) {
         case 'lab':
           const record = await getLabFromDbById(id);
-          console.log(`Lab ID: ${id}, Record: ${JSON.stringify(record)}`);
+          console.log(`Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
           switch (record.status) {
             case 'finished':
               // Annotate as a Completed Lab
-              appendIcon(shadow, 'check', options);
+              appendIcon(cardTitle, 'check', options);
               continue;
               break;
             case null:
               // Append New Icon for unregistered Activity
-              appendIcon(shadow, 'new', options);
+              appendIcon(cardTitle, 'new', options);
               break;
           };
           break;
@@ -1013,12 +1014,12 @@
           switch (courseRecord.status) {
             case 'finished':
               // Annotate as a Completed course
-              appendIcon(shadow, 'check', options);
+              appendIcon(cardTitle, 'check', options);
               continue;
               break;
             case null:
               // Append New Icon for unregistered Activity
-              appendIcon(shadow, 'new', options);
+              appendIcon(cardTitle, 'new', options);
               break;
           };
           break;
@@ -1354,7 +1355,8 @@
         identifier: 'home',
         exec: async () => {
           console.debug('Tracking card data on Home');
-          await trackActivityCards();
+          const cards = document.querySelectorAll(ACTIVITY_CARD_SELECTOR);
+          await trackActivityCards(cards);
         },
       },
       '/catalog': {
