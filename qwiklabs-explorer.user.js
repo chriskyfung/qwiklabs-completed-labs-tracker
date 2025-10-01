@@ -797,9 +797,8 @@
    * @param {string} title - A lab title.
    * @return {Object|null} A lab record or null if not found.
    */
-  async function getLabByTitle(title) {
+  async function getLabFromDbByTitle(title) {
     const formattedTitle = formatTitle(title);
-    //
     const record = await tmpdb.labs.filter((record) => {
       return record.name == formattedTitle;
     })[0];
@@ -1202,7 +1201,7 @@
           el.classList.add('completed-game');
         },
         'lab': async (el, name, passed) => {
-          const record = await getLabByTitle(name);
+          const record = await getLabFromDbByTitle(name);
           const handler = statusHandler[record.status];
           if (passed) {
             handler(el, record || name, 'lab');
