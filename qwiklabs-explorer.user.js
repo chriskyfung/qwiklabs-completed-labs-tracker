@@ -1238,7 +1238,7 @@
           }
         */
         const type = record.type.match(/activity="(\w+)"/)[1].toLowerCase();
-        const name = record.name.match(/>([^<]+)</)[1];
+        const name = record.name.match(/>([^<]+)</)?.slice(1, 2)?.[0] || record.name;
         const passed = record.passed;
         const row = rows[i];
         const handler = typeHandler(type);
