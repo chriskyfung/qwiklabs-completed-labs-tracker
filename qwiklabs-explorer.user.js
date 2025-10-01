@@ -4,7 +4,7 @@
 // @namespace    https://chriskyfung.github.io/
 // @version      2.1.1
 // @author       chriskyfung
-// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Google Cloud Skills Boost (https://www.cloudskillsboost.google/catalog)
+// @description  Label completed courses and labs on the Catalog page(s) and Lab pages on Google Cloud Skills Boost (https://www.cloudskillsboost.google/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
 // @icon         https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-32x32.png
 // @icon64       https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-64x64.png
@@ -29,7 +29,7 @@
   const dbName = 'qwiklabs-db-test-1';
   const qdb = new Dexie(dbName);
 
-  let tmpdb = {'labs': null, 'quests': null};
+  let tmpdb = {'labs': null, 'courses': null};
 
   /**
    * Initialize Database if not yet exist
@@ -39,9 +39,9 @@
     //
     // Define database
     //
-    qdb.version(1).stores({
+    qdb.version(2).stores({
       labs: '&id,name,status',
-      quests: '&id,name,status',
+      courses: '&id,name,status',
     });
     console.debug('Using Dexie v' + Dexie.semVer);
 
@@ -565,7 +565,7 @@
         {'id': 10962, 'name': 'Managing IoT Sensor Data with Amazon ElastiCache for Redis', 'status': ''},
         {'id': 12007, 'name': 'Set Up Network and HTTP Load Balancers', 'status': ''},
       ],
-      'quests': [
+      'courses': [
         {'id': 3, 'name': 'Websites & Web Apps', 'status': ''},
         {'id': 5, 'name': 'Big Data on AWS', 'status': ''},
         {'id': 6, 'name': 'Compute & Networking', 'status': ''},
@@ -649,15 +649,16 @@
         {'id': 103, 'name': 'Creating with Google Maps', 'status': ''},
         {'id': 105, 'name': 'Apigee Basic', 'status': ''},
         {'id': 106, 'name': 'Apigee Advanced', 'status': ''},
-      ]};
+      ],
+    };
 
     // Query Database
     const lastLab = await qdb.labs.bulkAdd(qldata.labs);
     console.log(`Done adding ${qldata.labs.length} labs to the Dexie database`);
     console.log(`Last lab's id was: ${lastLab}`);
-    const lastQuest = await qdb.quests.bulkAdd(qldata.quests);
-    console.log(`Done adding ${qldata.quests.length} quests to the Dexie database`);
-    console.log(`Last quest's id was: ${lastQuest}`);
+    const lastCourse = await qdb.courses.bulkAdd(qldata.courses);
+    console.log(`Done adding ${qldata.courses.length} courses to the Dexie database`);
+    console.log(`Last course's id was: ${lastCourse}`);
   }
 
   /**
@@ -684,7 +685,7 @@
     // Fetch Stored Data as Temporary Datasets
     //
     tmpdb.labs = await qdb.table('labs').toArray();
-    tmpdb.quests = await qdb.table('quests').toArray();
+    tmpdb.courses = await qdb.table('courses').toArray();
   }
 
   /**
@@ -725,7 +726,7 @@
   const batchUpdateToDb = async () => {
     const newRecords = document.querySelector('button#db-update').data?.untrackedRecords;
     console.log('Batch Update - start');
-    const count = {labs: 0, quests: 0};
+    const count = {labs: 0, courses: 0};
     for (const newRecord of newRecords) {
       const id = newRecord.id;
       const type = newRecord.type;
@@ -736,8 +737,8 @@
         console.log(`Updated ${type}: {id: ${id}, name: '${newRecord.name}', 'status': 'finished'}`);
       }
     }
-    console.log(`Number of items updated: ${count.quests} quests and ${count.labs} labs`);
-    const nUpdate = count.labs + count.quests;
+    console.log(`Number of items updated: ${count.courses} courses and ${count.labs} labs`);
+    const nUpdate = count.labs + count.courses;
     const snackbar = document.createElement('div');
     snackbar.id = 'snackbar';
     if (nUpdate == 0) {
@@ -745,8 +746,8 @@
         '<a class="alert__close js-alert-close"><i class="fa fa-times"></i></a>';
     } else {
       let txt = '';
-      txt += count.quests > 0 ? `${count.quests} quest` : '';
-      txt += ( count.quests > 0 && count.labs > 0 ) ? ' and ' : '';
+      txt += count.courses > 0 ? `${count.courses} course` : '';
+      txt += (count.courses > 0 && count.labs > 0) ? ' and ' : '';
       txt += count.labs > 0 ? `${count.labs} lab` : '';
       txt += nUpdate > 1 ? ' records' : ' record';
       snackbar.innerHTML = `<p class="alert__message js-alert-message" style="margin-right:16px;">` +
@@ -767,7 +768,7 @@
 
   /**
    * Standardize the string to be stored in the database
-   * @param {string} title - A lab/quest title
+   * @param {string} title - A lab/course title
    * @return {string}
    */
   function formatTitle(title) {
@@ -815,32 +816,32 @@
    * @param {number} id - A lab identifier.
    * @return {string|null} The lab status or null if not found.
    */
-  async function getQuestStatusById(id) {
-    const record = await tmpdb.quests.filter((record) => {
+  async function getCourseStatusFromDbById(id) {
+    const record = await tmpdb.courses.filter((record) => {
       return id == record.id;
     })[0];
     try {
       return await record.status;
     } catch (e) {
-      console.warn(`No quest record has an ID of ${id} in the database`);
+      console.warn(`No course record has an ID of ${id} in the database`);
       return null;
     }
   }
 
   /**
-   * Retrieve a quest record from the database by passsing the title.
-   * @param {string} title - A quest title.
-   * @return {Object|null} A quest record or null if not found.
+   * Retrieve a course record from the database by passsing the title.
+   * @param {string} title - A course title.
+   * @return {Object|null} A course record or null if not found.
    */
-  async function getQuestByTitle(title) {
+  async function getCourseFromDbByTitle(title) {
     const formattedTitle = formatTitle(title);
-    const record = await tmpdb.quests.filter((record) => {
+    const record = await tmpdb.courses.filter((record) => {
       return record.name == formattedTitle;
     })[0];
     try {
       return record || {status: null};
     } catch (e) {
-      console.warn(`No quest record named "${title}" in the database`);
+      console.warn(`No course record named "${title}" in the database`);
       return null;
     }
   }
@@ -944,10 +945,10 @@
               break;
           };
           break;
-        case 'quest':
-          switch (await getQuestStatusById(id)) {
+        case 'course':
+          switch (await getCourseStatusFromDbById(id)) {
             case 'finished':
-            // Annotate as a Completed Quest
+              // Annotate as a Completed course
               appendIcon(shadow, 'check', options);
               continue;
               break;
@@ -988,25 +989,25 @@
   }
 
   /**
-   * Label a quest page title based on the recorded status from the database.
+   * Label a course page title based on the recorded status from the database.
    * @param {number} id - The id to query the record from the database.
    */
-  async function trackQuestTitle(id) {
+  async function trackCourseTitle(id) {
     const el = document.querySelector('.ql-headline-1');
     const title = el.innerText;
     const options = {elementType: 'span', before: ' '};
-    switch (await getQuestStatusById(id)) {
+    switch (await getCourseStatusFromDbById(id)) {
       case 'finished':
         // Annotate as Completed
         setBackgroundColor(el, 'green');
         appendIcon(el, 'check', options);
-        updateRecordById('quest', id, {'name': formatTitle(title)});
+        updateRecordById('course', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
         setBackgroundColor(el, 'yellow');
         appendIcon(el, 'new', options);
-        createRecord('quest', id, {'name': formatTitle(title), 'status': ''});
+        createRecord('course', id, {'name': formatTitle(title), 'status': ''});
         break;
     };
   }
@@ -1014,7 +1015,7 @@
   /**
    * Extract ids from the title links and label the titles based on the
    * recorded status from the database.
-   * @param {Object[]} titles - The DOM elements that contain lab/quest titles.
+   * @param {Object[]} titles - The DOM elements that contain lab/course titles.
    */
   async function trackListOfTitles(titles) {
     for (const title of titles) {
@@ -1042,11 +1043,11 @@
               break;
           };
           break;
-        case 'quest':
-          // tracking a quest on catalog page
-          switch (await getQuestStatusById(id)) {
+        case 'course':
+          // tracking a course on catalog page
+          switch (await getCourseStatusFromDbById(id)) {
             case 'finished':
-            // Annotate as a Completed Quest
+              // Annotate as a Completed Course
               setBackgroundColor(title, 'green');
               appendIcon(title, 'check', options);
               continue;
@@ -1204,10 +1205,10 @@
           }
           return record;
         },
-        'quest': async (el, name) => {
-          const record = await getQuestByTitle(name);
+        'course': async (el, name) => {
+          const record = await getCourseFromDbByTitle(name);
           const handler = statusHandler[record.status];
-          handler(el, record || name, 'quest');
+          handler(el, record || name, 'course');
           return record;
         },
       };
@@ -1321,7 +1322,7 @@
         exec: async () => {
           console.debug('Tracking a quest page');
           const id = m[2];
-          await trackQuestTitle(id);
+          await trackCourseTitle(id);
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
         },
