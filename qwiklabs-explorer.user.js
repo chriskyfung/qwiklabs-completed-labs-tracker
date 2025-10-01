@@ -1151,7 +1151,7 @@
     * ('/profile/activity').
     * @return {Object[]} JSON-formatted data from the Activity table
     */
-  const parseActivities = () => {
+  const parseActivitiesOnProgressPage = () => {
     // Tracking tables under the My Learning section
     return document.querySelector(ACTIVITY_TABLE_SELECTOR)?.data || null;
   };
@@ -1162,7 +1162,7 @@
     * @param {Object[]} records - JSON-formatted data from the Activity table.
     * @return {number} Number of activity.
     */
-  const trackActivities = async (records) => {
+  const trackAndAnnotateActivities = async (records) => {
     const staging = {
       untrackedRecords: [],
       unregisteredRecords: [],
@@ -1265,6 +1265,7 @@
    * @param {string} path - A path name, e.g. '/', '/catalog'.
    * @return {Object} The handler object.
    */
+  // TODO: Update `trackAndAnnotateActivities()` for '/profile/activity'
   const router = (path) => {
     const m = path.match(/^(\/\w+)\/(\d+)$/);
     const route = m ? m[1] : path;
@@ -1296,21 +1297,20 @@
         identifier: 'activities',
         exec: async () => {
           console.debug('Tracking activity data on Profle');
-          const qlData = parseActivities();
-          const results = await trackActivities(qlData);
-          const button = createUpdateButton(results);
-          button.style.cssText = 'margin: auto 0 auto auto';
+          const activitiesData = parseActivitiesOnProgressPage();
+          const results = await trackAndAnnotateActivities(activitiesData);
+          // Create an Update button and a Pagination control
+          const updateButton = createUpdateButton(results);
+          updateButton.style.cssText = 'margin: auto 0 auto auto';
           const pagination = createActivitesPagination(results.counts.rows);
-          const buttonGroup = createButtonGroup();
           pagination.style.cssText = 'margin: auto 12px auto 36px';
-          const activityFilters = document.querySelector('#learning_activity_search .filters');
-          buttonGroup.appendChild(button);
+          // Append buttons to the button group on the top-right corner
+          // of the Activities table
+          const buttonGroup = createButtonGroup();
+          buttonGroup.appendChild(updateButton);
           buttonGroup.appendChild(pagination);
+          const activityFilters = document.querySelector('#learning_activity_search .filters');
           activityFilters.appendChild(buttonGroup);
-          const clonedGroup = buttonGroup.cloneNode('true');
-          clonedGroup.style.cssText = 'margin-top: 16px';
-          const profileTabs = document.querySelector('.profile-tabs');
-          profileTabs.appendChild(clonedGroup);
         },
       },
       '/quests': {
@@ -1349,6 +1349,6 @@
   //
   main().catch((e) => {
     // Dexie.MissingAPIError
-    console.error(e);
+    console.log(e);
   });
 })();
