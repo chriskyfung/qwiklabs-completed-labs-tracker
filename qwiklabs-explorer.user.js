@@ -4,17 +4,18 @@
 // @namespace    https://chriskyfung.github.io/
 // @version      2.1.1
 // @author       chriskyfung
-// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Qwiklabs (https://www.qwiklabs.com/catalog)
+// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Google Cloud Skills Boost (https://www.cloudskillsboost.google/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
 // @icon         https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-32x32.png
 // @icon64       https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-64x64.png
 // @updateURL    https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues
-// @match        https://*.qwiklabs.com/
-// @match        https://*.qwiklabs.com/catalog*
-// @match        https://*.qwiklabs.com/focuses/*
-// @match        https://*.qwiklabs.com/quests/*
-// @match        https://*.qwiklabs.com/profile/activity*
+// @match        https://*.cloudskillsboost.google/
+// @match        https://*.cloudskillsboost.google/catalog*
+// @match        https://*.cloudskillsboost.google/course_templates/*
+// @match        https://*.cloudskillsboost.google/focuses/*
+// @match        https://*.cloudskillsboost.google/quests/*
+// @match        https://*.cloudskillsboost.google/profile/activity*
 // @require      https://unpkg.com/dexie@latest/dist/dexie.js
 // ==/UserScript==
 
@@ -22,6 +23,7 @@
   'use strict';
 
   const isDebugMode = false;
+  const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
 
   const dbName = 'qwiklabs-db-test-1';
   const qdb = new Dexie(dbName);
@@ -1137,7 +1139,7 @@
    */
   const appendSeachLink = (el, searchTerm) => {
     const aTag = document.createElement('a');
-    aTag.href = `https://www.qwiklabs.com/catalog?keywords=${encodeURIComponent(searchTerm)}`;
+    aTag.href = `${CLOUD_SKILLS_BOOST_BASE_URL}/catalog?keywords=${encodeURIComponent(searchTerm)}`;
     aTag.style.paddingLeft = '0.25em';
     el.appendChild(aTag);
     return aTag;
