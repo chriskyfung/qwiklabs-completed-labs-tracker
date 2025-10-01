@@ -23,6 +23,7 @@
   'use strict';
 
   const isDebugMode = false;
+  const ACTIVITY_TABLE_SELECTOR = '.activities-table';
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
 
   const dbName = 'qwiklabs-db-test-1';
@@ -1146,13 +1147,13 @@
   };
 
   /**
-    * Extract and handle the data from an Activities table.
+    * Extract and handle the data from an Activities table on the Progress page
+    * ('/profile/activity').
     * @return {Object[]} JSON-formatted data from the Activity table
     */
   const parseActivities = () => {
     // Tracking tables under the My Learning section
-    const qlTable = document.querySelector('ql-table');
-    return qlTable ? qlTable.data : null;
+    return document.querySelector(ACTIVITY_TABLE_SELECTOR)?.data || null;
   };
 
   /**
@@ -1222,9 +1223,9 @@
       };
       return handlerObj[type] || dummyFunc;
     };
-    const qlTable = document.querySelector('ql-table');
-    if (qlTable) {
-      const rows = qlTable.shadowRoot.querySelectorAll('tbody > tr');
+    const activityTable = document.querySelector(ACTIVITY_TABLE_SELECTOR);
+    if (activityTable) {
+      const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
       for (const [i, record] of records.entries()) {
         const type = record.type.toLowerCase();
         const name = record.name;
