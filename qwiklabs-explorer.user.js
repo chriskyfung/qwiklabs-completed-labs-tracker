@@ -1194,14 +1194,7 @@
     };
     const typeHandler = (type) => {
       const handlerObj = {
-        /* Change the background in purple color, and add a Gamepad
-          icon to the second column to the row of a Game record.    */
-        'game': (el) => {
-          setBackgroundColor(el, 'purple');
-          appendIcon(el.children[1], 'game', options);
-          el.classList.add('completed-game');
-        },
-        'lab': async (el, name, passed) => {
+                'lab': async (el, name, passed) => {
           const record = await getLabFromDbByTitle(name);
           const handler = statusHandler[record.status];
           if (passed) {
