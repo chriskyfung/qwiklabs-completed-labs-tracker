@@ -24,6 +24,8 @@
 
   const isDebugMode = false;
   const ACTIVITY_TABLE_SELECTOR = '.activities-table';
+  const LAB_PAGE_TITLE_SELECTOR = '.header__title > h1';
+
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
 
   const dbName = 'qwiklabs-db-test-1';
@@ -832,7 +834,7 @@
    * @param {number} id
    * @return {boolean}
    */
-  async function getLabStatusById(id) {
+  async function getLabStatusFromDbById(id) {
     const record = await tmpdb.labs.filter((record) => {
       return id == record.id;
     })[0];
@@ -985,7 +987,7 @@
       const options = {format_key: 1};
       switch (type) {
         case 'lab':
-          switch (await getLabStatusById(id)) {
+          switch (await getLabStatusFromDbById(id)) {
             case 'finished':
               // Annotate as a Completed Lab
               appendIcon(shadow, 'check', options);
@@ -1020,21 +1022,21 @@
    * Label a lab page title based on the recorded status from the database.
    * @param {number} id - The id to query the record from the database.
    */
-  async function trackLabTitle(id) {
-    const el = document.querySelector('div.header__title > h1');
-    const title = el.innerText;
+  async function trackTitleOnLabPage(id) {
+    const labPageTitle = document.querySelector(LAB_PAGE_TITLE_SELECTOR);
+    const title = labPageTitle.innerText;
     const options = {elementType: 'span', before: ' '};
-    switch (await getLabStatusById(id)) {
+    switch (await getLabStatusFromDbById(id)) {
       case 'finished':
         // Annotate as Completed
-        setBackgroundColor(el, 'green');
-        appendIcon(el, 'check', options);
+        setBackgroundColor(labPageTitle, 'green');
+        appendIcon(labPageTitle, 'check', options);
         updateRecordById('lab', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
-        setBackgroundColor(el, 'yellow');
-        appendIcon(el, 'new', options);
+        setBackgroundColor(labPageTitle, 'yellow');
+        appendIcon(labPageTitle, 'new', options);
         createRecord('lab', id, {'name': formatTitle(title), 'status': ''});
         break;
     };
@@ -1081,7 +1083,7 @@
       switch (type) {
         case 'lab':
           // tracking a lab on catalog page
-          switch (await getLabStatusById(id)) {
+          switch (await getLabStatusFromDbById(id)) {
             case 'finished':
               // Annotate as a Completed Lab
               setBackgroundColor(title, 'green');
@@ -1345,7 +1347,7 @@
         exec: async () => {
           console.debug('Tracking a lab page');
           const id = m[2];
-          await trackLabTitle(id);
+          await trackTitleOnLabPage(id);
         },
       },
       '/profile/activity': {
