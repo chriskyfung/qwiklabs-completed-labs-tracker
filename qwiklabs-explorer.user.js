@@ -1447,7 +1447,15 @@
   // Call and Catch the Main Function of the Program
   //
   main().catch((e) => {
-    // Dexie.MissingAPIError
-    console.log(e);
+    try {
+      // Dexie.MissingAPIError
+      if (e.name === 'MissingAPIError') {
+        console.error('Dexie API is missing. Please make sure Dexie.js is loaded.');
+      } else {
+        console.error(e);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   });
 })();
