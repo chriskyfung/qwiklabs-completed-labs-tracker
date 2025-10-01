@@ -24,6 +24,7 @@
 
   const isDebugMode = false;
   const ACTIVITY_TABLE_SELECTOR = '.activities-table';
+  const COURSE_PAGE_TITLE_SELECTOR = '.title-text';
   const LAB_PAGE_TITLE_SELECTOR = '.header__title';
 
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
@@ -1046,21 +1047,22 @@
    * Label a course page title based on the recorded status from the database.
    * @param {number} id - The id to query the record from the database.
    */
-  async function trackCourseTitle(id) {
-    const el = document.querySelector('.ql-headline-1');
-    const title = el.innerText;
-    const options = {elementType: 'span', before: ' '};
+  async function trackTitleOnCoursePage(id) {
+    const coursePageTitle = document.querySelector(COURSE_PAGE_TITLE_SELECTOR);
+    const h1 = coursePageTitle.querySelector('h1');
+    const title = h1.innerText;
+    const options = {format_key: 1, elementType: 'span'};
     switch (await getCourseStatusFromDbById(id)) {
       case 'finished':
         // Annotate as Completed
-        setBackgroundColor(el, 'green');
-        appendIcon(el, 'check', options);
+        setBackgroundColor(h1, 'green');
+        appendIcon(coursePageTitle, 'check', options);
         updateRecordById('course', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
-        setBackgroundColor(el, 'yellow');
-        appendIcon(el, 'new', options);
+        setBackgroundColor(h1, 'yellow');
+        appendIcon(coursePageTitle, 'new', options);
         createRecord('course', id, {'name': formatTitle(title), 'status': ''});
         break;
     };
@@ -1370,12 +1372,12 @@
           activityFilters.appendChild(buttonGroup);
         },
       },
-      '/quests': {
-        identifier: 'quest',
+      '/course_templates': {
+        identifier: 'course',
         exec: async () => {
-          console.debug('Tracking a quest page');
+          console.debug('Tracking a course page');
           const id = m[2];
-          await trackCourseTitle(id);
+          await trackTitleOnCoursePage(id);
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
         },
