@@ -4,7 +4,7 @@
 // @namespace    https://chriskyfung.github.io/
 // @version      2.1.1
 // @author       chriskyfung
-// @description  Label completed quests and labs on the Catalog page(s) and Lab pages on Google Cloud Skills Boost (https://www.cloudskillsboost.google/catalog)
+// @description  Label completed courses and labs on the Catalog page(s) and Lab pages on Google Cloud Skills Boost (https://www.cloudskillsboost.google/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
 // @icon         https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-32x32.png
 // @icon64       https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-64x64.png
@@ -23,12 +23,13 @@
   'use strict';
 
   const isDebugMode = false;
+  const ACTIVITY_TABLE_SELECTOR = '.activities-table';
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
 
   const dbName = 'qwiklabs-db-test-1';
   const qdb = new Dexie(dbName);
 
-  let tmpdb = {'labs': null, 'quests': null};
+  let tmpdb = {'labs': null, 'courses': null};
 
   /**
    * Initialize Database if not yet exist
@@ -38,9 +39,9 @@
     //
     // Define database
     //
-    qdb.version(1).stores({
+    qdb.version(2).stores({
       labs: '&id,name,status',
-      quests: '&id,name,status',
+      courses: '&id,name,status',
     });
     console.debug('Using Dexie v' + Dexie.semVer);
 
@@ -564,7 +565,7 @@
         {'id': 10962, 'name': 'Managing IoT Sensor Data with Amazon ElastiCache for Redis', 'status': ''},
         {'id': 12007, 'name': 'Set Up Network and HTTP Load Balancers', 'status': ''},
       ],
-      'quests': [
+      'courses': [
         {'id': 3, 'name': 'Websites & Web Apps', 'status': ''},
         {'id': 5, 'name': 'Big Data on AWS', 'status': ''},
         {'id': 6, 'name': 'Compute & Networking', 'status': ''},
@@ -648,15 +649,16 @@
         {'id': 103, 'name': 'Creating with Google Maps', 'status': ''},
         {'id': 105, 'name': 'Apigee Basic', 'status': ''},
         {'id': 106, 'name': 'Apigee Advanced', 'status': ''},
-      ]};
+      ],
+    };
 
     // Query Database
     const lastLab = await qdb.labs.bulkAdd(qldata.labs);
     console.log(`Done adding ${qldata.labs.length} labs to the Dexie database`);
     console.log(`Last lab's id was: ${lastLab}`);
-    const lastQuest = await qdb.quests.bulkAdd(qldata.quests);
-    console.log(`Done adding ${qldata.quests.length} quests to the Dexie database`);
-    console.log(`Last quest's id was: ${lastQuest}`);
+    const lastCourse = await qdb.courses.bulkAdd(qldata.courses);
+    console.log(`Done adding ${qldata.courses.length} courses to the Dexie database`);
+    console.log(`Last course's id was: ${lastCourse}`);
   }
 
   /**
@@ -668,7 +670,7 @@
       await initDB().catch(Dexie.BulkError, function(e) {
         // Explicitely catching the bulkAdd() operation makes those successful
         // additions commit despite that there were errors.
-        console.error(e.failures.length + ' items did not succeed.' );
+        console.error(e.failures.length + ' items did not succeed.');
       });
     }
     if (!qdb.isOpen()) {
@@ -683,7 +685,7 @@
     // Fetch Stored Data as Temporary Datasets
     //
     tmpdb.labs = await qdb.table('labs').toArray();
-    tmpdb.quests = await qdb.table('quests').toArray();
+    tmpdb.courses = await qdb.table('courses').toArray();
   }
 
   /**
@@ -719,12 +721,73 @@
   }
 
   /**
+   * Shows a snackbar notification.
+   * @param {object} options - The options for the snackbar.
+   * @param {string} options.message - The message to display.
+   * @param {string} [options.actionText] - The text for the action button.
+   * @param {Function} [options.onAction] - The callback for the action button.
+   * @param {number} [options.autoDismissDelay=10000] - Delay in ms to auto-dismiss.
+   */
+  function showSnackbar({message, actionText, onAction, autoDismissDelay = 10000}) {
+    const snackbar = document.createElement('div');
+    snackbar.id = 'snackbar';
+    snackbar.classList.add('alert', 'alert--fake', 'js-alert', 'alert-success');
+    // Apply Material Design styles
+    Object.assign(snackbar.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '14px 24px',
+      color: '#FFFFFF',
+      borderRadius: '4px',
+      position: 'fixed',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      minWidth: '344px',
+      maxWidth: '568px',
+      zIndex: '1000',
+    });
+
+    const messageEl = document.createElement('p');
+    messageEl.classList.add('alert__message', 'js-alert-message');
+    messageEl.style.margin = '0';
+    messageEl.style.flexGrow = '1';
+
+    const actionEl = document.createElement('a');
+    actionEl.classList.add('alert__close', 'js-alert-close');
+    actionEl.href = '#'; // for accessibility
+    actionEl.textContent = actionText || '✕';
+    if (actionText) {
+      messageEl.style.marginRight = '16px';
+      Object.assign(actionEl.style, {
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+      });
+    } else {
+      actionEl.style.cursor = 'pointer';
+    }
+    actionEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      onAction ? onAction() : snackbar.remove();
+    });
+
+    messageEl.textContent = message;
+    snackbar.appendChild(messageEl);
+    snackbar.appendChild(actionEl);
+
+    document.body.appendChild(snackbar);
+
+    setTimeout(() => onAction ? onAction() : snackbar.remove(), autoDismissDelay);
+  }
+
+  /**
    * Batch update Activity records to the database.
    */
   const batchUpdateToDb = async () => {
     const newRecords = document.querySelector('button#db-update').data?.untrackedRecords;
     console.log('Batch Update - start');
-    const count = {labs: 0, quests: 0};
+    const count = {labs: 0, courses: 0};
     for (const newRecord of newRecords) {
       const id = newRecord.id;
       const type = newRecord.type;
@@ -735,38 +798,29 @@
         console.log(`Updated ${type}: {id: ${id}, name: '${newRecord.name}', 'status': 'finished'}`);
       }
     }
-    console.log(`Number of items updated: ${count.quests} quests and ${count.labs} labs`);
-    const nUpdate = count.labs + count.quests;
-    const snackbar = document.createElement('div');
-    snackbar.id = 'snackbar';
-    if (nUpdate == 0) {
-      snackbar.innerHTML = '<p class="alert__message js-alert-message">0 items to update</p>' +
-        '<a class="alert__close js-alert-close"><i class="fa fa-times"></i></a>';
+    console.log(`Number of items updated: ${count.courses} courses and ${count.labs} labs`);
+    const nUpdate = count.labs + count.courses;
+
+    if (nUpdate === 0) {
+      showSnackbar({message: '0 items to update'});
     } else {
       let txt = '';
-      txt += count.quests > 0 ? `${count.quests} quest` : '';
-      txt += ( count.quests > 0 && count.labs > 0 ) ? ' and ' : '';
+      txt += count.courses > 0 ? `${count.courses} course` : '';
+      txt += (count.courses > 0 && count.labs > 0) ? ' and ' : '';
       txt += count.labs > 0 ? `${count.labs} lab` : '';
       txt += nUpdate > 1 ? ' records' : ' record';
-      snackbar.innerHTML = `<p class="alert__message js-alert-message" style="margin-right:16px;">` +
-        `Updated ${txt}</p><a class="alert__close js-alert-close">Refresh</a>`;
+      showSnackbar({
+        message: `Updated ${txt}`,
+        actionText: 'Refresh',
+        onAction: () => location.reload(),
+      });
     }
-    snackbar.classList = 'alert alert--fake js-alert alert-success';
-    snackbar.style = 'display:flex; max-width:360px; min-width:250px; width:auto; margin-left: -125px;' +
-      'margin-bottom:-26px; text-align: center; position: fixed; left: 50%; bottom: 76px;';
-    document.body.appendChild(snackbar);
-    snackbar.querySelector('.js-alert-close').addEventListener( 'click', function() {
-      nUpdate ? location.reload() : snackbar.remove();
-    });
-    setTimeout(function() {
-      nUpdate ? location.reload() : snackbar.remove();
-    }, 10000);
     console.log('Batch updated - finished');
   };
 
   /**
    * Standardize the string to be stored in the database
-   * @param {string} title - A lab/quest title
+   * @param {string} title - A lab/course title
    * @return {string}
    */
   function formatTitle(title) {
@@ -796,9 +850,8 @@
    * @param {string} title - A lab title.
    * @return {Object|null} A lab record or null if not found.
    */
-  async function getLabByTitle(title) {
+  async function getLabFromDbByTitle(title) {
     const formattedTitle = formatTitle(title);
-    //
     const record = await tmpdb.labs.filter((record) => {
       return record.name == formattedTitle;
     })[0];
@@ -815,32 +868,32 @@
    * @param {number} id - A lab identifier.
    * @return {string|null} The lab status or null if not found.
    */
-  async function getQuestStatusById(id) {
-    const record = await tmpdb.quests.filter((record) => {
+  async function getCourseStatusFromDbById(id) {
+    const record = await tmpdb.courses.filter((record) => {
       return id == record.id;
     })[0];
     try {
       return await record.status;
     } catch (e) {
-      console.warn(`No quest record has an ID of ${id} in the database`);
+      console.warn(`No course record has an ID of ${id} in the database`);
       return null;
     }
   }
 
   /**
-   * Retrieve a quest record from the database by passsing the title.
-   * @param {string} title - A quest title.
-   * @return {Object|null} A quest record or null if not found.
+   * Retrieve a course record from the database by passsing the title.
+   * @param {string} title - A course title.
+   * @return {Object|null} A course record or null if not found.
    */
-  async function getQuestByTitle(title) {
+  async function getCourseFromDbByTitle(title) {
     const formattedTitle = formatTitle(title);
-    const record = await tmpdb.quests.filter((record) => {
+    const record = await tmpdb.courses.filter((record) => {
       return record.name == formattedTitle;
     })[0];
     try {
       return record || {status: null};
     } catch (e) {
-      console.warn(`No quest record named "${title}" in the database`);
+      console.warn(`No course record named "${title}" in the database`);
       return null;
     }
   }
@@ -878,10 +931,11 @@
     *           where 0 specifies for icon font and 1 for SVG image.
     * @return {string} The XML code of a SVG from iconMap.
     */
-  function appendIcon(element, iconKey, options={}) {
+  function appendIcon(element, iconKey, options = {}) {
     const formatKey = options.format_key || 0;
     const elementType = options.elementType || 'p';
     const beforeIcon = options.before || '';
+    const tooltip = options.tooltip || iconKey;
     const iconMap = {
       check: {
         0: '<i class="fas fa-check-circle" style="color:green"></i>',
@@ -911,6 +965,7 @@
     const newElm = document.createElement(elementType);
     newElm.classList = 'qclt-icon';
     newElm.style.height = 0;
+    newElm.title = tooltip;
     newElm.innerText = beforeIcon;
     newElm.innerHTML += icon;
     element.appendChild(newElm);
@@ -932,20 +987,20 @@
         case 'lab':
           switch (await getLabStatusById(id)) {
             case 'finished':
-            // Annotate as a Completed Lab
+              // Annotate as a Completed Lab
               appendIcon(shadow, 'check', options);
               continue;
               break;
             case null:
-            // Append New Icon for unregistered Activity
+              // Append New Icon for unregistered Activity
               appendIcon(shadow, 'new', options);
               break;
           };
           break;
-        case 'quest':
-          switch (await getQuestStatusById(id)) {
+        case 'course':
+          switch (await getCourseStatusFromDbById(id)) {
             case 'finished':
-            // Annotate as a Completed Quest
+              // Annotate as a Completed course
               appendIcon(shadow, 'check', options);
               continue;
               break;
@@ -986,25 +1041,25 @@
   }
 
   /**
-   * Label a quest page title based on the recorded status from the database.
+   * Label a course page title based on the recorded status from the database.
    * @param {number} id - The id to query the record from the database.
    */
-  async function trackQuestTitle(id) {
+  async function trackCourseTitle(id) {
     const el = document.querySelector('.ql-headline-1');
     const title = el.innerText;
     const options = {elementType: 'span', before: ' '};
-    switch (await getQuestStatusById(id)) {
+    switch (await getCourseStatusFromDbById(id)) {
       case 'finished':
         // Annotate as Completed
         setBackgroundColor(el, 'green');
         appendIcon(el, 'check', options);
-        updateRecordById('quest', id, {'name': formatTitle(title)});
+        updateRecordById('course', id, {'name': formatTitle(title)});
         break;
       case null:
         // Annotate as Unregistered;
         setBackgroundColor(el, 'yellow');
         appendIcon(el, 'new', options);
-        createRecord('quest', id, {'name': formatTitle(title), 'status': ''});
+        createRecord('course', id, {'name': formatTitle(title), 'status': ''});
         break;
     };
   }
@@ -1012,7 +1067,7 @@
   /**
    * Extract ids from the title links and label the titles based on the
    * recorded status from the database.
-   * @param {Object[]} titles - The DOM elements that contain lab/quest titles.
+   * @param {Object[]} titles - The DOM elements that contain lab/course titles.
    */
   async function trackListOfTitles(titles) {
     for (const title of titles) {
@@ -1028,29 +1083,29 @@
           // tracking a lab on catalog page
           switch (await getLabStatusById(id)) {
             case 'finished':
-            // Annotate as a Completed Lab
+              // Annotate as a Completed Lab
               setBackgroundColor(title, 'green');
               appendIcon(title, 'check', options);
               continue;
               break;
             case null:
-            // Annotate as Unregistered
+              // Annotate as Unregistered
               setBackgroundColor(title, 'yellow');
               appendIcon(title, 'new', options);
               break;
           };
           break;
-        case 'quest':
-          // tracking a quest on catalog page
-          switch (await getQuestStatusById(id)) {
+        case 'course':
+          // tracking a course on catalog page
+          switch (await getCourseStatusFromDbById(id)) {
             case 'finished':
-            // Annotate as a Completed Quest
+              // Annotate as a Completed Course
               setBackgroundColor(title, 'green');
               appendIcon(title, 'check', options);
               continue;
               break;
             case null:
-            // Annotate as Unregistered
+              // Annotate as Unregistered
               setBackgroundColor(title, 'yellow');
               appendIcon(title, 'new', options);
               break;
@@ -1070,7 +1125,7 @@
     button.type = 'button';
     button.id = 'db-update';
     button.classList = 'db-update-button mdl-button mdl-button--icon' +
-                      ' mdl-button--primary mdl-js-button mdl-js-ripple-effect';
+      ' mdl-button--primary mdl-js-button mdl-js-ripple-effect';
     button.title = 'Update Database Records';
     button.innerHTML = '<i class="material-icons">sync</i>';
     button.addEventListener('click', batchUpdateToDb);
@@ -1117,7 +1172,7 @@
     }
     if (perPage > onPage) {
       pagination.innerHTML += '<span class="next_page disabled" aria-disabled="true">' +
-            '<i class="material-icons" aria-label="Next page">navigate_next</i></span>';
+        '<i class="material-icons" aria-label="Next page">navigate_next</i></span>';
     } else {
       const nextPage = document.createElement('a');
       nextPage.className = 'next_page';
@@ -1146,13 +1201,13 @@
   };
 
   /**
-    * Extract and handle the data from an Activities table.
+    * Extract and handle the data from an Activities table on the Progress page
+    * ('/profile/activity').
     * @return {Object[]} JSON-formatted data from the Activity table
     */
-  const parseActivities = () => {
+  const parseActivitiesOnProgressPage = () => {
     // Tracking tables under the My Learning section
-    const qlTable = document.querySelector('ql-table');
-    return qlTable ? qlTable.data : null;
+    return document.querySelector(ACTIVITY_TABLE_SELECTOR)?.data || null;
   };
 
   /**
@@ -1161,12 +1216,12 @@
     * @param {Object[]} records - JSON-formatted data from the Activity table.
     * @return {number} Number of activity.
     */
-  const trackActivities = async (records) => {
+  const trackAndAnnotateActivities = async (records) => {
     const staging = {
       untrackedRecords: [],
       unregisteredRecords: [],
     };
-    const options = {format_key: 1, elementType: 'span', before: ' '};
+    const options = {format_key: 1, elementType: 'span'};
     const statusHandler = {
       // Annotate a record marked as finished in database
       'finished': (el, record, type) => {
@@ -1183,25 +1238,17 @@
       'null': (el, record, type) => {
         setBackgroundColor(el, 'yellow');
         const col1 = el.children[0];
-        const col2 = el.children[1];
-        const searchIcon = appendSeachLink(col2, col1.innerText);
-        appendIcon(searchIcon, 'search', {format_key: 1, elementType: 'span'});
-        appendIcon(col2, 'warning', options);
+        const searchIcon = appendSeachLink(col1, col1.innerText);
+        appendIcon(searchIcon, 'search', {...options, tooltip: 'Search this activity'});
+        appendIcon(col1, 'warning', {...options, before: ' ', tooltip: 'Unregistered activity'});
         el.classList.add(`new-${type}`);
         staging.unregisteredRecords.push({type, record});
       },
     };
     const typeHandler = (type) => {
       const handlerObj = {
-        /* Change the background in purple color, and add a Gamepad
-          icon to the second column to the row of a Game record.    */
-        'game': (el) => {
-          setBackgroundColor(el, 'purple');
-          appendIcon(el.children[1], 'game', options);
-          el.classList.add('completed-game');
-        },
         'lab': async (el, name, passed) => {
-          const record = await getLabByTitle(name);
+          const record = await getLabFromDbByTitle(name);
           const handler = statusHandler[record.status];
           if (passed) {
             handler(el, record || name, 'lab');
@@ -1210,10 +1257,10 @@
           }
           return record;
         },
-        'quest': async (el, name) => {
-          const record = await getQuestByTitle(name);
+        'course': async (el, name) => {
+          const record = await getCourseFromDbByTitle(name);
           const handler = statusHandler[record.status];
-          handler(el, record || name, 'quest');
+          handler(el, record || name, 'course');
           return record;
         },
       };
@@ -1222,12 +1269,22 @@
       };
       return handlerObj[type] || dummyFunc;
     };
-    const qlTable = document.querySelector('ql-table');
-    if (qlTable) {
-      const rows = qlTable.shadowRoot.querySelectorAll('tbody > tr');
+    const activityTable = document.querySelector(ACTIVITY_TABLE_SELECTOR);
+    if (activityTable) {
+      const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
       for (const [i, record] of records.entries()) {
-        const type = record.type.toLowerCase();
-        const name = record.name;
+        /**
+          Example of `record`:{
+            "name": "<a href=\"/quizzes/409\">Quiz: Getting Started with Go</a>",
+            "type": "<ql-activity-label activity=\"quiz\">Quiz: Getting Started with Go</ql-activity-label>",
+            "started": "2020-01-01T00:00:00.000-00:00",
+            "ended": "2020-01-01T00:01:00.000-00:00",
+            "score": "Assessment 100.0%",
+            "passed": true
+          }
+        */
+        const type = record.type.match(/activity="(\w+)"/)[1].toLowerCase();
+        const name = record.name.match(/>([^<]+)</)?.slice(1, 2)?.[0] || record.name;
         const passed = record.passed;
         const row = rows[i];
         const handler = typeHandler(type);
@@ -1295,21 +1352,20 @@
         identifier: 'activities',
         exec: async () => {
           console.debug('Tracking activity data on Profle');
-          const qlData = parseActivities();
-          const results = await trackActivities(qlData);
-          const button = createUpdateButton(results);
-          button.style.cssText = 'margin: auto 0 auto auto';
+          const activitiesData = parseActivitiesOnProgressPage();
+          const results = await trackAndAnnotateActivities(activitiesData);
+          // Create an Update button and a Pagination control
+          const updateButton = createUpdateButton(results);
+          updateButton.style.cssText = 'margin: auto 0 auto auto';
           const pagination = createActivitesPagination(results.counts.rows);
-          const buttonGroup = createButtonGroup();
           pagination.style.cssText = 'margin: auto 12px auto 36px';
-          const activityFilters = document.querySelector('#learning_activity_search .filters');
-          buttonGroup.appendChild(button);
+          // Append buttons to the button group on the top-right corner
+          // of the Activities table
+          const buttonGroup = createButtonGroup();
+          buttonGroup.appendChild(updateButton);
           buttonGroup.appendChild(pagination);
+          const activityFilters = document.querySelector('#learning_activity_search .filters');
           activityFilters.appendChild(buttonGroup);
-          const clonedGroup = buttonGroup.cloneNode('true');
-          clonedGroup.style.cssText = 'margin-top: 16px';
-          const profileTabs = document.querySelector('.profile-tabs');
-          profileTabs.appendChild(clonedGroup);
         },
       },
       '/quests': {
@@ -1317,7 +1373,7 @@
         exec: async () => {
           console.debug('Tracking a quest page');
           const id = m[2];
-          await trackQuestTitle(id);
+          await trackCourseTitle(id);
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
         },
@@ -1348,6 +1404,6 @@
   //
   main().catch((e) => {
     // Dexie.MissingAPIError
-    console.error(e);
+    console.log(e);
   });
 })();
