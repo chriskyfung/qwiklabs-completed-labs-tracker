@@ -831,16 +831,22 @@
   }
 
   /**
-   * Status Query Methods.
-   * @param {number} id
-   * @return {boolean}
+   * The function `getLabFromDbById` retrieves a lab record from a temporary database based on the
+   * provided ID, handling errors and returning a default object if no record is found.
+   * @param id - The `getLabFromDbById` function is an asynchronous function that takes an `id` parameter
+   * as input. This function retrieves a lab record from a temporary database (`tmpdb`) based on the
+   * provided `id`. If a matching record is found, it is returned. If no matching record is
+   * @return The function `getLabFromDbById` is returning the lab record with the specified `id` from
+   * the database. If a record with the given `id` is found, it will return that record. If no record is
+   * found with the given `id`, it will return an object with a `status` property set to `null`. If an
+   * error occurs during the process, it will log
    */
-  async function getLabStatusFromDbById(id) {
+  async function getLabFromDbById(id) {
     const record = await tmpdb.labs.filter((record) => {
       return id == record.id;
     })[0];
     try {
-      return await record.status;
+      return record || {status: null};
     } catch (e) {
       // console.error (`${e}\nWhen handling lab id: "${id}"`);
       console.warn(`No lab record has an ID of ${id} in the database`);
@@ -987,7 +993,9 @@
       const options = {format_key: 1};
       switch (type) {
         case 'lab':
-          switch (await getLabStatusFromDbById(id)) {
+          const record = await getLabFromDbById(id);
+          console.log(`Lab ID: ${id}, Record: ${JSON.stringify(record)}`);
+          switch (record.status) {
             case 'finished':
               // Annotate as a Completed Lab
               appendIcon(shadow, 'check', options);
@@ -1027,7 +1035,9 @@
     const h1 = labPageTitle.querySelector('h1');
     const title = h1.innerText;
     const options = {format_key: 1, elementType: 'span', style: 'margin-left: 4px'};
-    switch (await getLabStatusFromDbById(id)) {
+    const record = await getLabFromDbById(id);
+    console.log(`Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
+    switch (record.status) {
       case 'finished':
         // Annotate as Completed
         setBackgroundColor(h1, 'green');
@@ -1085,7 +1095,9 @@
       switch (type) {
         case 'lab':
           // tracking a lab on catalog page
-          switch (await getLabStatusFromDbById(id)) {
+          const record = await getLabFromDbById(id);
+          console.log(`Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
+          switch (record.status) {
             case 'finished':
               // Annotate as a Completed Lab
               setBackgroundColor(title, 'green');
@@ -1251,8 +1263,9 @@
     };
     const typeHandler = (type) => {
       const handlerObj = {
-        'lab': async (el, name, passed) => {
-          const record = await getLabFromDbByTitle(name);
+        'lab': async (el, id, name, passed) => {
+          const record = await getLabFromDbById(id);
+          // || await getLabFromDbByTitle(name);
           const handler = statusHandler[record.status];
           if (passed) {
             handler(el, record || name, 'lab');
@@ -1287,12 +1300,13 @@
             "passed": true
           }
         */
-        const type = record.type.match(/activity="(\w+)"/)[1].toLowerCase();
-        const name = record.name.match(/>([^<]+)</)?.slice(1, 2)?.[0] || record.name;
+        const type = record.type.match(/activity="(?<type>\w+)"/)?.groups?.type.toLowerCase() || 'unknown';
+        const name = record.name.match(/>(?<name>[^<]+)</)?.groups?.name || record.name;
+        const id = record.name.match(/\/\w+\/(?<id>\d+)/)?.groups?.id || null;
         const passed = record.passed;
         const row = rows[i];
         const handler = typeHandler(type);
-        await handler(row, name, passed);
+        await handler(row, id, name, passed);
       };
       if (isDebugMode) {
         console.table(staging.untrackedRecords);
