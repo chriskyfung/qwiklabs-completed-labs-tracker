@@ -877,12 +877,12 @@
    * @param {number} id - A lab identifier.
    * @return {string|null} The lab status or null if not found.
    */
-  async function getCourseStatusFromDbById(id) {
+  async function getCourseFromDbById(id) {
     const record = await tmpdb.courses.filter((record) => {
       return id == record.id;
     })[0];
     try {
-      return await record.status;
+      return record || {status: null};
     } catch (e) {
       console.warn(`No course record has an ID of ${id} in the database`);
       return null;
@@ -1008,7 +1008,9 @@
           };
           break;
         case 'course':
-          switch (await getCourseStatusFromDbById(id)) {
+          const courseRecord = await getCourseFromDbById(id);
+          console.log(`Course ID: ${id}, Record: ${JSON.stringify(courseRecord)}`);
+          switch (courseRecord.status) {
             case 'finished':
               // Annotate as a Completed course
               appendIcon(shadow, 'check', options);
@@ -1062,7 +1064,9 @@
     const h1 = coursePageTitle.querySelector('h1');
     const title = h1.innerText;
     const options = {format_key: 1, elementType: 'span'};
-    switch (await getCourseStatusFromDbById(id)) {
+    const courseRecord = await getCourseFromDbById(id);
+    console.log(`Course ID: ${id}, Title: "${title}", Record: ${JSON.stringify(courseRecord)}`);
+    switch (courseRecord.status) {
       case 'finished':
         // Annotate as Completed
         setBackgroundColor(h1, 'green');
@@ -1113,7 +1117,9 @@
           break;
         case 'course':
           // tracking a course on catalog page
-          switch (await getCourseStatusFromDbById(id)) {
+          const courseRecord = await getCourseFromDbById(id);
+          console.log(`Course ID: ${id}, Title: "${title}", Record: ${JSON.stringify(courseRecord)}`);
+          switch (courseRecord.status) {
             case 'finished':
               // Annotate as a Completed Course
               setBackgroundColor(title, 'green');
@@ -1274,8 +1280,8 @@
           }
           return record;
         },
-        'course': async (el, name) => {
-          const record = await getCourseFromDbByTitle(name);
+        'course': async (el, id, name, passed) => {
+          const record = await getCourseFromDbById(id);
           const handler = statusHandler[record.status];
           handler(el, record || name, 'course');
           return record;
