@@ -448,7 +448,15 @@
    */
   async function trackTitleOnLabPage(id) {
     const labPageTitle = document.querySelector(LAB_PAGE_TITLE_SELECTOR);
+    if (!labPageTitle) {
+      console.warn(`Element '${LAB_PAGE_TITLE_SELECTOR}' not found.`);
+      return;
+    }
     const h1 = labPageTitle.querySelector('h1');
+    if (!h1) {
+      console.warn(`h1 not found in '${LAB_PAGE_TITLE_SELECTOR}'.`);
+      return;
+    }
     const title = h1.innerText;
     const options = {format_key: 1, elementType: 'span', style: 'margin-left: 4px'};
     const record = await getLabFromDbById(id);
@@ -475,7 +483,15 @@
    */
   async function trackTitleOnCoursePage(id) {
     const coursePageTitle = document.querySelector(COURSE_PAGE_TITLE_SELECTOR);
+    if (!coursePageTitle) {
+      console.warn(`Element '${COURSE_PAGE_TITLE_SELECTOR}' not found.`);
+      return;
+    }
     const h1 = coursePageTitle.querySelector('h1');
+    if (!h1) {
+      console.warn(`h1 not found in '${COURSE_PAGE_TITLE_SELECTOR}'.`);
+      return;
+    }
     const title = h1.innerText;
     const options = {format_key: 1, elementType: 'span'};
     const courseRecord = await getCourseFromDbById(id);
@@ -800,8 +816,12 @@
         exec: async () => {
           console.debug('Tracking data on Catalog');
           const container = document.querySelector(SEARCH_RESULT_CONTAINER_SELECTOR);
-          const cards = container.shadowRoot.querySelectorAll(ACTIVITY_CARD_SELECTOR);
-          await trackActivityCards(cards);
+          if (container && container.shadowRoot) {
+            const cards = container.shadowRoot.querySelectorAll(ACTIVITY_CARD_SELECTOR);
+            await trackActivityCards(cards);
+          } else {
+            console.warn(`Element '${SEARCH_RESULT_CONTAINER_SELECTOR}' not found or has no shadowRoot.`);
+          }
         },
       },
       '/focuses': {
@@ -828,7 +848,11 @@
           buttonGroup.appendChild(updateButton);
           buttonGroup.appendChild(pagination);
           const activityFilters = document.querySelector('#learning_activity_search .filters');
-          activityFilters.appendChild(buttonGroup);
+          if (activityFilters) {
+            activityFilters.appendChild(buttonGroup);
+          } else {
+            console.warn("Element '#learning_activity_search .filters' not found.");
+          }
         },
       },
       '/course_templates': {
