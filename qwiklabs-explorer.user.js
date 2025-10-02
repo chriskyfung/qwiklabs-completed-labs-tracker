@@ -16,7 +16,7 @@
 // @match        https://*.cloudskillsboost.google/focuses/*
 // @match        https://*.cloudskillsboost.google/quests/*
 // @match        https://*.cloudskillsboost.google/profile/activity*
-// @require      https://unpkg.com/dexie@latest/dist/dexie.js
+// @require      https://unpkg.com/dexie@4.2.0/dist/dexie.js
 // ==/UserScript==
 
 (function() {
