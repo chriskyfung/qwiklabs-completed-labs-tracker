@@ -563,7 +563,10 @@
     button.classList = 'db-update-button mdl-button mdl-button--icon' +
       ' mdl-button--primary mdl-js-button mdl-js-ripple-effect';
     button.title = 'Update Database Records';
-    button.innerHTML = '<i class="material-icons">sync</i>';
+    const icon = document.createElement('i');
+    icon.className = 'material-icons';
+    icon.textContent = 'sync';
+    button.appendChild(icon);
     button.addEventListener('click', batchUpdateToDb);
     button.setAttribute('data-untracked-records', JSON.stringify(dataObj.data.untrackedRecords));
     button.setAttribute('data-unregistered-records', JSON.stringify(dataObj.data.unregisteredRecords));
@@ -593,30 +596,50 @@
     const currentPage = parseInt(params.get('page')) || 1;
     const pagination = document.createElement('div');
     pagination.className = 'pagination__navigation';
+
+    const createIcon = (label, content) => {
+      const icon = document.createElement('i');
+      icon.className = 'material-icons';
+      icon.setAttribute('aria-label', label);
+      icon.textContent = content;
+      return icon;
+    };
+
     if (currentPage == 1) {
-      pagination.innerHTML = '<span class="previous_page disabled" aria-disabled="true">' +
-        '<i class="material-icons" aria-label="Previous page">navigate_before</i></span>';
+      const prevSpan = document.createElement('span');
+      prevSpan.className = 'previous_page disabled';
+      prevSpan.setAttribute('aria-disabled', 'true');
+      prevSpan.appendChild(createIcon('Previous page', 'navigate_before'));
+      pagination.appendChild(prevSpan);
     } else {
       const previousPage = document.createElement('a');
       previousPage.className = 'previous_page';
       previousPage.rel = 'prev';
-      params.set('page', currentPage - 1);
-      url.search = params.toString();
-      previousPage.href = url.toString();
-      previousPage.innerHTML = '<i class="material-icons" aria-label="Previous page">navigate_before</i>';
+      const newParams = new URLSearchParams(params);
+      newParams.set('page', currentPage - 1);
+      const newUrl = new URL(url);
+      newUrl.search = newParams.toString();
+      previousPage.href = newUrl.toString();
+      previousPage.appendChild(createIcon('Previous page', 'navigate_before'));
       pagination.appendChild(previousPage);
     }
+
     if (perPage > onPage) {
-      pagination.innerHTML += '<span class="next_page disabled" aria-disabled="true">' +
-        '<i class="material-icons" aria-label="Next page">navigate_next</i></span>';
+      const nextSpan = document.createElement('span');
+      nextSpan.className = 'next_page disabled';
+      nextSpan.setAttribute('aria-disabled', 'true');
+      nextSpan.appendChild(createIcon('Next page', 'navigate_next'));
+      pagination.appendChild(nextSpan);
     } else {
       const nextPage = document.createElement('a');
       nextPage.className = 'next_page';
       nextPage.rel = 'next';
-      params.set('page', currentPage + 1);
-      url.search = params.toString();
-      nextPage.href = url.toString();
-      nextPage.innerHTML = '<i class="material-icons" aria-label="Next page">navigate_next</i>';
+      const newParams = new URLSearchParams(params);
+      newParams.set('page', currentPage + 1);
+      const newUrl = new URL(url);
+      newUrl.search = newParams.toString();
+      nextPage.href = newUrl.toString();
+      nextPage.appendChild(createIcon('Next page', 'navigate_next'));
       pagination.appendChild(nextPage);
     }
     return pagination;
