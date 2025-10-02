@@ -259,13 +259,7 @@
     const record = await tmpdb.labs.filter((record) => {
       return id == record.id;
     })[0];
-    try {
-      return record || {status: null};
-    } catch (e) {
-      // console.error (`${e}\nWhen handling lab id: "${id}"`);
-      console.warn(`No lab record has an ID of ${id} in the database`);
-      return null;
-    }
+    return record || {status: null};
   }
 
   /**
@@ -278,12 +272,7 @@
     const record = await tmpdb.labs.filter((record) => {
       return record.name == formattedTitle;
     })[0];
-    try {
-      return record || {status: null};
-    } catch (e) {
-      console.warn(`No lab record named "${title}" in the database`);
-      return null;
-    }
+    return record || {status: null};
   }
 
   /**
@@ -295,12 +284,7 @@
     const record = await tmpdb.courses.filter((record) => {
       return id == record.id;
     })[0];
-    try {
-      return record || {status: null};
-    } catch (e) {
-      console.warn(`No course record has an ID of ${id} in the database`);
-      return null;
-    }
+    return record || {status: null};
   }
 
   /**
@@ -313,12 +297,7 @@
     const record = await tmpdb.courses.filter((record) => {
       return record.name == formattedTitle;
     })[0];
-    try {
-      return record || {status: null};
-    } catch (e) {
-      console.warn(`No course record named "${title}" in the database`);
-      return null;
-    }
+    return record || {status: null};
   }
 
   //
