@@ -988,6 +988,9 @@
     */
   async function trackActivityCards(cards) {
     for (const card of cards) {
+      // NOTE: This script relies on the internal structure of the ql-activity-card
+      // web component. If the site updates this component, the selectors below
+      // may break.
       if (!card.shadowRoot) {
         console.warn('No shadowRoot found for this card element. Skip it.');
         continue;
