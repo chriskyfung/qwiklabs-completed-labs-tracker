@@ -684,14 +684,16 @@
         rowElement.classList.add(`untracked-${type}`);
         staging.untrackedRecords.push({type, ...record});
       },
-      'null': (rowElement, record, type) => {
+      'null': (rowElement, record, type, id, name) => {
         setBackgroundColor(rowElement, 'yellow');
         const col1 = rowElement.children[0];
         const searchIcon = appendSeachLink(col1, col1.innerText);
         appendIcon(searchIcon, 'search', {...options, tooltip: 'Search this activity'});
         appendIcon(col1, 'warning', {...options, before: ' ', tooltip: 'Unregistered activity'});
         rowElement.classList.add(`new-${type}`);
-        staging.unregisteredRecords.push({type, record});
+        const newRecord = {id: parseInt(id), name: formatTitle(name), status: ''};
+        createRecord(type, id, newRecord);
+        staging.unregisteredRecords.push({type, record: newRecord});
       },
     };
 
@@ -701,8 +703,8 @@
         'lab': async (rowElement, id, name, passed) => {
           const record = await getLabFromDbById(id);
           const statusUpdateHandler = statusHandler[record.status];
-          if (passed) {
-            statusUpdateHandler(rowElement, record || name, 'lab');
+          if (passed && statusUpdateHandler) {
+            statusUpdateHandler(rowElement, record, 'lab', id, name);
           } else {
             setBackgroundColor(rowElement, 'red');
           }
@@ -711,7 +713,7 @@
         'course': async (rowElement, id, name, passed) => {
           const record = await getCourseFromDbById(id);
           const statusUpdateHandler = statusHandler[record.status];
-          statusUpdateHandler(rowElement, record || name, 'course');
+          statusUpdateHandler(rowElement, record, 'course', id, name);
           return record;
         },
       };
