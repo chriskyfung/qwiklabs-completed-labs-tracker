@@ -16,32 +16,47 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
   'use strict';
 
-  console.save = function(data, filename) {
-    if (! data) {
+  console.save = function (data, filename) {
+    if (!data) {
       console.error('Console.save: No data');
       return;
     }
 
-    if (! filename) {
+    if (!filename) {
       filename = 'console.json';
     }
-
 
     if (typeof data === 'object') {
       data = JSON.stringify(data, undefined, 4);
     }
 
-    const blob = new Blob([data], {type: 'text/json'});
+    const blob = new Blob([data], { type: 'text/json' });
     const e = document.createEvent('MouseEvents');
     const a = document.createElement('a');
 
     a.download = filename;
     a.href = window.URL.createObjectURL(blob);
     a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
-    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    e.initMouseEvent(
+      'click',
+      true,
+      false,
+      window,
+      0,
+      0,
+      0,
+      0,
+      0,
+      false,
+      false,
+      false,
+      false,
+      0,
+      null
+    );
     a.dispatchEvent(e);
   };
 
@@ -62,9 +77,9 @@
 
   const URL = window.location.href;
   if (URL == 'https://www.qwiklabs.com/catalog') {
-    document.querySelector('label[for=\'format_labs\']').innerHTML +=
+    document.querySelector("label[for='format_labs']").innerHTML +=
       '<span class="mdl-checkbox__label" style="align-items:flex-start;"><i class="fas fa-file-download"></i>&nbsp;<a href="https://www.qwiklabs.com/catalog.labs?cloud%5B%5D=GCP&keywords=&locale=&page=1&per_page=100" target="_blank">GCP</a><i class="fas fa-file-download"></i>&nbsp;<a href="https://www.qwiklabs.com/catalog.labs?cloud%5B%5D=AWS&keywords=&locale=&page=1&per_page=100" target="_blank">AWS</a></span>';
-    document.querySelector('label[for=\'format_quests\']').innerHTML +=
+    document.querySelector("label[for='format_quests']").innerHTML +=
       '<span class="mdl-checkbox__label" style="align-items:flex-start;"><i class="fas fa-file-download"></i>&nbsp;<a href="https://www.qwiklabs.com/catalog.quests?cloud%5B%5D=GCP&keywords=&locale=&page=1&per_page=100" target="_blank">GCP</a><i class="fas fa-file-download"></i>&nbsp;<a href="https://www.qwiklabs.com/catalog.quests?cloud%5B%5D=AWS&keywords=&locale=&page=1&per_page=100" target="_blank">AWS</a></span>';
   } else {
     const type = URL.match(/catalog.(\w+)?/)[1];
@@ -87,13 +102,13 @@
 
     items.forEach((i) => {
       const name = getInnerText(i, '.catalog-item__title');
-      const id = i.querySelector('.catalog-item__title > a').
-          href.match(/(focuses|quests)\/(\d+)/)[2];
+      const id = i
+        .querySelector('.catalog-item__title > a')
+        .href.match(/(focuses|quests)\/(\d+)/)[2];
       const dur = getInnerText(i, '.catalog-item-duration');
       const level = getInnerText(i, '.catalog-item-level');
       const cost = getInnerText(i, '.catalog-item-cost');
-      const line =
-      `${type},${id},"${name}",${dur},${level},${cost},${platformName}\n`;
+      const line = `${type},${id},"${name}",${dur},${level},${cost},${platformName}\n`;
       console.log(line);
       csvData += line;
     });
@@ -101,7 +116,7 @@
 
     console.save(csvData, `qwiklabs-${type}-${platformName}-${iPage}.csv`);
 
-    setTimeout(function() {
+    setTimeout(function () {
       const nextBtn = document.querySelector('.next_page');
       if (nextBtn) nextBtn.click();
     }, 3000);
