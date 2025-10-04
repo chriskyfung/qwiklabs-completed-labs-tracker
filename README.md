@@ -1,10 +1,10 @@
-# Qwiklabs Lab Completion Tracker
+# Google Cloud Skills Boost Lab Completion Tracker
 
-💡 **Label completed quests and labs on Qwiklabs webpages**
+💡 **Label completed quests and labs on Google Cloud Skills Boost webpages**
 
-[Qwiklabs](https://www.qwiklabs.com) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and quests for learn and practice.
+[Google Cloud Skills Boost](https://www.cloudskillsboost.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and quests for learn and practice.
 
-As a Qwiklabs user, I figure out it is messy and damp to look up unenrolled quests or incompleted labs from the Qwiklabs Catalog page or Search Results. I desired to make a straight-forward way to identify the catalog items, by adding a green check-circle next to those completed.
+As a Google Cloud Skills Boost user, I figure out it is messy and damp to look up unenrolled quests or incompleted labs from the Google Cloud Skills Boost Catalog page or Search Results. I desired to make a straight-forward way to identify the catalog items, by adding a green check-circle next to those completed.
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/chriskyfung/qwiklabs-completed-labs-tracker) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) ![GitHub Release Date
 ](https://img.shields.io/github/release-date/chriskyfung/qwiklabs-completed-labs-tracker) ![GitHub issues
@@ -12,8 +12,8 @@ As a Qwiklabs user, I figure out it is messy and damp to look up unenrolled ques
 
 🎯 **Objectives of this project**
 
-- To develop a handy way to implement the enhancement to Qwiklabs website in a web browser.
-- To indicate completed labs and quests in Qwiklabs Catalog pages, thereby easier to inspect the self-learning progress and look for unenrolled quests or incompleted labs.
+- To develop a handy way to implement the enhancement to Google Cloud Skills Boost website in a web browser.
+- To indicate completed labs and quests in Google Cloud Skills Boost Catalog pages, thereby easier to inspect the self-learning progress and look for unenrolled quests or incompleted labs.
 - To design a location to store and update the name list of the completed items.
 
 For more information, please read [**this post**](https://chriskyfung.github.io/blog/qwiklabs/Qwiklabs-User-Tips-for-Learning_Google_Cloud_Platform) on my GitHub Pages.
@@ -24,9 +24,11 @@ For more information, please read [**this post**](https://chriskyfung.github.io/
 
 This script requires an userscript manager to run it in your browser, such as [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) for Google Chrome. Click on the following button to download and install the script via your userscript manager.
 
-[![Install Script with Tampermonkey](https://img.shields.io/badge/-Install%20Script-brightgreen?color=green&logo=tampermonkey&style=for-the-badge)](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js)
+[![Install Script with Tampermonkey](https://img.shields.io/badge/-Install%20Script-brightgreen?color=green&logo=tampermonkey&style=for-the-badge)](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/main/qwiklabs-explorer.user.js)
 
 ## 🎠Features
+
+*Note: The screenshots below are from a previous version of the userscript on the old Google Cloud Skills Boost website. The UI on the new Google Cloud Skills Boost website may look different.*
 
 ### 🌈 on Home pages
 
@@ -84,7 +86,7 @@ Would you like to buy me a coffee? I would really appreciate it if you could sup
 
 ## 🤝 Contributing
 
-Pull requests for new features, bug fixes, and suggestions are welcome!
+Pull requests for new features, bug fixes, and suggestions are welcome! Please see the [contributing guidelines](.github/CONTRIBUTING.md) for more details.
 
 ## ⚖ License
 
