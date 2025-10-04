@@ -7,14 +7,15 @@
     "dexie": "^3.2.2"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
+    "eslint": "^8.57.0",
     "eslint-config-google": "^0.14.0",
-    "prettier": "^2.4.1"
+    "prettier": "^3.2.5",
+    "eslint-config-prettier": "^9.1.0"
   },
   "scripts": {
     "lint": "npm run eslint && npm run prettier",
     "eslint": "eslint --ext .js --fix .",
-    "prettier": "prettier '**/*.js' --write --ignore-path .eslintignore",
+    "prettier": "prettier \"**/*.js\" --write --ignore-path .eslintignore",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
