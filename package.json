@@ -1,10 +1,10 @@
 {
   "name": "qwiklabs-completed-labs-tracker",
-  "version": "2.0.3",
-  "description": "Label completed labs and quests on Qwiklabs",
+  "version": "3.0.0",
+  "description": "Label completed labs and quests on Google Cloud Skills Boost",
   "main": "qwiklabs-explorer.user.js",
   "dependencies": {
-    "dexie": "^3.2.2"
+    "dexie": "4.2.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
@@ -25,7 +25,9 @@
   "keywords": [
     "userscript",
     "qwiklabs",
-    "labs-tracker"
+    "labs-tracker",
+    "google-cloud-skills-boost",
+    "cloud-skills-boost"
   ],
   "author": "Chris K.Y. Fung",
   "license": "GPL-3.0",
