@@ -1,10 +1,10 @@
 # Google Cloud Skills Boost Lab Completion Tracker
 
-💡 **Label completed quests and labs on Google Cloud Skills Boost webpages**
+💡 **Label completed courses and labs on Google Cloud Skills Boost webpages**
 
-[Google Cloud Skills Boost](https://www.cloudskillsboost.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and quests for learn and practice.
+[Google Cloud Skills Boost](https://www.cloudskillsboost.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and courses for learn and practice.
 
-As a Google Cloud Skills Boost user, I figure out it is messy and damp to look up unenrolled quests or incompleted labs from the Google Cloud Skills Boost Catalog page or Search Results. I desired to make a straight-forward way to identify the catalog items, by adding a green check-circle next to those completed.
+As a Google Cloud Skills Boost user, I found it cumbersome to identify unenrolled courses or incomplete labs from the Catalog and search results. This script offers a straightforward way to track your progress by visually marking items you have already completed.
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/chriskyfung/qwiklabs-completed-labs-tracker) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) ![GitHub Release Date
 ](https://img.shields.io/github/release-date/chriskyfung/qwiklabs-completed-labs-tracker) ![GitHub issues
@@ -12,9 +12,9 @@ As a Google Cloud Skills Boost user, I figure out it is messy and damp to look u
 
 🎯 **Objectives of this project**
 
-- To develop a handy way to implement the enhancement to Google Cloud Skills Boost website in a web browser.
-- To indicate completed labs and quests in Google Cloud Skills Boost Catalog pages, thereby easier to inspect the self-learning progress and look for unenrolled quests or incompleted labs.
-- To design a location to store and update the name list of the completed items.
+- Develop a userscript to enhance the Google Cloud Skills Boost website.
+- Indicate completed labs and courses on Catalog pages, making it easier to track learning progress and find new activities.
+- Store and update the list of completed items locally in your browser's IndexedDB.
 
 For more information, please read [**this post**](https://chriskyfung.github.io/blog/qwiklabs/Qwiklabs-User-Tips-for-Learning_Google_Cloud_Platform) on my GitHub Pages.
 
@@ -22,7 +22,7 @@ For more information, please read [**this post**](https://chriskyfung.github.io/
 
 ## 🛴 How to Use
 
-This script requires an userscript manager to run it in your browser, such as [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) for Google Chrome. Click on the following button to download and install the script via your userscript manager.
+This script requires a userscript manager, such as [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) for Google Chrome, to run in your browser. Click the button below to install the script via your userscript manager.
 
 [![Install Script with Tampermonkey](https://img.shields.io/badge/-Install%20Script-brightgreen?color=green&logo=tampermonkey&style=for-the-badge)](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/main/qwiklabs-explorer.user.js)
 
@@ -30,49 +30,41 @@ This script requires an userscript manager to run it in your browser, such as [T
 
 *Note: The screenshots below are from a previous version of the userscript on the old Google Cloud Skills Boost website. The UI on the new Google Cloud Skills Boost website may look different.*
 
-### 🌈 on Home pages
+### 🌈 on your Dashboard page
 
-Retrieve the local records and annotate each card in “My Favorites”, “Featured Learning”, and “What’s Hots” sections with badges.
+Annotates lab and course cards in the "Stay on track" section based on your locally stored progress.
 
-- Screenshot:
+### 🌈 on a Catalog page
 
-  ![badges added to What's Hot cards](screenshots/v2.x/new-activity-cards-on-qwiklabs-home_768x689.png)
+Retrieves local records and annotates catalog items:
 
-### 🌈 on Catalog pages
+- Marks completed labs and courses with a green check circle.
+- Marks labs and courses not yet registered in the local database with a yellow 🆕 icon.
 
-Retrieve the local records and annotate each lab and quest item as the following:
+  ![Screenshot of a Catalog page](screenshots/v3.x/cloudskillsboost-tracker-catalog-page-demo.png)
 
-- Label the completed labs and quests with a green check-circle.
-- Highlight any new labs and quests that you have not yet explored in yellow color.
+### 🌈 on a Course page
 
-  ![Screenshot of a Catalog page](/demo-image.png)
+- Automatically creates a record in the local database for any unrecorded course you visit.
+- Automatically updates the course name in the local database.
+- Adds a green check circle next to the page title if the course is completed.
 
-### 🌈 on Quest pages
+### 🌈 on a Lab page
 
-- Automatically add a record for the quest or update the info to the local database
-- Add a green check-circle at the end of the page title if the quest is completed.
+- Automatically creates a record in the local database for any unrecorded lab you visit.
+- Automatically updates the lab name in the local database.
+- Adds a green check circle next to the lab title if the lab is completed.
 
-### 🌈 on Lab pages
+  ![Screenshot of a Lab header](screenshots/v3.x/cloudskillsboost-tracker-lab-page-demo.png)
 
-- Automatically add a record for the lab or update the info to the local database.
-- Add a green check-circle at the end of the lab title if the lab is completed.
+### 🌈 on your Progress page
 
-  ![Screenshot of a Lab header](/demo-image2.png)
+- Colors lab and course table rows for better readability.
+- Provides a one-click button 🔄 to update the status of all labs and courses on the current page to your local database.
+- Inserts pagination buttons to navigate through all your activities.
+- Shows 🔍 quick search links for activities that are mismatched ⚠ with database records.
 
-### 🌈 on Profile page
-
-- Annotate each table row in **Activities** tab with colors.
-- Offer pagination links for you to view all previous activities.
-- One-click update the labs and quests status from the activity table to your browser database.
-- Show 🔍 quick links to search activities that are ⚠ mismatched with database records.
-
-  [![Batch Update Activities to Your Database](/screenshots/v2.x/v210-update-activities-to-database.gif)](https://www.youtube.com/watch?v=gEwvgWuUHe4)
-
-  [![Look Up Your Older Activities With Pagination Links](/screenshots/v2.x/v210-activities-pagination.gif)](https://www.youtube.com/watch?v=dYLPFfmZVtY)
-
-  [![Investigate Conflicting Records with Quick Search](/screenshots/v2.x/v210-search-unrecognized-activity.gif)](https://www.youtube.com/watch?v=g0b7jyxdHJ8)
-
-<br>
+![Screenshot of a Progress page](screenshots/v3.x/cloudskillsboost-tracker-progress-page-demo.png)
 
 ## 👀 Future Plans
 
@@ -80,7 +72,7 @@ Retrieve the local records and annotate each lab and quest item as the following
 
 ## 💗 Support Me
 
-Would you like to buy me a coffee? I would really appreciate it if you could support me for this projects.
+If you find this project helpful, please consider supporting me. I would really appreciate it!
 
 <a href="https://www.buymeacoffee.com/chrisfungky"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" target="_blank"></a>
 
