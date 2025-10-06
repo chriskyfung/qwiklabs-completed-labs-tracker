@@ -1,8 +1,8 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: ''
-labels: ''
+title: "[FEAT] "
+labels: "enhancement"
 assignees: ''
 
 ---
@@ -18,3 +18,6 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
+
+**Check for duplicates**
+- [ ] I have searched the existing [issues](https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues) and have not found a similar feature request.
