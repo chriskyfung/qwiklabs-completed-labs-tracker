@@ -28,8 +28,6 @@ This script requires a userscript manager, such as [Tampermonkey](https://chrome
 
 ## 🎠Features
 
-*Note: The screenshots below are from a previous version of the userscript on the old Google Skills website. The UI on the new Google Skills website may look different.*
-
 ### 🌈 on your Dashboard page
 
 Annotates lab and course cards in the "Stay on track" section based on your locally stored progress.
@@ -41,7 +39,7 @@ Retrieves local records and annotates catalog items:
 - Marks completed labs and courses with a green check circle.
 - Marks labs and courses not yet registered in the local database with a yellow 🆕 icon.
 
-  ![Screenshot of a Catalog page](screenshots/v3.x/cloudskillsboost-tracker-catalog-page-demo.png)
+  ![Screenshot of a Catalog page](screenshots/v3.1/skills-tracker-catalog-page-demo.png)
 
 ### 🌈 on a Course page
 
@@ -49,13 +47,17 @@ Retrieves local records and annotates catalog items:
 - Automatically updates the course name in the local database.
 - Adds a green check circle next to the page title if the course is completed.
 
+  ![Screenshot of a Lab header](screenshots/v3.1/skills-tracker-course-page-demo-completed.png)
+
+  ![Screenshot of a Lab header](screenshots/v3.1/skills-tracker-course-page-demo-new.png)
+
 ### 🌈 on a Lab page
 
 - Automatically creates a record in the local database for any unrecorded lab you visit.
 - Automatically updates the lab name in the local database.
 - Adds a green check circle next to the lab title if the lab is completed.
 
-  ![Screenshot of a Lab header](screenshots/v3.x/cloudskillsboost-tracker-lab-page-demo.png)
+  ![Screenshot of a Lab header](screenshots/v3.1/skills-tracker-lab-page-demo-completed.png)
 
 ### 🌈 on your Progress page
 
@@ -64,7 +66,7 @@ Retrieves local records and annotates catalog items:
 - Inserts pagination buttons to navigate through all your activities.
 - Shows 🔍 quick search links for activities that are mismatched ⚠ with database records.
 
-![Screenshot of a Progress page](screenshots/v3.x/cloudskillsboost-tracker-progress-page-demo.png)
+![Screenshot of a Progress page](screenshots/v3.1/skills-tracker-progress-page-demo.png)
 
 ## 👀 Future Plans
 
