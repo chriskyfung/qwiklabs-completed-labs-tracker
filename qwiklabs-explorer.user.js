@@ -26,8 +26,8 @@
   const isDebugMode = false;
   const ACTIVITY_CARD_SELECTOR = 'ql-activity-card';
   const ACTIVITY_TABLE_SELECTOR = '.activities-table';
-  const COURSE_PAGE_TITLE_SELECTOR = '.title-text';
-  const LAB_PAGE_TITLE_SELECTOR = '.header__title';
+  const COURSE_PAGE_TITLE_SELECTOR = '.top-title';
+  const LAB_PAGE_TITLE_SELECTOR = '.lab-preamble';
   const SEARCH_RESULT_CONTAINER_SELECTOR = 'ql-search-result-container';
 
   const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.skills.google';
@@ -311,6 +311,8 @@
    */
   function setBackgroundColor(element, colorKey) {
     const colorMap = {
+      darkGreen: '#008000',
+      darkOrange: '#ff8c00',
       green: '#efe',
       yellow: '#ffc',
       purple: '#fef',
@@ -399,8 +401,9 @@
       if (card.attributes.length === 0) {
         const { href, title } = card.shadowRoot.firstElementChild.attributes;
         const type = card.shadowRoot
-          .querySelector('.content-type')
-          .innerText.toLowerCase();
+          .querySelector('ql-activity-label')
+          .getAttribute('activity')
+          .toLowerCase();
         params.id = href.value.match(/\/(\d+)/)[1];
         params.name = title.value;
         params.type = type;
@@ -469,7 +472,7 @@
     const options = {
       format_key: 1,
       elementType: 'span',
-      style: 'margin-left: 4px',
+      style: 'display: inline-block; vertical-align:super;',
     };
     const record = await getLabFromDbById(id);
     console.log(
@@ -478,12 +481,12 @@
     switch (record.status) {
       case 'finished':
         setBackgroundColor(h1, 'green');
-        appendIcon(labPageTitle, 'check', options);
+        appendIcon(h1, 'check', options);
         updateRecordById('lab', id, { name: formatTitle(title) });
         break;
       case null:
         setBackgroundColor(h1, 'yellow');
-        appendIcon(labPageTitle, 'new', options);
+        appendIcon(h1, 'new', options);
         createRecord('lab', id, { name: formatTitle(title), status: '' });
         break;
     }
@@ -512,12 +515,12 @@
     );
     switch (courseRecord.status) {
       case 'finished':
-        setBackgroundColor(h1, 'green');
+        setBackgroundColor(h1, 'darkGreen');
         appendIcon(coursePageTitle, 'check', options);
         updateRecordById('course', id, { name: formatTitle(title) });
         break;
       case null:
-        setBackgroundColor(h1, 'yellow');
+        setBackgroundColor(h1, 'darkOrange');
         appendIcon(coursePageTitle, 'new', options);
         createRecord('course', id, { name: formatTitle(title), status: '' });
         break;
