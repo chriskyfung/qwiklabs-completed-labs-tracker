@@ -1,4 +1,4 @@
-# Contributing to Google Cloud Skills Boost Lab Completion Tracker
+# Contributing to Google Skills Lab Completion Tracker
 
 First off, thank you for considering contributing! It's people like you that make this project great.
 

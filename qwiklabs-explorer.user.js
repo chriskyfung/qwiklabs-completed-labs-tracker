@@ -4,18 +4,18 @@
 // @namespace    https://chriskyfung.github.io/
 // @version      3.0.0
 // @author       chriskyfung
-// @description  Label completed courses and labs on the Catalog page(s) and Lab pages on Google Cloud Skills Boost (https://www.cloudskillsboost.google/catalog)
+// @description  Label completed courses and labs on the Catalog page(s) and Lab pages on Google Skills (https://www.skills.google/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
 // @icon         https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-32x32.png
 // @icon64       https://raw.githubusercontent.com/chriskyfung/qwiklabs-completed-labs-tracker/master/icons/favicon-64x64.png
 // @updateURL    https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/raw/master/qwiklabs-explorer.user.js
 // @supportUrl   https://github.com/chriskyfung/qwiklabs-completed-labs-tracker/issues
-// @match        https://*.cloudskillsboost.google/
-// @match        https://*.cloudskillsboost.google/catalog*
-// @match        https://*.cloudskillsboost.google/course_templates/*
-// @match        https://*.cloudskillsboost.google/focuses/*
-// @match        https://*.cloudskillsboost.google/quests/*
-// @match        https://*.cloudskillsboost.google/profile/activity*
+// @match        https://*.skills.google/
+// @match        https://*.skills.google/catalog*
+// @match        https://*.skills.google/course_templates/*
+// @match        https://*.skills.google/focuses/*
+// @match        https://*.skills.google/quests/*
+// @match        https://*.skills.google/profile/activity*
 // @require      https://unpkg.com/dexie@4.2.0/dist/dexie.js
 // @grant        none
 // ==/UserScript==
@@ -30,7 +30,7 @@
   const LAB_PAGE_TITLE_SELECTOR = '.header__title';
   const SEARCH_RESULT_CONTAINER_SELECTOR = 'ql-search-result-container';
 
-  const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.cloudskillsboost.google';
+  const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.skills.google';
 
   const dbName = 'qwiklabs-db-test-1';
   const db = new Dexie(dbName);

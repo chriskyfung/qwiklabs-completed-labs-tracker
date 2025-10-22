@@ -1,10 +1,10 @@
-# Google Cloud Skills Boost Lab Completion Tracker
+# Google Skills Lab Completion Tracker
 
-💡 **Label completed courses and labs on Google Cloud Skills Boost webpages**
+💡 **Label completed courses and labs on Google Skills webpages**
 
-[Google Cloud Skills Boost](https://www.cloudskillsboost.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and courses for learn and practice.
+[Google Skills](https://www.skills.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and courses for learn and practice.
 
-As a Google Cloud Skills Boost user, I found it cumbersome to identify unenrolled courses or incomplete labs from the Catalog and search results. This script offers a straightforward way to track your progress by visually marking items you have already completed.
+As a Google Skills user, I found it cumbersome to identify unenrolled courses or incomplete labs from the Catalog and search results. This script offers a straightforward way to track your progress by visually marking items you have already completed.
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/chriskyfung/qwiklabs-completed-labs-tracker) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) ![GitHub Release Date
 ](https://img.shields.io/github/release-date/chriskyfung/qwiklabs-completed-labs-tracker) ![GitHub issues
@@ -12,7 +12,7 @@ As a Google Cloud Skills Boost user, I found it cumbersome to identify unenrolle
 
 🎯 **Objectives of this project**
 
-- Develop a userscript to enhance the Google Cloud Skills Boost website.
+- Develop a userscript to enhance the Google Skills website.
 - Indicate completed labs and courses on Catalog pages, making it easier to track learning progress and find new activities.
 - Store and update the list of completed items locally in your browser's IndexedDB.
 
@@ -28,7 +28,7 @@ This script requires a userscript manager, such as [Tampermonkey](https://chrome
 
 ## 🎠Features
 
-*Note: The screenshots below are from a previous version of the userscript on the old Google Cloud Skills Boost website. The UI on the new Google Cloud Skills Boost website may look different.*
+*Note: The screenshots below are from a previous version of the userscript on the old Google Skills website. The UI on the new Google Skills website may look different.*
 
 ### 🌈 on your Dashboard page
 
