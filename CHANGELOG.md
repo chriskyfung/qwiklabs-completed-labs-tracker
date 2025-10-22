@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v3.1.0] - 2025-10-22
+### Features
+- Update platform name and URL to Google Skills.
+
+### Fixes
+- Adapt to UI changes for course and lab pages.
+
+### Documentation
+- Update `README.md` with v3.1 screenshots.
+
 ## [v3.0.0] - 2025-10-04
 ### Breaking Change
 - Migrated from `qwiklabs.com` to `cloudskillsboost.google` to support the new Google Cloud Skills Boost platform.

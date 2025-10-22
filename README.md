@@ -1,10 +1,10 @@
-# Google Cloud Skills Boost Lab Completion Tracker
+# Google Skills Lab Completion Tracker
 
-💡 **Label completed courses and labs on Google Cloud Skills Boost webpages**
+💡 **Label completed courses and labs on Google Skills webpages**
 
-[Google Cloud Skills Boost](https://www.cloudskillsboost.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and courses for learn and practice.
+[Google Skills](https://www.skills.google) is a great online self-paced learning platform for getting hands-on experience of the Google Cloud Platform. It has over 400 hands-on labs and courses for learn and practice.
 
-As a Google Cloud Skills Boost user, I found it cumbersome to identify unenrolled courses or incomplete labs from the Catalog and search results. This script offers a straightforward way to track your progress by visually marking items you have already completed.
+As a Google Skills user, I found it cumbersome to identify unenrolled courses or incomplete labs from the Catalog and search results. This script offers a straightforward way to track your progress by visually marking items you have already completed.
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/chriskyfung/qwiklabs-completed-labs-tracker) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) ![GitHub Release Date
 ](https://img.shields.io/github/release-date/chriskyfung/qwiklabs-completed-labs-tracker) ![GitHub issues
@@ -12,7 +12,7 @@ As a Google Cloud Skills Boost user, I found it cumbersome to identify unenrolle
 
 🎯 **Objectives of this project**
 
-- Develop a userscript to enhance the Google Cloud Skills Boost website.
+- Develop a userscript to enhance the Google Skills website.
 - Indicate completed labs and courses on Catalog pages, making it easier to track learning progress and find new activities.
 - Store and update the list of completed items locally in your browser's IndexedDB.
 
@@ -28,8 +28,6 @@ This script requires a userscript manager, such as [Tampermonkey](https://chrome
 
 ## 🎠Features
 
-*Note: The screenshots below are from a previous version of the userscript on the old Google Cloud Skills Boost website. The UI on the new Google Cloud Skills Boost website may look different.*
-
 ### 🌈 on your Dashboard page
 
 Annotates lab and course cards in the "Stay on track" section based on your locally stored progress.
@@ -41,7 +39,7 @@ Retrieves local records and annotates catalog items:
 - Marks completed labs and courses with a green check circle.
 - Marks labs and courses not yet registered in the local database with a yellow 🆕 icon.
 
-  ![Screenshot of a Catalog page](screenshots/v3.x/cloudskillsboost-tracker-catalog-page-demo.png)
+  ![Screenshot of a Catalog page](screenshots/v3.1/skills-tracker-catalog-page-demo.png)
 
 ### 🌈 on a Course page
 
@@ -49,13 +47,17 @@ Retrieves local records and annotates catalog items:
 - Automatically updates the course name in the local database.
 - Adds a green check circle next to the page title if the course is completed.
 
+  ![Screenshot of a Lab header](screenshots/v3.1/skills-tracker-course-page-demo-completed.png)
+
+  ![Screenshot of a Lab header](screenshots/v3.1/skills-tracker-course-page-demo-new.png)
+
 ### 🌈 on a Lab page
 
 - Automatically creates a record in the local database for any unrecorded lab you visit.
 - Automatically updates the lab name in the local database.
 - Adds a green check circle next to the lab title if the lab is completed.
 
-  ![Screenshot of a Lab header](screenshots/v3.x/cloudskillsboost-tracker-lab-page-demo.png)
+  ![Screenshot of a Lab header](screenshots/v3.1/skills-tracker-lab-page-demo-completed.png)
 
 ### 🌈 on your Progress page
 
@@ -64,7 +66,7 @@ Retrieves local records and annotates catalog items:
 - Inserts pagination buttons to navigate through all your activities.
 - Shows 🔍 quick search links for activities that are mismatched ⚠ with database records.
 
-![Screenshot of a Progress page](screenshots/v3.x/cloudskillsboost-tracker-progress-page-demo.png)
+![Screenshot of a Progress page](screenshots/v3.1/skills-tracker-progress-page-demo.png)
 
 ## 👀 Future Plans
 
