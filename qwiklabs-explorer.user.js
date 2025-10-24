@@ -148,6 +148,35 @@
   }
 
   /**
+   * Batch updates records in the database from an array of records.
+   * @param {Array} records - Array of records to be updated.
+   * @return {Promise<Object>} An object with counts of updated labs and courses.
+   */
+  async function batchUpdateRecords(records) {
+    console.log('Batch Update - start');
+    const counts = { labs: 0, courses: 0 };
+    for (const record of records) {
+      const { id, type } = record;
+      const tableName = `${type}s`;
+      counts[tableName] += 1;
+      const updated = await db
+        .table(tableName)
+        .where('id')
+        .equals(id)
+        .modify({ status: 'finished' });
+      if (updated) {
+        console.log(
+          `Updated ${type}: {id: ${id}, name: '${record.name}', 'status': 'finished'}`
+        );
+      }
+    }
+    console.log(
+      `Number of items updated: ${counts.courses} courses and ${counts.labs} labs`
+    );
+    return counts;
+  }
+
+  /**
    * Shows a snackbar notification at the top of the page.
    * @param {object} options - The options for the snackbar.
    * @param {string} options.message - The message to display.
@@ -226,32 +255,17 @@
       return;
     }
     const untrackedRecordsJSON = updateButton.dataset.untrackedRecords;
-    const newRecords = untrackedRecordsJSON ? JSON.parse(untrackedRecordsJSON) : [];
-    if (!newRecords || newRecords.length === 0) {
+    const recordsToUpdate = untrackedRecordsJSON
+      ? JSON.parse(untrackedRecordsJSON)
+      : [];
+    if (!recordsToUpdate || recordsToUpdate.length === 0) {
       console.warn('No untracked records found to update.');
       showSnackbar({ message: '0 items to update' });
       return;
     }
-    console.log('Batch Update - start');
-    const counts = { labs: 0, courses: 0 };
-    for (const newRecord of newRecords) {
-      const { id, type } = newRecord;
-      const tableName = `${type}s`;
-      counts[tableName] += 1;
-      const updated = await db
-        .table(tableName)
-        .where('id')
-        .equals(id)
-        .modify({ status: 'finished' });
-      if (updated) {
-        console.log(
-          `Updated ${type}: {id: ${id}, name: '${newRecord.name}', 'status': 'finished'}`
-        );
-      }
-    }
-    console.log(
-      `Number of items updated: ${counts.courses} courses and ${counts.labs} labs`
-    );
+
+    const counts = await batchUpdateRecords(recordsToUpdate);
+
     const totalUpdates = counts.labs + counts.courses;
 
     if (totalUpdates === 0) {
