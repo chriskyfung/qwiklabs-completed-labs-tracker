@@ -148,6 +148,37 @@
   }
 
   /**
+   * Batch creates new records in the database from an array of records.
+   * @param {Array} records - Array of records to be created, each with a type and record data.
+   */
+  async function batchCreateRecords(records) {
+    const newRecordsByType = records.reduce((acc, { type, record }) => {
+      const tableName = `${type}s`;
+      if (!acc[tableName]) {
+        acc[tableName] = [];
+      }
+      acc[tableName].push(record);
+      return acc;
+    }, {});
+
+    for (const tableName in newRecordsByType) {
+      if (Object.prototype.hasOwnProperty.call(newRecordsByType, tableName)) {
+        const newRecordsArray = newRecordsByType[tableName];
+        if (newRecordsArray.length > 0) {
+          try {
+            const lastKey = await db.table(tableName).bulkAdd(newRecordsArray);
+            console.log(
+              `Bulk added ${newRecordsArray.length} new records to ${tableName}. Last key: ${lastKey}.`
+            );
+          } catch (e) {
+            console.error(`Error bulk adding to ${tableName}:`, e);
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Batch updates records in the database from an array of records.
    * @param {Array} records - Array of records to be updated.
    * @return {Promise<Object>} An object with counts of updated labs and courses.
@@ -770,7 +801,6 @@
           name: formatTitle(name),
           status: '',
         };
-        createRecord(type, id, newRecord);
         staging.unregisteredRecords.push({ type, record: newRecord });
       },
     };
@@ -824,6 +854,9 @@
         const handler = activityTypeHandler(type);
         await handler(row, id, name, passed);
       }
+
+      await batchCreateRecords(staging.unregisteredRecords);
+
       if (isDebugMode) {
         console.table(staging.untrackedRecords);
         console.table(staging.unregisteredRecords);
