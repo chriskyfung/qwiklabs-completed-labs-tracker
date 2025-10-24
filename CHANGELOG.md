@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Performance
+- Optimize batch record updates with `bulkPut`.
+- Batch create new records for improved performance.
+
+### Refactoring
+- Consolidate lab and course title annotation logic.
+- Consolidate configuration variables into a `CONFIG` object.
+- Extract batch record update logic into a new function.
+- Use standard `dataset` for button data attributes.
+- Rename `before` option to `beforeIcon` and improve formatting.
+
 ## [v3.1.0] - 2025-10-22
 ### Features
 - Update platform name and URL to Google Skills.
