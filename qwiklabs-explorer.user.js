@@ -641,6 +641,7 @@
    * @return {HTMLDivElement} The pagination container element.
    */
   const createActivitesPagination = (onPage) => {
+    const defaultPerPage = 25;
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
     const perPage = parseInt(params.get('per_page')) || 25;
@@ -656,6 +657,14 @@
       return icon;
     };
 
+    const updatePaginationLinks = (newPerPage) => {
+      const newParams = new URLSearchParams(params);
+      if (newPerPage !== defaultPerPage) {
+ newParams.set('per_page', newPerPage);
+      } else {
+ newParams.delete('per_page');
+      }
+    };
     if (currentPage == 1) {
       const prevSpan = document.createElement('span');
       prevSpan.className = 'previous_page disabled';
@@ -668,6 +677,9 @@
       previousPage.rel = 'prev';
       const newParams = new URLSearchParams(params);
       newParams.set('page', currentPage - 1);
+      if (perPage !== defaultPerPage) {
+ newParams.set('per_page', perPage);
+      }
       const newUrl = new URL(url);
       newUrl.search = newParams.toString();
       previousPage.href = newUrl.toString();
@@ -687,12 +699,43 @@
       nextPage.rel = 'next';
       const newParams = new URLSearchParams(params);
       newParams.set('page', currentPage + 1);
+      if (perPage !== defaultPerPage) {
+ newParams.set('per_page', perPage);
+      }
       const newUrl = new URL(url);
       newUrl.search = newParams.toString();
       nextPage.href = newUrl.toString();
       nextPage.appendChild(createIcon('Next page', 'navigate_next'));
       pagination.appendChild(nextPage);
     }
+
+    // Per page dropdown
+    const perPageDropdown = document.createElement('select');
+    perPageDropdown.className = 'per-page-dropdown';
+    perPageDropdown.style.cssText = 'font-size: 14px; margin-left: 10px; border-radius: 8px; height: auto;';
+    const perPageOptions = [25, 50, 100, 200];
+    perPageOptions.forEach((optionValue) => {
+      const option = document.createElement('option');
+      option.value = optionValue;
+      option.textContent = `${optionValue} per page`;
+      if (optionValue === perPage) {
+ option.selected = true;
+      }
+      perPageDropdown.appendChild(option);
+    });
+
+    perPageDropdown.addEventListener('change', (event) => {
+      const newPerPage = parseInt(event.target.value);
+      const newParams = new URLSearchParams(params);
+      newParams.set('page', 1); // Reset to first page when changing per_page
+      if (newPerPage !== defaultPerPage) {
+ newParams.set('per_page', newPerPage);
+      } else {
+ newParams.delete('per_page');
+      }
+      window.location.search = newParams.toString();
+    });
+    pagination.append(perPageDropdown);
     return pagination;
   };
 
