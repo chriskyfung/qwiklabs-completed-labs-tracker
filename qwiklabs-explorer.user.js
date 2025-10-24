@@ -503,78 +503,45 @@
   }
 
   /**
-   * Annotates the title on a lab page based on its completion status in the database.
-   * @param {number} id - The ID of the lab to check.
+   * Annotates the title on a detail page (lab or course) based on its completion status.
+   * @param {string} type - The type of detail page ('lab' or 'course').
+   * @param {number} id - The ID of the lab or course.
    */
-  async function trackTitleOnLabPage(id) {
-    const labPageTitle = document.querySelector(CONFIG.selectors.labPageTitle);
-    if (!labPageTitle) {
-      console.warn(`Element '${CONFIG.selectors.labPageTitle}' not found.`);
+  async function trackTitleOnDetailPage(type, id) {
+    const isLab = type === 'lab';
+    const selector = isLab ? CONFIG.selectors.labPageTitle : CONFIG.selectors.coursePageTitle;
+    const pageTitleEl = document.querySelector(selector);
+    if (!pageTitleEl) {
+      console.warn(`Element '${selector}' not found.`);
       return;
     }
-    const h1 = labPageTitle.querySelector('h1');
+    const h1 = pageTitleEl.querySelector('h1');
     if (!h1) {
-      console.warn(`h1 not found in '${CONFIG.selectors.labPageTitle}'.`);
+      console.warn(`h1 not found in '${selector}'.`);
       return;
     }
     const title = h1.innerText;
+    const getRecord = isLab ? getLabFromDbById : getCourseFromDbById;
+    const record = await getRecord(id);
+
     const options = {
       format_key: 1,
       elementType: 'span',
-      style: 'display: inline-block; vertical-align:super;',
+      style: isLab ? 'display: inline-block; vertical-align:super;' : '',
     };
-    const record = await getLabFromDbById(id);
-    console.log(
-      `Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
-    );
+
+    console.log(`${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
+
     switch (record.status) {
       case 'finished':
-        setBackgroundColor(h1, 'green');
-        appendIcon(h1, 'check', options);
-        updateRecordById('lab', id, { name: formatTitle(title) });
+        setBackgroundColor(h1, isLab ? 'green' : 'darkGreen');
+        appendIcon(isLab ? h1 : pageTitleEl, 'check', options);
+        updateRecordById(type, id, { name: formatTitle(title) });
         break;
       case null:
-        setBackgroundColor(h1, 'yellow');
-        appendIcon(h1, 'new', options);
-        createRecord('lab', id, { name: formatTitle(title), status: '' });
-        break;
-    }
-  }
-
-  /**
-   * Annotates the title on a course page based on its completion status in the database.
-   * @param {number} id - The ID of the course to check.
-   */
-  async function trackTitleOnCoursePage(id) {
-    const coursePageTitle = document.querySelector(CONFIG.selectors.coursePageTitle);
-    if (!coursePageTitle) {
-      console.warn(`Element '${CONFIG.selectors.coursePageTitle}' not found.`);
-      return;
-    }
-    const h1 = coursePageTitle.querySelector('h1');
-    if (!h1) {
-      console.warn(`h1 not found in '${CONFIG.selectors.coursePageTitle}'.`);
-      return;
-    }
-    const title = h1.innerText;
-    const options = {
-      format_key: 1,
-      elementType: 'span',
-    };
-    const courseRecord = await getCourseFromDbById(id);
-    console.log(
-      `Course ID: ${id}, Title: "${title}", Record: ${JSON.stringify(courseRecord)}`
-    );
-    switch (courseRecord.status) {
-      case 'finished':
-        setBackgroundColor(h1, 'darkGreen');
-        appendIcon(coursePageTitle, 'check', options);
-        updateRecordById('course', id, { name: formatTitle(title) });
-        break;
-      case null:
-        setBackgroundColor(h1, 'darkOrange');
-        appendIcon(coursePageTitle, 'new', options);
-        createRecord('course', id, { name: formatTitle(title), status: '' });
+        setBackgroundColor(h1, isLab ? 'yellow' : 'darkOrange');
+        appendIcon(isLab ? h1 : pageTitleEl, 'new', options);
+        createRecord(type, id, { name: formatTitle(title), status: '' });
         break;
     }
   }
@@ -916,7 +883,7 @@
         identifier: 'lab',
         exec: async () => {
           console.debug('Tracking a lab page');
-          await trackTitleOnLabPage(id);
+          await trackTitleOnDetailPage('lab', id);
         },
       },
       '/profile/activity': {
@@ -950,7 +917,7 @@
         identifier: 'course',
         exec: async () => {
           console.debug('Tracking a course page');
-          await trackTitleOnCoursePage(id);
+          await trackTitleOnDetailPage('course', id);
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
         },
