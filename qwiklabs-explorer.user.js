@@ -748,16 +748,18 @@
       null: (rowElement, record, type, id, name) => {
         setBackgroundColor(rowElement, 'yellow');
         const col1 = rowElement.children[0];
-        const searchIcon = appendSeachLink(col1, col1.innerText);
-        appendIcon(searchIcon, 'search', {
-          ...options,
-          tooltip: 'Search this activity',
-        });
         appendIcon(col1, 'warning', {
           ...options,
           beforeIcon: ' ',
           tooltip: 'Unregistered activity',
         });
+        if (!col1.querySelector('a')) {
+          const searchIcon = appendSeachLink(col1, col1.innerText);
+          appendIcon(searchIcon, 'search', {
+            ...options,
+            tooltip: 'Search this activity',
+          });
+        }
         rowElement.classList.add(`new-${type}`);
         const newRecord = {
           id: parseInt(id),
