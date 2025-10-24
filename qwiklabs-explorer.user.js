@@ -23,17 +23,21 @@
 (function () {
   'use strict';
 
-  const isDebugMode = false;
-  const ACTIVITY_CARD_SELECTOR = 'ql-activity-card';
-  const ACTIVITY_TABLE_SELECTOR = '.activities-table';
-  const COURSE_PAGE_TITLE_SELECTOR = '.top-title';
-  const LAB_PAGE_TITLE_SELECTOR = '.lab-preamble';
-  const SEARCH_RESULT_CONTAINER_SELECTOR = 'ql-search-result-container';
-
-  const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.skills.google';
-
-  const dbName = 'qwiklabs-db-test-1';
-  const db = new Dexie(dbName);
+  const CONFIG = {
+    isDebugMode: false,
+    dbName: 'qwiklabs-db-test-1',
+    selectors: {
+      activityCard: 'ql-activity-card',
+      activityTable: '.activities-table',
+      coursePageTitle: '.top-title',
+      labPageTitle: '.lab-preamble',
+      searchResultContainer: 'ql-search-result-container',
+    },
+    urls: {
+      cloudSkillsBoost: 'https://www.skills.google',
+    },
+  };
+  const db = new Dexie(CONFIG.dbName);
 
   // In-memory cache for database tables to reduce DB queries.
   let databaseCache = { labs: null, courses: null };
@@ -101,7 +105,7 @@
     }
     if (!db.isOpen()) {
       await db.open();
-      if (isDebugMode) {
+      if (CONFIG.isDebugMode) {
         console.log('Database opened: ' + db.name);
         console.log('Database version: ' + db.verno);
       }
@@ -511,14 +515,14 @@
    * @param {number} id - The ID of the lab to check.
    */
   async function trackTitleOnLabPage(id) {
-    const labPageTitle = document.querySelector(LAB_PAGE_TITLE_SELECTOR);
+    const labPageTitle = document.querySelector(CONFIG.selectors.labPageTitle);
     if (!labPageTitle) {
-      console.warn(`Element '${LAB_PAGE_TITLE_SELECTOR}' not found.`);
+      console.warn(`Element '${CONFIG.selectors.labPageTitle}' not found.`);
       return;
     }
     const h1 = labPageTitle.querySelector('h1');
     if (!h1) {
-      console.warn(`h1 not found in '${LAB_PAGE_TITLE_SELECTOR}'.`);
+      console.warn(`h1 not found in '${CONFIG.selectors.labPageTitle}'.`);
       return;
     }
     const title = h1.innerText;
@@ -550,14 +554,14 @@
    * @param {number} id - The ID of the course to check.
    */
   async function trackTitleOnCoursePage(id) {
-    const coursePageTitle = document.querySelector(COURSE_PAGE_TITLE_SELECTOR);
+    const coursePageTitle = document.querySelector(CONFIG.selectors.coursePageTitle);
     if (!coursePageTitle) {
-      console.warn(`Element '${COURSE_PAGE_TITLE_SELECTOR}' not found.`);
+      console.warn(`Element '${CONFIG.selectors.coursePageTitle}' not found.`);
       return;
     }
     const h1 = coursePageTitle.querySelector('h1');
     if (!h1) {
-      console.warn(`h1 not found in '${COURSE_PAGE_TITLE_SELECTOR}'.`);
+      console.warn(`h1 not found in '${CONFIG.selectors.coursePageTitle}'.`);
       return;
     }
     const title = h1.innerText;
@@ -741,7 +745,7 @@
    */
   const appendSeachLink = (element, searchTerm) => {
     const aTag = document.createElement('a');
-    aTag.href = `${CLOUD_SKILLS_BOOST_BASE_URL}/catalog?keywords=${encodeURIComponent(searchTerm)}`;
+    aTag.href = `${CONFIG.urls.cloudSkillsBoost}/catalog?keywords=${encodeURIComponent(searchTerm)}`;
     aTag.style.paddingLeft = '0.25em';
     element.appendChild(aTag);
     return aTag;
@@ -753,7 +757,7 @@
    */
   const parseActivitiesOnProgressPage = () => {
     // The activity data is conveniently stored on the table element's `data` property.
-    return document.querySelector(ACTIVITY_TABLE_SELECTOR)?.data || null;
+    return document.querySelector(CONFIG.selectors.activityTable)?.data || null;
   };
 
   /**
@@ -828,7 +832,7 @@
       return handlers[type] || (() => null); // Return a dummy function for unknown types.
     };
 
-    const activityTable = document.querySelector(ACTIVITY_TABLE_SELECTOR);
+    const activityTable = document.querySelector(CONFIG.selectors.activityTable);
     if (activityTable) {
       const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
       for (const [i, record] of records.entries()) {
@@ -857,7 +861,7 @@
 
       await batchCreateRecords(staging.unregisteredRecords);
 
-      if (isDebugMode) {
+      if (CONFIG.isDebugMode) {
         console.table(staging.untrackedRecords);
         console.table(staging.unregisteredRecords);
       }
@@ -893,7 +897,7 @@
         identifier: 'home',
         exec: async () => {
           console.debug('Tracking card data on Home');
-          const cards = document.querySelectorAll(ACTIVITY_CARD_SELECTOR);
+          const cards = document.querySelectorAll(CONFIG.selectors.activityCard);
           await trackActivityCards(cards);
         },
       },
@@ -902,16 +906,16 @@
         exec: async () => {
           console.debug('Tracking data on Catalog');
           const container = document.querySelector(
-            SEARCH_RESULT_CONTAINER_SELECTOR
+            CONFIG.selectors.searchResultContainer
           );
           if (container && container.shadowRoot) {
             const cards = container.shadowRoot.querySelectorAll(
-              ACTIVITY_CARD_SELECTOR
+              CONFIG.selectors.activityCard
             );
             await trackActivityCards(cards);
           } else {
             console.warn(
-              `Element '${SEARCH_RESULT_CONTAINER_SELECTOR}' not found or has no shadowRoot.`
+              `Element '${CONFIG.selectors.searchResultContainer}' not found or has no shadowRoot.`
             );
           }
         },
