@@ -336,7 +336,10 @@
   function appendIcon(
     element,
     iconKey,
-    options = { format_key: 0, elementType: 'p' }
+    options = {
+      format_key: 0,
+      elementType: 'p',
+    }
   ) {
     const formatKey = options.format_key;
     const elementType = options.elementType;
@@ -508,7 +511,10 @@
       return;
     }
     const title = h1.innerText;
-    const options = { format_key: 1, elementType: 'span' };
+    const options = {
+      format_key: 1,
+      elementType: 'span',
+    };
     const courseRecord = await getCourseFromDbById(id);
     console.log(
       `Course ID: ${id}, Title: "${title}", Record: ${JSON.stringify(courseRecord)}`
@@ -539,7 +545,7 @@
       }
       const id = matches[2];
       const type = matches[1].toLowerCase();
-      const options = { before: ' ' };
+      const options = { beforeIcon: ' ' };
       switch (type) {
         case 'lab':
           const record = await getLabFromDbById(id);
@@ -713,7 +719,10 @@
       untrackedRecords: [],
       unregisteredRecords: [],
     };
-    const options = { format_key: 1, elementType: 'span' };
+    const options = {
+      format_key: 1,
+      elementType: 'span',
+    };
 
     // Handlers for different completion statuses.
     const statusHandler = {
@@ -736,7 +745,7 @@
         });
         appendIcon(col1, 'warning', {
           ...options,
-          before: ' ',
+          beforeIcon: ' ',
           tooltip: 'Unregistered activity',
         });
         rowElement.classList.add(`new-${type}`);
