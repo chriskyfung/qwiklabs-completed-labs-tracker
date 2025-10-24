@@ -188,27 +188,25 @@
    * @return {Promise<Object>} An object with counts of updated labs and courses.
    */
   async function batchUpdateRecords(records) {
-    console.log('Batch Update - start');
-    const counts = { labs: 0, courses: 0 };
-    for (const record of records) {
-      const { id, type } = record;
-      const tableName = `${type}s`;
-      counts[tableName] += 1;
-      const updated = await db
-        .table(tableName)
-        .where('id')
-        .equals(id)
-        .modify({ status: 'finished' });
-      if (updated) {
-        console.log(
-          `Updated ${type}: {id: ${id}, name: '${record.name}', 'status': 'finished'}`
-        );
-      }
+    console.log('Batch Update - start', records);
+    const labsToUpdate = records
+      .filter((r) => r.type === 'lab')
+      .map((r) => ({ ...r, status: 'finished' }));
+    const coursesToUpdate = records
+      .filter((r) => r.type === 'course')
+      .map((r) => ({ ...r, status: 'finished' }));
+
+    if (labsToUpdate.length > 0) {
+      await db.table('labs').bulkPut(labsToUpdate);
     }
+    if (coursesToUpdate.length > 0) {
+      await db.table('courses').bulkPut(coursesToUpdate);
+    }
+
     console.log(
-      `Number of items updated: ${counts.courses} courses and ${counts.labs} labs`
+      `Number of items updated: ${coursesToUpdate.length} courses and ${labsToUpdate.length} labs`
     );
-    return counts;
+    return { labs: labsToUpdate.length, courses: coursesToUpdate.length };
   }
 
   /**
@@ -332,25 +330,19 @@
   /**
    * Retrieves a lab record from the cache by its ID.
    * @param {number} id - The ID of the lab to retrieve.
-   * @return {Promise<Object>} The lab record, or an object with a null status if not found.
+   * @return {Object} The lab record, or an object with a null status if not found.
    */
   async function getLabFromDbById(id) {
-    const record = await databaseCache.labs.filter((record) => {
-      return id == record.id;
-    })[0];
-    return record || { status: null };
+    return databaseCache.labs.find((record) => id == record.id) || { status: null };
   }
 
   /**
    * Retrieves a course record from the cache by its ID.
    * @param {number} id - The ID of the course.
-   * @return {Promise<Object>} The course record, or an object with a null status if not found.
+   * @return {Object} The course record, or an object with a null status if not found.
    */
-  async function getCourseFromDbById(id) {
-    const record = await databaseCache.courses.filter((record) => {
-      return id == record.id;
-    })[0];
-    return record || { status: null };
+  function getCourseFromDbById(id) {
+    return databaseCache.courses.find((record) => id == record.id) || { status: null };
   }
 
   //
@@ -372,7 +364,7 @@
       purple: '#fef',
       red: '#fdd',
     };
-    if (colorKey in colorMap === false) {
+    if (!(colorKey in colorMap)) {
       return null;
     }
     const color = colorMap[colorKey];
@@ -419,7 +411,7 @@
         1: '<svg aria-hidden="true" focusable="false" data-icon="exclamation-triangle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="16"><path fill="orange" d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"></path></svg>',
       },
     };
-    if (iconKey in iconMap === false) {
+    if (!(iconKey in iconMap)) {
       return null;
     }
     const icon = iconMap[iconKey][formatKey];
