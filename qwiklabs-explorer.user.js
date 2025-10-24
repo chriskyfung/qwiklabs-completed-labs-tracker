@@ -220,9 +220,14 @@
    * Batch updates the status of untracked activity records to 'finished' in the database.
    */
   const batchUpdateToDb = async () => {
-    const newRecords =
-      document.querySelector('button#db-update').data?.untrackedRecords;
-    if (!newRecords) {
+    const updateButton = document.querySelector('button#db-update');
+    if (!updateButton) {
+      console.error('Update button not found.');
+      return;
+    }
+    const untrackedRecordsJSON = updateButton.dataset.untrackedRecords;
+    const newRecords = untrackedRecordsJSON ? JSON.parse(untrackedRecordsJSON) : [];
+    if (!newRecords || newRecords.length === 0) {
       console.warn('No untracked records found to update.');
       showSnackbar({ message: '0 items to update' });
       return;
@@ -601,15 +606,12 @@
     icon.textContent = 'sync';
     button.appendChild(icon);
     button.addEventListener('click', batchUpdateToDb);
-    button.setAttribute(
-      'data-untracked-records',
-      JSON.stringify(activityData.data.untrackedRecords)
+    button.dataset.untrackedRecords = JSON.stringify(
+      activityData.data.untrackedRecords
     );
-    button.setAttribute(
-      'data-unregistered-records',
-      JSON.stringify(activityData.data.unregisteredRecords)
+    button.dataset.unregisteredRecords = JSON.stringify(
+      activityData.data.unregisteredRecords
     );
-    button.data = activityData.data;
     button.disabled = activityData.counts.untrackedRecords === 0;
     return button;
   };
