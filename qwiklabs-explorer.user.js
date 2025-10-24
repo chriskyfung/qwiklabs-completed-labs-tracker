@@ -816,20 +816,24 @@
     // Handlers for different activity types (lab, course, etc.).
     const activityTypeHandler = (type) => {
       const handlers = {
-        lab: async (rowElement, id, name, passed) => {
+        lab: async (rowElement, id, name, isPassed) => {
           const record = await getLabFromDbById(id);
           const statusUpdateHandler = statusHandler[record.status];
-          if (passed && statusUpdateHandler) {
+          if (isPassed && statusUpdateHandler) {
             statusUpdateHandler(rowElement, record, 'lab', id, name);
           } else {
             setBackgroundColor(rowElement, 'red');
           }
           return record;
         },
-        course: async (rowElement, id, name, passed) => {
+        course: async (rowElement, id, name, isPassed) => {
           const record = await getCourseFromDbById(id);
           const statusUpdateHandler = statusHandler[record.status];
-          statusUpdateHandler(rowElement, record, 'course', id, name);
+          if (statusUpdateHandler && (isPassed || isPassed === null)) {
+            statusUpdateHandler(rowElement, record, 'course', id, name);
+          } else {
+            setBackgroundColor(rowElement, 'yellow');          
+          }
           return record;
         },
       };
