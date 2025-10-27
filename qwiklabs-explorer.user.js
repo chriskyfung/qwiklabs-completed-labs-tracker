@@ -23,17 +23,21 @@
 (function () {
   'use strict';
 
-  const isDebugMode = false;
-  const ACTIVITY_CARD_SELECTOR = 'ql-activity-card';
-  const ACTIVITY_TABLE_SELECTOR = '.activities-table';
-  const COURSE_PAGE_TITLE_SELECTOR = '.top-title';
-  const LAB_PAGE_TITLE_SELECTOR = '.lab-preamble';
-  const SEARCH_RESULT_CONTAINER_SELECTOR = 'ql-search-result-container';
-
-  const CLOUD_SKILLS_BOOST_BASE_URL = 'https://www.skills.google';
-
-  const dbName = 'qwiklabs-db-test-1';
-  const db = new Dexie(dbName);
+  const CONFIG = {
+    isDebugMode: false,
+    dbName: 'qwiklabs-db-test-1',
+    selectors: {
+      activityCard: 'ql-activity-card',
+      activityTable: '.activities-table',
+      coursePageTitle: '.top-title',
+      labPageTitle: '.lab-preamble',
+      searchResultContainer: 'ql-search-result-container',
+    },
+    urls: {
+      cloudSkillsBoost: 'https://www.skills.google',
+    },
+  };
+  const db = new Dexie(CONFIG.dbName);
 
   // In-memory cache for database tables to reduce DB queries.
   let databaseCache = { labs: null, courses: null };
@@ -101,7 +105,7 @@
     }
     if (!db.isOpen()) {
       await db.open();
-      if (isDebugMode) {
+      if (CONFIG.isDebugMode) {
         console.log('Database opened: ' + db.name);
         console.log('Database version: ' + db.verno);
       }
@@ -145,6 +149,64 @@
       );
     }
     return updated;
+  }
+
+  /**
+   * Batch creates new records in the database from an array of records.
+   * @param {Array} records - Array of records to be created, each with a type and record data.
+   */
+  async function batchCreateRecords(records) {
+    const newRecordsByType = records.reduce((acc, { type, record }) => {
+      const tableName = `${type}s`;
+      if (!acc[tableName]) {
+        acc[tableName] = [];
+      }
+      acc[tableName].push(record);
+      return acc;
+    }, {});
+
+    for (const tableName in newRecordsByType) {
+      if (Object.prototype.hasOwnProperty.call(newRecordsByType, tableName)) {
+        const newRecordsArray = newRecordsByType[tableName];
+        if (newRecordsArray.length > 0) {
+          try {
+            const lastKey = await db.table(tableName).bulkAdd(newRecordsArray);
+            console.log(
+              `Bulk added ${newRecordsArray.length} new records to ${tableName}. Last key: ${lastKey}.`
+            );
+          } catch (e) {
+            console.error(`Error bulk adding to ${tableName}:`, e);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Batch updates records in the database from an array of records.
+   * @param {Array} records - Array of records to be updated.
+   * @return {Promise<Object>} An object with counts of updated labs and courses.
+   */
+  async function batchUpdateRecords(records) {
+    console.log('Batch Update - start', records);
+    const labsToUpdate = records
+      .filter((r) => r.type === 'lab')
+      .map((r) => ({ ...r, status: 'finished' }));
+    const coursesToUpdate = records
+      .filter((r) => r.type === 'course')
+      .map((r) => ({ ...r, status: 'finished' }));
+
+    if (labsToUpdate.length > 0) {
+      await db.table('labs').bulkPut(labsToUpdate);
+    }
+    if (coursesToUpdate.length > 0) {
+      await db.table('courses').bulkPut(coursesToUpdate);
+    }
+
+    console.log(
+      `Number of items updated: ${coursesToUpdate.length} courses and ${labsToUpdate.length} labs`
+    );
+    return { labs: labsToUpdate.length, courses: coursesToUpdate.length };
   }
 
   /**
@@ -220,33 +282,23 @@
    * Batch updates the status of untracked activity records to 'finished' in the database.
    */
   const batchUpdateToDb = async () => {
-    const newRecords =
-      document.querySelector('button#db-update').data?.untrackedRecords;
-    if (!newRecords) {
+    const updateButton = document.querySelector('button#db-update');
+    if (!updateButton) {
+      console.error('Update button not found.');
+      return;
+    }
+    const untrackedRecordsJSON = updateButton.dataset.untrackedRecords;
+    const recordsToUpdate = untrackedRecordsJSON
+      ? JSON.parse(untrackedRecordsJSON)
+      : [];
+    if (!recordsToUpdate || recordsToUpdate.length === 0) {
       console.warn('No untracked records found to update.');
       showSnackbar({ message: '0 items to update' });
       return;
     }
-    console.log('Batch Update - start');
-    const counts = { labs: 0, courses: 0 };
-    for (const newRecord of newRecords) {
-      const { id, type } = newRecord;
-      const tableName = `${type}s`;
-      counts[tableName] += 1;
-      const updated = await db
-        .table(tableName)
-        .where('id')
-        .equals(id)
-        .modify({ status: 'finished' });
-      if (updated) {
-        console.log(
-          `Updated ${type}: {id: ${id}, name: '${newRecord.name}', 'status': 'finished'}`
-        );
-      }
-    }
-    console.log(
-      `Number of items updated: ${counts.courses} courses and ${counts.labs} labs`
-    );
+
+    const counts = await batchUpdateRecords(recordsToUpdate);
+
     const totalUpdates = counts.labs + counts.courses;
 
     if (totalUpdates === 0) {
@@ -278,25 +330,19 @@
   /**
    * Retrieves a lab record from the cache by its ID.
    * @param {number} id - The ID of the lab to retrieve.
-   * @return {Promise<Object>} The lab record, or an object with a null status if not found.
+   * @return {Object} The lab record, or an object with a null status if not found.
    */
   async function getLabFromDbById(id) {
-    const record = await databaseCache.labs.filter((record) => {
-      return id == record.id;
-    })[0];
-    return record || { status: null };
+    return databaseCache.labs.find((record) => id == record.id) || { status: null };
   }
 
   /**
    * Retrieves a course record from the cache by its ID.
    * @param {number} id - The ID of the course.
-   * @return {Promise<Object>} The course record, or an object with a null status if not found.
+   * @return {Object} The course record, or an object with a null status if not found.
    */
-  async function getCourseFromDbById(id) {
-    const record = await databaseCache.courses.filter((record) => {
-      return id == record.id;
-    })[0];
-    return record || { status: null };
+  function getCourseFromDbById(id) {
+    return databaseCache.courses.find((record) => id == record.id) || { status: null };
   }
 
   //
@@ -318,7 +364,7 @@
       purple: '#fef',
       red: '#fdd',
     };
-    if (colorKey in colorMap === false) {
+    if (!(colorKey in colorMap)) {
       return null;
     }
     const color = colorMap[colorKey];
@@ -336,7 +382,10 @@
   function appendIcon(
     element,
     iconKey,
-    options = { format_key: 0, elementType: 'p' }
+    options = {
+      format_key: 0,
+      elementType: 'p',
+    }
   ) {
     const formatKey = options.format_key;
     const elementType = options.elementType;
@@ -362,7 +411,7 @@
         1: '<svg aria-hidden="true" focusable="false" data-icon="exclamation-triangle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="16"><path fill="orange" d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"></path></svg>',
       },
     };
-    if (iconKey in iconMap === false) {
+    if (!(iconKey in iconMap)) {
       return null;
     }
     const icon = iconMap[iconKey][formatKey];
@@ -454,75 +503,45 @@
   }
 
   /**
-   * Annotates the title on a lab page based on its completion status in the database.
-   * @param {number} id - The ID of the lab to check.
+   * Annotates the title on a detail page (lab or course) based on its completion status.
+   * @param {string} type - The type of detail page ('lab' or 'course').
+   * @param {number} id - The ID of the lab or course.
    */
-  async function trackTitleOnLabPage(id) {
-    const labPageTitle = document.querySelector(LAB_PAGE_TITLE_SELECTOR);
-    if (!labPageTitle) {
-      console.warn(`Element '${LAB_PAGE_TITLE_SELECTOR}' not found.`);
+  async function trackTitleOnDetailPage(type, id) {
+    const isLab = type === 'lab';
+    const selector = isLab ? CONFIG.selectors.labPageTitle : CONFIG.selectors.coursePageTitle;
+    const pageTitleEl = document.querySelector(selector);
+    if (!pageTitleEl) {
+      console.warn(`Element '${selector}' not found.`);
       return;
     }
-    const h1 = labPageTitle.querySelector('h1');
+    const h1 = pageTitleEl.querySelector('h1');
     if (!h1) {
-      console.warn(`h1 not found in '${LAB_PAGE_TITLE_SELECTOR}'.`);
+      console.warn(`h1 not found in '${selector}'.`);
       return;
     }
     const title = h1.innerText;
+    const getRecord = isLab ? getLabFromDbById : getCourseFromDbById;
+    const record = await getRecord(id);
+
     const options = {
       format_key: 1,
       elementType: 'span',
-      style: 'display: inline-block; vertical-align:super;',
+      style: isLab ? 'display: inline-block; vertical-align:super;' : '',
     };
-    const record = await getLabFromDbById(id);
-    console.log(
-      `Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
-    );
+
+    console.log(`${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
+
     switch (record.status) {
       case 'finished':
-        setBackgroundColor(h1, 'green');
-        appendIcon(h1, 'check', options);
-        updateRecordById('lab', id, { name: formatTitle(title) });
+        setBackgroundColor(h1, isLab ? 'green' : 'darkGreen');
+        appendIcon(isLab ? h1 : pageTitleEl, 'check', options);
+        updateRecordById(type, id, { name: formatTitle(title) });
         break;
       case null:
-        setBackgroundColor(h1, 'yellow');
-        appendIcon(h1, 'new', options);
-        createRecord('lab', id, { name: formatTitle(title), status: '' });
-        break;
-    }
-  }
-
-  /**
-   * Annotates the title on a course page based on its completion status in the database.
-   * @param {number} id - The ID of the course to check.
-   */
-  async function trackTitleOnCoursePage(id) {
-    const coursePageTitle = document.querySelector(COURSE_PAGE_TITLE_SELECTOR);
-    if (!coursePageTitle) {
-      console.warn(`Element '${COURSE_PAGE_TITLE_SELECTOR}' not found.`);
-      return;
-    }
-    const h1 = coursePageTitle.querySelector('h1');
-    if (!h1) {
-      console.warn(`h1 not found in '${COURSE_PAGE_TITLE_SELECTOR}'.`);
-      return;
-    }
-    const title = h1.innerText;
-    const options = { format_key: 1, elementType: 'span' };
-    const courseRecord = await getCourseFromDbById(id);
-    console.log(
-      `Course ID: ${id}, Title: "${title}", Record: ${JSON.stringify(courseRecord)}`
-    );
-    switch (courseRecord.status) {
-      case 'finished':
-        setBackgroundColor(h1, 'darkGreen');
-        appendIcon(coursePageTitle, 'check', options);
-        updateRecordById('course', id, { name: formatTitle(title) });
-        break;
-      case null:
-        setBackgroundColor(h1, 'darkOrange');
-        appendIcon(coursePageTitle, 'new', options);
-        createRecord('course', id, { name: formatTitle(title), status: '' });
+        setBackgroundColor(h1, isLab ? 'yellow' : 'darkOrange');
+        appendIcon(isLab ? h1 : pageTitleEl, 'new', options);
+        createRecord(type, id, { name: formatTitle(title), status: '' });
         break;
     }
   }
@@ -539,7 +558,7 @@
       }
       const id = matches[2];
       const type = matches[1].toLowerCase();
-      const options = { before: ' ' };
+      const options = { beforeIcon: ' ' };
       switch (type) {
         case 'lab':
           const record = await getLabFromDbById(id);
@@ -595,15 +614,12 @@
     icon.textContent = 'sync';
     button.appendChild(icon);
     button.addEventListener('click', batchUpdateToDb);
-    button.setAttribute(
-      'data-untracked-records',
-      JSON.stringify(activityData.data.untrackedRecords)
+    button.dataset.untrackedRecords = JSON.stringify(
+      activityData.data.untrackedRecords
     );
-    button.setAttribute(
-      'data-unregistered-records',
-      JSON.stringify(activityData.data.unregisteredRecords)
+    button.dataset.unregisteredRecords = JSON.stringify(
+      activityData.data.unregisteredRecords
     );
-    button.data = activityData.data;
     button.disabled = activityData.counts.untrackedRecords === 0;
     return button;
   };
@@ -688,7 +704,7 @@
    */
   const appendSeachLink = (element, searchTerm) => {
     const aTag = document.createElement('a');
-    aTag.href = `${CLOUD_SKILLS_BOOST_BASE_URL}/catalog?keywords=${encodeURIComponent(searchTerm)}`;
+    aTag.href = `${CONFIG.urls.cloudSkillsBoost}/catalog?keywords=${encodeURIComponent(searchTerm)}`;
     aTag.style.paddingLeft = '0.25em';
     element.appendChild(aTag);
     return aTag;
@@ -700,7 +716,7 @@
    */
   const parseActivitiesOnProgressPage = () => {
     // The activity data is conveniently stored on the table element's `data` property.
-    return document.querySelector(ACTIVITY_TABLE_SELECTOR)?.data || null;
+    return document.querySelector(CONFIG.selectors.activityTable)?.data || null;
   };
 
   /**
@@ -713,7 +729,10 @@
       untrackedRecords: [],
       unregisteredRecords: [],
     };
-    const options = { format_key: 1, elementType: 'span' };
+    const options = {
+      format_key: 1,
+      elementType: 'span',
+    };
 
     // Handlers for different completion statuses.
     const statusHandler = {
@@ -736,7 +755,7 @@
         });
         appendIcon(col1, 'warning', {
           ...options,
-          before: ' ',
+          beforeIcon: ' ',
           tooltip: 'Unregistered activity',
         });
         rowElement.classList.add(`new-${type}`);
@@ -745,7 +764,6 @@
           name: formatTitle(name),
           status: '',
         };
-        createRecord(type, id, newRecord);
         staging.unregisteredRecords.push({ type, record: newRecord });
       },
     };
@@ -773,7 +791,7 @@
       return handlers[type] || (() => null); // Return a dummy function for unknown types.
     };
 
-    const activityTable = document.querySelector(ACTIVITY_TABLE_SELECTOR);
+    const activityTable = document.querySelector(CONFIG.selectors.activityTable);
     if (activityTable) {
       const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
       for (const [i, record] of records.entries()) {
@@ -799,7 +817,10 @@
         const handler = activityTypeHandler(type);
         await handler(row, id, name, passed);
       }
-      if (isDebugMode) {
+
+      await batchCreateRecords(staging.unregisteredRecords);
+
+      if (CONFIG.isDebugMode) {
         console.table(staging.untrackedRecords);
         console.table(staging.unregisteredRecords);
       }
@@ -835,7 +856,7 @@
         identifier: 'home',
         exec: async () => {
           console.debug('Tracking card data on Home');
-          const cards = document.querySelectorAll(ACTIVITY_CARD_SELECTOR);
+          const cards = document.querySelectorAll(CONFIG.selectors.activityCard);
           await trackActivityCards(cards);
         },
       },
@@ -844,16 +865,16 @@
         exec: async () => {
           console.debug('Tracking data on Catalog');
           const container = document.querySelector(
-            SEARCH_RESULT_CONTAINER_SELECTOR
+            CONFIG.selectors.searchResultContainer
           );
           if (container && container.shadowRoot) {
             const cards = container.shadowRoot.querySelectorAll(
-              ACTIVITY_CARD_SELECTOR
+              CONFIG.selectors.activityCard
             );
             await trackActivityCards(cards);
           } else {
             console.warn(
-              `Element '${SEARCH_RESULT_CONTAINER_SELECTOR}' not found or has no shadowRoot.`
+              `Element '${CONFIG.selectors.searchResultContainer}' not found or has no shadowRoot.`
             );
           }
         },
@@ -862,7 +883,7 @@
         identifier: 'lab',
         exec: async () => {
           console.debug('Tracking a lab page');
-          await trackTitleOnLabPage(id);
+          await trackTitleOnDetailPage('lab', id);
         },
       },
       '/profile/activity': {
@@ -896,7 +917,7 @@
         identifier: 'course',
         exec: async () => {
           console.debug('Tracking a course page');
-          await trackTitleOnCoursePage(id);
+          await trackTitleOnDetailPage('course', id);
           const titles = document.querySelectorAll('.catalog-item__title');
           await trackListOfTitles(titles);
         },
