@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v3.2.0] - 2025-10-27
 
 ### Features
 - Add per-page selection dropdown for activities.
