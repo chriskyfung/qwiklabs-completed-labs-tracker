@@ -64,6 +64,7 @@ Retrieves local records and annotates catalog items:
 - Colors lab and course table rows for better readability.
 - Provides a one-click button 🔄 to update the status of all labs and courses on the current page to your local database.
 - Inserts pagination buttons to navigate through all your activities.
+- Adds a dropdown to select the number of activities to display per page.
 - Shows 🔍 quick search links for activities that are mismatched ⚠ with database records.
 
 ![Screenshot of a Progress page](screenshots/v3.1/skills-tracker-progress-page-demo.png)
