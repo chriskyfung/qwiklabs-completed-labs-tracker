@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Features
+- Add per-page selection dropdown for activities.
+
 ### Performance
 - Optimize batch record updates with `bulkPut`.
 - Batch create new records for improved performance.
