@@ -657,14 +657,6 @@
       return icon;
     };
 
-    const updatePaginationLinks = (newPerPage) => {
-      const newParams = new URLSearchParams(params);
-      if (newPerPage !== defaultPerPage) {
- newParams.set('per_page', newPerPage);
-      } else {
- newParams.delete('per_page');
-      }
-    };
     if (currentPage == 1) {
       const prevSpan = document.createElement('span');
       prevSpan.className = 'previous_page disabled';
@@ -678,7 +670,7 @@
       const newParams = new URLSearchParams(params);
       newParams.set('page', currentPage - 1);
       if (perPage !== defaultPerPage) {
- newParams.set('per_page', perPage);
+        newParams.set('per_page', perPage);
       }
       const newUrl = new URL(url);
       newUrl.search = newParams.toString();
@@ -700,7 +692,7 @@
       const newParams = new URLSearchParams(params);
       newParams.set('page', currentPage + 1);
       if (perPage !== defaultPerPage) {
- newParams.set('per_page', perPage);
+        newParams.set('per_page', perPage);
       }
       const newUrl = new URL(url);
       newUrl.search = newParams.toString();
@@ -719,7 +711,7 @@
       option.value = optionValue;
       option.textContent = `${optionValue} per page`;
       if (optionValue === perPage) {
- option.selected = true;
+        option.selected = true;
       }
       perPageDropdown.appendChild(option);
     });
@@ -729,9 +721,9 @@
       const newParams = new URLSearchParams(params);
       newParams.set('page', 1); // Reset to first page when changing per_page
       if (newPerPage !== defaultPerPage) {
- newParams.set('per_page', newPerPage);
+        newParams.set('per_page', newPerPage);
       } else {
- newParams.delete('per_page');
+        newParams.delete('per_page');
       }
       window.location.search = newParams.toString();
     });
@@ -832,7 +824,7 @@
           if (statusUpdateHandler && (isPassed || isPassed === null)) {
             statusUpdateHandler(rowElement, record, 'course', id, name);
           } else {
-            setBackgroundColor(rowElement, 'yellow');          
+            setBackgroundColor(rowElement, 'yellow');
           }
           return record;
         },
