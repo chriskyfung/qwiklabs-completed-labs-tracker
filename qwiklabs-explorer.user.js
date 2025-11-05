@@ -32,9 +32,70 @@
       coursePageTitle: '.top-title',
       labPageTitle: '.lab-preamble',
       searchResultContainer: 'ql-search-result-container',
+      updateButton: '#db-update',
+      activityFilters: '#learning_activity_search .filters',
+      catalogItemTitle: '.catalog-item__title',
+      activityTableRow: 'tbody > tr',
+      activityLabel: 'ql-activity-label',
+      anchor: 'a',
+      h1: 'h1',
+      h3: 'h3',
     },
     urls: {
       cloudSkillsBoost: 'https://www.skills.google',
+    },
+    cssClasses: {
+      updateButton:
+        'db-update-button mdl-button mdl-button--icon' +
+        ' mdl-button--primary mdl-js-button mdl-js-ripple-effect',
+      paginationNav: 'pagination__navigation',
+      buttonGroup: 'filter-group qclt-button-group',
+      perPageDropdown: 'per-page-dropdown',
+      materialIcons: 'material-icons',
+      qcltIcon: 'qclt-icon',
+      snackbar: ['alert', 'alert--fake', 'js-alert', 'alert-success'],
+      snackbarMessage: ['alert__message', 'js-alert-message'],
+      snackbarClose: ['alert__close', 'js-alert-close'],
+      completedLab: 'completed-lab',
+      completedCourse: 'completed-course',
+      untrackedLab: 'untracked-lab',
+      untrackedCourse: 'untracked-course',
+      newLab: 'new-lab',
+      newCourse: 'new-course',
+    },
+    pagination: {
+      defaultPerPage: 25,
+      perPageOptions: [25, 50, 100, 200],
+    },
+    colors: {
+      darkGreen: '#008000',
+      darkOrange: '#ff8c00',
+      green: '#efe',
+      yellow: '#ffc',
+      purple: '#fef',
+      red: '#fdd',
+    },
+    icons: {
+      check: {
+        0: '<i class="fas fa-check-circle" style="color:green"></i>',
+        1: '<svg aria-hidden="true" focusable="false" data-icon="check-circle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>',
+      },
+      game: {
+        0: '<i class="fas fa-gamepad" style="color:purple"></i>',
+        1: '<svg aria-hidden="true" focusable="false" data-icon="gamepad" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 -100 640 512" width="24" height="19"><path fill="purple" d="M480.07 96H160a160 160 0 1 0 114.24 272h91.52A160 160 0 1 0 480.07 96zM248 268a12 12 0 0 1-12 12h-52v52a12 12 0 0 1-12 12h-24a12 12 0 0 1-12-12v-52H84a12 12 0 0 1-12-12v-24a12 12 0 0 1 12-12h52v-52a12 12 0 0 1 12-12h24a12 12 0 0 1 12 12v52h52a12 12 0 0 1 12 12zm216 76a40 40 0 1 1 40-40 40 40 0 0 1-40 40zm64-96a40 40 0 1 1 40-40 40 40 0 0 1-40 40z"></path></svg>',
+      },
+      new: {
+        0: '<i class="material-icons" style="color:orange">fiber_new</i>',
+        1: '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" width="24px" height="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>',
+      },
+      search: {
+        0: '<i class="fas fa-search"></i>',
+        1: '<svg aria-hidden="true" focusable="false" data-icon="search" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16"><path fill="#39c" d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path></svg>',
+      },
+      warning: {
+        0: '<i class="fas fa-exclamation-triangle"></i>',
+        1: '<svg aria-hidden="true" focusable="false" data-icon="exclamation-triangle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="16"><path fill="orange" d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"></path></svg>',
+      },
     },
   };
   const db = new Dexie(CONFIG.dbName);
@@ -225,7 +286,7 @@
   }) {
     const snackbar = document.createElement('div');
     snackbar.id = 'snackbar';
-    snackbar.classList.add('alert', 'alert--fake', 'js-alert', 'alert-success');
+    snackbar.classList.add(...CONFIG.cssClasses.snackbar);
     // Using Material Design-like styles for the snackbar.
     Object.assign(snackbar.style, {
       display: 'flex',
@@ -243,12 +304,12 @@
     });
 
     const messageEl = document.createElement('p');
-    messageEl.classList.add('alert__message', 'js-alert-message');
+    messageEl.classList.add(...CONFIG.cssClasses.snackbarMessage);
     messageEl.style.margin = '0';
     messageEl.style.flexGrow = '1';
 
     const actionEl = document.createElement('a');
-    actionEl.classList.add('alert__close', 'js-alert-close');
+    actionEl.classList.add(...CONFIG.cssClasses.snackbarClose);
     actionEl.href = '#'; // Necessary for accessibility.
     actionEl.textContent = actionText || '✕';
     if (actionText) {
@@ -282,7 +343,9 @@
    * Batch updates the status of untracked activity records to 'finished' in the database.
    */
   const batchUpdateToDb = async () => {
-    const updateButton = document.querySelector('button#db-update');
+    const updateButton = document.querySelector(
+      `button${CONFIG.selectors.updateButton}`
+    );
     if (!updateButton) {
       console.error('Update button not found.');
       return;
@@ -362,18 +425,10 @@
    * @return {string|null} The hex color code if the key is valid, otherwise null.
    */
   function setBackgroundColor(element, colorKey) {
-    const colorMap = {
-      darkGreen: '#008000',
-      darkOrange: '#ff8c00',
-      green: '#efe',
-      yellow: '#ffc',
-      purple: '#fef',
-      red: '#fdd',
-    };
-    if (!(colorKey in colorMap)) {
+    if (!(colorKey in CONFIG.colors)) {
       return null;
     }
-    const color = colorMap[colorKey];
+    const color = CONFIG.colors[colorKey];
     element.style.background = color;
     return color;
   }
@@ -395,34 +450,12 @@
   ) {
     const formatKey = options.format_key;
     const elementType = options.elementType;
-    const iconMap = {
-      check: {
-        0: '<i class="fas fa-check-circle" style="color:green"></i>',
-        1: '<svg aria-hidden="true" focusable="false" data-icon="check-circle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16"><path fill="green" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path></svg>',
-      },
-      game: {
-        0: '<i class="fas fa-gamepad" style="color:purple"></i>',
-        1: '<svg aria-hidden="true" focusable="false" data-icon="gamepad" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 -100 640 512" width="24" height="19"><path fill="purple" d="M480.07 96H160a160 160 0 1 0 114.24 272h91.52A160 160 0 1 0 480.07 96zM248 268a12 12 0 0 1-12 12h-52v52a12 12 0 0 1-12 12h-24a12 12 0 0 1-12-12v-52H84a12 12 0 0 1-12-12v-24a12 12 0 0 1 12-12h52v-52a12 12 0 0 1 12-12h24a12 12 0 0 1 12 12v52h52a12 12 0 0 1 12 12zm216 76a40 40 0 1 1 40-40 40 40 0 0 1-40 40zm64-96a40 40 0 1 1 40-40 40 40 0 0 1-40 40z"></path></svg>',
-      },
-      new: {
-        0: '<i class="material-icons" style="color:orange">fiber_new</i>',
-        1: '<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" width="24px" height="24px" fill="orange"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><g><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"/></g></g></g></svg>',
-      },
-      search: {
-        0: '<i class="fas fa-search"></i>',
-        1: '<svg aria-hidden="true" focusable="false" data-icon="search" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16"><path fill="#39c" d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path></svg>',
-      },
-      warning: {
-        0: '<i class="fas fa-exclamation-triangle"></i>',
-        1: '<svg aria-hidden="true" focusable="false" data-icon="exclamation-triangle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="16"><path fill="orange" d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"></path></svg>',
-      },
-    };
-    if (!(iconKey in iconMap)) {
+    if (!(iconKey in CONFIG.icons)) {
       return null;
     }
-    const icon = iconMap[iconKey][formatKey];
+    const icon = CONFIG.icons[iconKey][formatKey];
     const iconElement = document.createElement(elementType);
-    iconElement.classList = 'qclt-icon';
+    iconElement.classList = CONFIG.cssClasses.qcltIcon;
     iconElement.setAttribute('aria-hidden', 'true');
     options.tooltip !== undefined &&
       iconElement.setAttribute('title', options.tooltip);
@@ -523,7 +556,7 @@
       console.warn(`Element '${selector}' not found.`);
       return;
     }
-    const h1 = pageTitleEl.querySelector('h1');
+    const h1 = pageTitleEl.querySelector(CONFIG.selectors.h1);
     if (!h1) {
       console.warn(`h1 not found in '${selector}'.`);
       return;
@@ -637,7 +670,7 @@
    */
   const createUpdateButton = (activityData) => {
     const icon = createElement('i', {
-      className: 'material-icons',
+      className: CONFIG.cssClasses.materialIcons,
       textContent: 'sync',
     });
     return createElement(
@@ -645,9 +678,7 @@
       {
         type: 'button',
         id: 'db-update',
-        className:
-          'db-update-button mdl-button mdl-button--icon' +
-          ' mdl-button--primary mdl-js-button mdl-js-ripple-effect',
+        className: CONFIG.cssClasses.updateButton,
         title: 'Update Database Records',
         disabled: activityData.counts.untrackedRecords === 0,
         dataset: {
@@ -668,7 +699,7 @@
    */
   const createButtonGroup = () => {
     return createElement('div', {
-      className: 'filter-group qclt-button-group',
+      className: CONFIG.cssClasses.buttonGroup,
       style: { marginLeft: 'auto' },
     });
   };
@@ -691,7 +722,7 @@
   ) {
     const createIcon = (label, content) => {
       const icon = createElement('i', {
-        className: 'material-icons',
+        className: CONFIG.cssClasses.materialIcons,
         textContent: content,
       });
       icon.setAttribute('aria-label', label);
@@ -731,8 +762,8 @@
    * @return {HTMLSelectElement}
    */
   function createPerPageDropdown(currentPerPage, params) {
-    const perPageOptions = [25, 50, 100, 200];
-    const defaultPerPage = 25;
+    const perPageOptions = CONFIG.pagination.perPageOptions;
+    const defaultPerPage = CONFIG.pagination.defaultPerPage;
 
     return createElement(
       'select',
@@ -772,10 +803,11 @@
    * @return {HTMLDivElement} The pagination container element.
    */
   const createActivitesPagination = (onPage) => {
-    const defaultPerPage = 25;
+    const defaultPerPage = CONFIG.pagination.defaultPerPage;
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
-    const perPage = parseInt(params.get('per_page')) || 25;
+    const perPage =
+      parseInt(params.get('per_page')) || CONFIG.pagination.defaultPerPage;
     const currentPage = parseInt(params.get('page')) || 1;
 
     const pagination = createElement('div', {
