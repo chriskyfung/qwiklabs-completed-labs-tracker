@@ -1095,6 +1095,12 @@
   })();
 
   /**
+   * @typedef {object} Route
+   * @property {RegExp} path - The URL path pattern to match.
+   * @property {Function} handler - The handler function for the route.
+   */
+
+  /**
    * ----------------------------------------------------------------
    * ROUTER
    * @namespace Router
@@ -1102,28 +1108,39 @@
    */
   const Router = (function () {
     /**
-     * Determines which function to run based on the current URL path.
-     * @return {Function|null} The handler function for the current route, or null if no match.
+     * An array of route objects, each defining a URL pattern and a handler.
+     * @type {Route[]}
      */
-    function getRoute() {
-      const path = window.location.pathname;
-      const matches = path.match(/^(?<route>\/\w+)\/(?<id>\d+)$/);
-      const route = matches?.groups?.route || path;
-      const id = matches?.groups?.id || null;
+    const routes = [
+      { path: /^\/$/, handler: PageHandlers.home },
+      { path: /^\/catalog/, handler: PageHandlers.catalog },
+      { path: /^\/focuses\/(?<id>\d+)/, handler: PageHandlers.lab },
+      { path: /^\/course_templates\/(?<id>\d+)/, handler: PageHandlers.course },
+      { path: /^\/profile\/activity/, handler: PageHandlers.activity },
+    ];
 
-      const handlers = {
-        '/': () => PageHandlers.home(),
-        '/catalog': () => PageHandlers.catalog(),
-        '/focuses': () => PageHandlers.lab(id),
-        '/course_templates': () => PageHandlers.course(id),
-        '/profile/activity': () => PageHandlers.activity(),
-      };
-
-      return route in handlers ? handlers[route] : null;
+    /**
+     * Matches the current URL against the defined routes and executes the corresponding handler.
+     * @return {Promise<void>}
+     */
+    async function handle() {
+      const currentPath = window.location.pathname;
+      for (const route of routes) {
+        const match = currentPath.match(route.path);
+        if (match) {
+          const id = match.groups?.id;
+          if (id) {
+            await route.handler(id);
+          } else {
+            await route.handler();
+          }
+          return;
+        }
+      }
     }
 
     return {
-      getRoute,
+      handle,
     };
   })();
 
@@ -1138,10 +1155,7 @@
    */
   async function main() {
     await Database.load();
-    const routeHandler = Router.getRoute();
-    if (routeHandler) {
-      await routeHandler();
-    }
+    await Router.handle();
     Database.clearCache();
     console.debug('Tracking - end');
   }
