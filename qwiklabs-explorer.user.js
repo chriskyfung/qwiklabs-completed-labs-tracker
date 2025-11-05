@@ -674,17 +674,21 @@
   };
 
   /**
-   * Creates pagination controls for the activities page.
-   * @param {number} onPage - The number of items currently displayed on the page.
-   * @return {HTMLDivElement} The pagination container element.
+   * Creates a pagination link, either as a span if disabled or as a link.
+   * @param {string} label - The aria-label for the link.
+   * @param {string} iconContent - The text content for the material icon.
+   * @param {URLSearchParams} newParams - The URL search parameters for the link.
+   * @param {boolean} isDisabled - Whether the link should be disabled.
+   * @param {string} rel - The rel attribute for the link.
+   * @return {HTMLAnchorElement|HTMLSpanElement}
    */
-  const createActivitesPagination = (onPage) => {
-    const defaultPerPage = 25;
-    const url = new URL(window.location.href);
-    const params = new URLSearchParams(url.search);
-    const perPage = parseInt(params.get('per_page')) || 25;
-    const currentPage = parseInt(params.get('page')) || 1;
-
+  function createPaginationLink(
+    label,
+    iconContent,
+    newParams,
+    isDisabled,
+    rel
+  ) {
     const createIcon = (label, content) => {
       const icon = createElement('i', {
         className: 'material-icons',
@@ -694,73 +698,43 @@
       return icon;
     };
 
-    const pagination = createElement('div', {
-      className: 'pagination__navigation',
-    });
-
-    if (currentPage == 1) {
-      const prevSpan = createElement(
+    if (isDisabled) {
+      const span = createElement(
         'span',
         {
-          className: 'previous_page disabled',
+          className: `${rel}_page disabled`,
         },
-        [createIcon('Previous page', 'navigate_before')]
+        [createIcon(label, iconContent)]
       );
-      prevSpan.setAttribute('aria-disabled', 'true');
-      pagination.appendChild(prevSpan);
-    } else {
-      const newParams = new URLSearchParams(params);
-      newParams.set('page', currentPage - 1);
-      if (perPage !== defaultPerPage) {
-        newParams.set('per_page', perPage);
-      }
-      const newUrl = new URL(url);
-      newUrl.search = newParams.toString();
-      const previousPage = createElement(
-        'a',
-        {
-          className: 'previous_page',
-          rel: 'prev',
-          href: newUrl.toString(),
-        },
-        [createIcon('Previous page', 'navigate_before')]
-      );
-      pagination.appendChild(previousPage);
+      span.setAttribute('aria-disabled', 'true');
+      return span;
     }
 
-    if (perPage > onPage) {
-      const nextSpan = createElement(
-        'span',
-        {
-          className: 'next_page disabled',
-        },
-        [createIcon('Next page', 'navigate_next')]
-      );
-      nextSpan.setAttribute('aria-disabled', 'true');
-      pagination.appendChild(nextSpan);
-    } else {
-      const newParams = new URLSearchParams(params);
-      newParams.set('page', currentPage + 1);
-      if (perPage !== defaultPerPage) {
-        newParams.set('per_page', perPage);
-      }
-      const newUrl = new URL(url);
-      newUrl.search = newParams.toString();
-      const nextPage = createElement(
-        'a',
-        {
-          className: 'next_page',
-          rel: 'next',
-          href: newUrl.toString(),
-        },
-        [createIcon('Next page', 'navigate_next')]
-      );
-      pagination.appendChild(nextPage);
-    }
+    const newUrl = new URL(window.location.href);
+    newUrl.search = newParams.toString();
 
-    // Per page dropdown
+    return createElement(
+      'a',
+      {
+        className: `${rel}_page`,
+        rel: rel,
+        href: newUrl.toString(),
+      },
+      [createIcon(label, iconContent)]
+    );
+  }
+
+  /**
+   * Creates the per-page dropdown menu for pagination.
+   * @param {number} currentPerPage - The currently selected number of items per page.
+   * @param {URLSearchParams} params - The current URL search parameters.
+   * @return {HTMLSelectElement}
+   */
+  function createPerPageDropdown(currentPerPage, params) {
     const perPageOptions = [25, 50, 100, 200];
-    const perPageDropdown = createElement(
+    const defaultPerPage = 25;
+
+    return createElement(
       'select',
       {
         className: 'per-page-dropdown',
@@ -773,7 +747,7 @@
         onchange: (event) => {
           const newPerPage = parseInt(event.target.value);
           const newParams = new URLSearchParams(params);
-          newParams.set('page', 1); // Reset to first page when changing per_page
+          newParams.set('page', 1); // Reset to first page
           if (newPerPage !== defaultPerPage) {
             newParams.set('per_page', newPerPage);
           } else {
@@ -786,11 +760,59 @@
         createElement('option', {
           value: optionValue,
           textContent: `${optionValue} per page`,
-          selected: optionValue === perPage,
+          selected: optionValue === currentPerPage,
         })
       )
     );
-    pagination.append(perPageDropdown);
+  }
+
+  /**
+   * Creates pagination controls for the activities page.
+   * @param {number} onPage - The number of items currently displayed on the page.
+   * @return {HTMLDivElement} The pagination container element.
+   */
+  const createActivitesPagination = (onPage) => {
+    const defaultPerPage = 25;
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    const perPage = parseInt(params.get('per_page')) || 25;
+    const currentPage = parseInt(params.get('page')) || 1;
+
+    const pagination = createElement('div', {
+      className: 'pagination__navigation',
+    });
+
+    const prevParams = new URLSearchParams(params);
+    prevParams.set('page', currentPage - 1);
+    if (perPage !== defaultPerPage) {
+      prevParams.set('per_page', perPage);
+    }
+    const prevLink = createPaginationLink(
+      'Previous page',
+      'navigate_before',
+      prevParams,
+      currentPage === 1,
+      'previous'
+    );
+    pagination.appendChild(prevLink);
+
+    const nextParams = new URLSearchParams(params);
+    nextParams.set('page', currentPage + 1);
+    if (perPage !== defaultPerPage) {
+      nextParams.set('per_page', perPage);
+    }
+    const nextLink = createPaginationLink(
+      'Next page',
+      'navigate_next',
+      nextParams,
+      perPage > onPage,
+      'next'
+    );
+    pagination.appendChild(nextLink);
+
+    const perPageDropdown = createPerPageDropdown(perPage, params);
+    pagination.appendChild(perPageDropdown);
+
     return pagination;
   };
 
@@ -821,6 +843,115 @@
   };
 
   /**
+   * Handles the 'finished' status for an activity row.
+   * @param {HTMLElement} rowElement - The table row element.
+   * @param {string} type - The activity type ('lab' or 'course').
+   */
+  function handleFinishedStatus(rowElement, type) {
+    setBackgroundColor(rowElement, 'green');
+    rowElement.classList.add(`completed-${type}`);
+  }
+
+  /**
+   * Handles an untracked status for an activity row.
+   * @param {HTMLElement} rowElement - The table row element.
+   * @param {Object} record - The activity record.
+   * @param {string} type - The activity type.
+   * @param {Object} staging - The staging object for untracked records.
+   */
+  function handleUntrackedStatus(rowElement, record, type, staging) {
+    setBackgroundColor(rowElement, 'yellow');
+    rowElement.classList.add(`untracked-${type}`);
+    staging.untrackedRecords.push({ type, ...record });
+  }
+
+  /**
+   * Handles a null status (unregistered) for an activity row.
+   * @param {HTMLElement} rowElement - The table row element.
+   * @param {string} type - The activity type.
+   * @param {number} id - The activity ID.
+   * @param {string} name - The activity name.
+   * @param {Object} staging - The staging object for unregistered records.
+   */
+  function handleNullStatus(rowElement, type, id, name, staging) {
+    const options = {
+      format_key: 1,
+      elementType: 'span',
+    };
+    setBackgroundColor(rowElement, 'yellow');
+    const col1 = rowElement.children[0];
+    appendIcon(col1, 'warning', {
+      ...options,
+      beforeIcon: ' ',
+      tooltip: 'Unregistered activity',
+    });
+    if (!col1.querySelector('a')) {
+      const searchIcon = appendSeachLink(col1, col1.innerText);
+      appendIcon(searchIcon, 'search', {
+        ...options,
+        tooltip: 'Search this activity',
+      });
+    }
+    rowElement.classList.add(`new-${type}`);
+    const newRecord = {
+      id: parseInt(id),
+      name: formatTitle(name),
+      status: '',
+    };
+    staging.unregisteredRecords.push({ type, record: newRecord });
+  }
+
+  /**
+   * Handles a lab activity.
+   * @param {HTMLElement} rowElement - The table row element.
+   * @param {number} id - The lab ID.
+   * @param {string} name - The lab name.
+   * @param {boolean} isPassed - Whether the lab was passed.
+   * @param {Object} statusHandler - The status handler object.
+   */
+  async function handleLabActivity(
+    rowElement,
+    id,
+    name,
+    isPassed,
+    statusHandler
+  ) {
+    const record = await getLabFromDbById(id);
+    const statusUpdateHandler = statusHandler[record.status];
+    if (isPassed && statusUpdateHandler) {
+      statusUpdateHandler(rowElement, record, 'lab', id, name);
+    } else {
+      setBackgroundColor(rowElement, 'red');
+    }
+    return record;
+  }
+
+  /**
+   * Handles a course activity.
+   * @param {HTMLElement} rowElement - The table row element.
+   * @param {number} id - The course ID.
+   * @param {string} name - The course name.
+   * @param {boolean} isPassed - Whether the course was passed.
+   * @param {Object} statusHandler - The status handler object.
+   */
+  async function handleCourseActivity(
+    rowElement,
+    id,
+    name,
+    isPassed,
+    statusHandler
+  ) {
+    const record = await getCourseFromDbById(id);
+    const statusUpdateHandler = statusHandler[record.status];
+    if (statusUpdateHandler && (isPassed || isPassed === null)) {
+      statusUpdateHandler(rowElement, record, 'course', id, name);
+    } else {
+      setBackgroundColor(rowElement, 'yellow');
+    }
+    return record;
+  }
+
+  /**
    * Tracks and annotates each row in the activities table based on database records.
    * @param {Object[]} records - An array of activity data from the page.
    * @return {Promise<Object>} An object containing counts and data for untracked/unregistered records.
@@ -830,70 +961,27 @@
       untrackedRecords: [],
       unregisteredRecords: [],
     };
-    const options = {
-      format_key: 1,
-      elementType: 'span',
-    };
 
     // Handlers for different completion statuses.
     const statusHandler = {
       finished: (rowElement, record, type) => {
-        setBackgroundColor(rowElement, 'green');
-        rowElement.classList.add(`completed-${type}`);
+        handleFinishedStatus(rowElement, type);
       },
       '': (rowElement, record, type) => {
-        setBackgroundColor(rowElement, 'yellow');
-        rowElement.classList.add(`untracked-${type}`);
-        staging.untrackedRecords.push({ type, ...record });
+        handleUntrackedStatus(rowElement, record, type, staging);
       },
       null: (rowElement, record, type, id, name) => {
-        setBackgroundColor(rowElement, 'yellow');
-        const col1 = rowElement.children[0];
-        appendIcon(col1, 'warning', {
-          ...options,
-          beforeIcon: ' ',
-          tooltip: 'Unregistered activity',
-        });
-        if (!col1.querySelector('a')) {
-          const searchIcon = appendSeachLink(col1, col1.innerText);
-          appendIcon(searchIcon, 'search', {
-            ...options,
-            tooltip: 'Search this activity',
-          });
-        }
-        rowElement.classList.add(`new-${type}`);
-        const newRecord = {
-          id: parseInt(id),
-          name: formatTitle(name),
-          status: '',
-        };
-        staging.unregisteredRecords.push({ type, record: newRecord });
+        handleNullStatus(rowElement, type, id, name, staging);
       },
     };
 
     // Handlers for different activity types (lab, course, etc.).
     const activityTypeHandler = (type) => {
       const handlers = {
-        lab: async (rowElement, id, name, isPassed) => {
-          const record = await getLabFromDbById(id);
-          const statusUpdateHandler = statusHandler[record.status];
-          if (isPassed && statusUpdateHandler) {
-            statusUpdateHandler(rowElement, record, 'lab', id, name);
-          } else {
-            setBackgroundColor(rowElement, 'red');
-          }
-          return record;
-        },
-        course: async (rowElement, id, name, isPassed) => {
-          const record = await getCourseFromDbById(id);
-          const statusUpdateHandler = statusHandler[record.status];
-          if (statusUpdateHandler && (isPassed || isPassed === null)) {
-            statusUpdateHandler(rowElement, record, 'course', id, name);
-          } else {
-            setBackgroundColor(rowElement, 'yellow');
-          }
-          return record;
-        },
+        lab: (rowElement, id, name, isPassed) =>
+          handleLabActivity(rowElement, id, name, isPassed, statusHandler),
+        course: (rowElement, id, name, isPassed) =>
+          handleCourseActivity(rowElement, id, name, isPassed, statusHandler),
       };
       return handlers[type] || (() => null); // Return a dummy function for unknown types.
     };
