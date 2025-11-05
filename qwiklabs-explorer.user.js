@@ -333,7 +333,9 @@
    * @return {Object} The lab record, or an object with a null status if not found.
    */
   async function getLabFromDbById(id) {
-    return databaseCache.labs.find((record) => id == record.id) || { status: null };
+    return (
+      databaseCache.labs.find((record) => id == record.id) || { status: null }
+    );
   }
 
   /**
@@ -342,7 +344,11 @@
    * @return {Object} The course record, or an object with a null status if not found.
    */
   function getCourseFromDbById(id) {
-    return databaseCache.courses.find((record) => id == record.id) || { status: null };
+    return (
+      databaseCache.courses.find((record) => id == record.id) || {
+        status: null,
+      }
+    );
   }
 
   //
@@ -509,7 +515,9 @@
    */
   async function trackTitleOnDetailPage(type, id) {
     const isLab = type === 'lab';
-    const selector = isLab ? CONFIG.selectors.labPageTitle : CONFIG.selectors.coursePageTitle;
+    const selector = isLab
+      ? CONFIG.selectors.labPageTitle
+      : CONFIG.selectors.coursePageTitle;
     const pageTitleEl = document.querySelector(selector);
     if (!pageTitleEl) {
       console.warn(`Element '${selector}' not found.`);
@@ -530,7 +538,9 @@
       style: isLab ? 'display: inline-block; vertical-align:super;' : '',
     };
 
-    console.log(`${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`);
+    console.log(
+      `${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
+    );
 
     switch (record.status) {
       case 'finished':
@@ -597,31 +607,59 @@
   }
 
   /**
+   * Creates an HTML element with specified attributes and children.
+   * @param {string} tag - The HTML tag for the element.
+   * @param {object} [attributes={}] - An object of attributes to set on the element.
+   * @param {Array<Node|string>} [children=[]] - An array of child nodes or strings to append.
+   * @return {HTMLElement} The created element.
+   */
+  function createElement(tag, attributes = {}, children = []) {
+    const element = document.createElement(tag);
+    for (const [key, value] of Object.entries(attributes)) {
+      if (key === 'style') {
+        Object.assign(element.style, value);
+      } else if (key === 'dataset') {
+        Object.assign(element.dataset, value);
+      } else {
+        element[key] = value;
+      }
+    }
+    for (const child of children) {
+      element.append(child);
+    }
+    return element;
+  }
+
+  /**
    * Creates the "Update Database" button.
    * @param {Object} activityData - Data object from trackAndAnnotateActivities.
    * @return {HTMLButtonElement} A button element for triggering the database update.
    */
   const createUpdateButton = (activityData) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.id = 'db-update';
-    button.classList =
-      'db-update-button mdl-button mdl-button--icon' +
-      ' mdl-button--primary mdl-js-button mdl-js-ripple-effect';
-    button.title = 'Update Database Records';
-    const icon = document.createElement('i');
-    icon.className = 'material-icons';
-    icon.textContent = 'sync';
-    button.appendChild(icon);
-    button.addEventListener('click', batchUpdateToDb);
-    button.dataset.untrackedRecords = JSON.stringify(
-      activityData.data.untrackedRecords
+    const icon = createElement('i', {
+      className: 'material-icons',
+      textContent: 'sync',
+    });
+    return createElement(
+      'button',
+      {
+        type: 'button',
+        id: 'db-update',
+        className:
+          'db-update-button mdl-button mdl-button--icon' +
+          ' mdl-button--primary mdl-js-button mdl-js-ripple-effect',
+        title: 'Update Database Records',
+        disabled: activityData.counts.untrackedRecords === 0,
+        dataset: {
+          untrackedRecords: JSON.stringify(activityData.data.untrackedRecords),
+          unregisteredRecords: JSON.stringify(
+            activityData.data.unregisteredRecords
+          ),
+        },
+        onclick: batchUpdateToDb,
+      },
+      [icon]
     );
-    button.dataset.unregisteredRecords = JSON.stringify(
-      activityData.data.unregisteredRecords
-    );
-    button.disabled = activityData.counts.untrackedRecords === 0;
-    return button;
   };
 
   /**
@@ -629,10 +667,10 @@
    * @return {HTMLDivElement} The button group element.
    */
   const createButtonGroup = () => {
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'filter-group qclt-button-group';
-    buttonGroup.style.cssText = 'margin-left: auto';
-    return buttonGroup;
+    return createElement('div', {
+      className: 'filter-group qclt-button-group',
+      style: { marginLeft: 'auto' },
+    });
   };
 
   /**
@@ -646,27 +684,31 @@
     const params = new URLSearchParams(url.search);
     const perPage = parseInt(params.get('per_page')) || 25;
     const currentPage = parseInt(params.get('page')) || 1;
-    const pagination = document.createElement('div');
-    pagination.className = 'pagination__navigation';
 
     const createIcon = (label, content) => {
-      const icon = document.createElement('i');
-      icon.className = 'material-icons';
+      const icon = createElement('i', {
+        className: 'material-icons',
+        textContent: content,
+      });
       icon.setAttribute('aria-label', label);
-      icon.textContent = content;
       return icon;
     };
 
+    const pagination = createElement('div', {
+      className: 'pagination__navigation',
+    });
+
     if (currentPage == 1) {
-      const prevSpan = document.createElement('span');
-      prevSpan.className = 'previous_page disabled';
+      const prevSpan = createElement(
+        'span',
+        {
+          className: 'previous_page disabled',
+        },
+        [createIcon('Previous page', 'navigate_before')]
+      );
       prevSpan.setAttribute('aria-disabled', 'true');
-      prevSpan.appendChild(createIcon('Previous page', 'navigate_before'));
       pagination.appendChild(prevSpan);
     } else {
-      const previousPage = document.createElement('a');
-      previousPage.className = 'previous_page';
-      previousPage.rel = 'prev';
       const newParams = new URLSearchParams(params);
       newParams.set('page', currentPage - 1);
       if (perPage !== defaultPerPage) {
@@ -674,21 +716,29 @@
       }
       const newUrl = new URL(url);
       newUrl.search = newParams.toString();
-      previousPage.href = newUrl.toString();
-      previousPage.appendChild(createIcon('Previous page', 'navigate_before'));
+      const previousPage = createElement(
+        'a',
+        {
+          className: 'previous_page',
+          rel: 'prev',
+          href: newUrl.toString(),
+        },
+        [createIcon('Previous page', 'navigate_before')]
+      );
       pagination.appendChild(previousPage);
     }
 
     if (perPage > onPage) {
-      const nextSpan = document.createElement('span');
-      nextSpan.className = 'next_page disabled';
+      const nextSpan = createElement(
+        'span',
+        {
+          className: 'next_page disabled',
+        },
+        [createIcon('Next page', 'navigate_next')]
+      );
       nextSpan.setAttribute('aria-disabled', 'true');
-      nextSpan.appendChild(createIcon('Next page', 'navigate_next'));
       pagination.appendChild(nextSpan);
     } else {
-      const nextPage = document.createElement('a');
-      nextPage.className = 'next_page';
-      nextPage.rel = 'next';
       const newParams = new URLSearchParams(params);
       newParams.set('page', currentPage + 1);
       if (perPage !== defaultPerPage) {
@@ -696,37 +746,50 @@
       }
       const newUrl = new URL(url);
       newUrl.search = newParams.toString();
-      nextPage.href = newUrl.toString();
-      nextPage.appendChild(createIcon('Next page', 'navigate_next'));
+      const nextPage = createElement(
+        'a',
+        {
+          className: 'next_page',
+          rel: 'next',
+          href: newUrl.toString(),
+        },
+        [createIcon('Next page', 'navigate_next')]
+      );
       pagination.appendChild(nextPage);
     }
 
     // Per page dropdown
-    const perPageDropdown = document.createElement('select');
-    perPageDropdown.className = 'per-page-dropdown';
-    perPageDropdown.style.cssText = 'font-size: 14px; margin-left: 10px; border-radius: 8px; height: auto;';
     const perPageOptions = [25, 50, 100, 200];
-    perPageOptions.forEach((optionValue) => {
-      const option = document.createElement('option');
-      option.value = optionValue;
-      option.textContent = `${optionValue} per page`;
-      if (optionValue === perPage) {
-        option.selected = true;
-      }
-      perPageDropdown.appendChild(option);
-    });
-
-    perPageDropdown.addEventListener('change', (event) => {
-      const newPerPage = parseInt(event.target.value);
-      const newParams = new URLSearchParams(params);
-      newParams.set('page', 1); // Reset to first page when changing per_page
-      if (newPerPage !== defaultPerPage) {
-        newParams.set('per_page', newPerPage);
-      } else {
-        newParams.delete('per_page');
-      }
-      window.location.search = newParams.toString();
-    });
+    const perPageDropdown = createElement(
+      'select',
+      {
+        className: 'per-page-dropdown',
+        style: {
+          fontSize: '14px',
+          marginLeft: '10px',
+          borderRadius: '8px',
+          height: 'auto',
+        },
+        onchange: (event) => {
+          const newPerPage = parseInt(event.target.value);
+          const newParams = new URLSearchParams(params);
+          newParams.set('page', 1); // Reset to first page when changing per_page
+          if (newPerPage !== defaultPerPage) {
+            newParams.set('per_page', newPerPage);
+          } else {
+            newParams.delete('per_page');
+          }
+          window.location.search = newParams.toString();
+        },
+      },
+      perPageOptions.map((optionValue) =>
+        createElement('option', {
+          value: optionValue,
+          textContent: `${optionValue} per page`,
+          selected: optionValue === perPage,
+        })
+      )
+    );
     pagination.append(perPageDropdown);
     return pagination;
   };
@@ -738,9 +801,12 @@
    * @return {HTMLAnchorElement} The created anchor element.
    */
   const appendSeachLink = (element, searchTerm) => {
-    const aTag = document.createElement('a');
-    aTag.href = `${CONFIG.urls.cloudSkillsBoost}/catalog?keywords=${encodeURIComponent(searchTerm)}`;
-    aTag.style.paddingLeft = '0.25em';
+    const aTag = createElement('a', {
+      href: `${
+        CONFIG.urls.cloudSkillsBoost
+      }/catalog?keywords=${encodeURIComponent(searchTerm)}`,
+      style: { paddingLeft: '0.25em' },
+    });
     element.appendChild(aTag);
     return aTag;
   };
@@ -832,7 +898,9 @@
       return handlers[type] || (() => null); // Return a dummy function for unknown types.
     };
 
-    const activityTable = document.querySelector(CONFIG.selectors.activityTable);
+    const activityTable = document.querySelector(
+      CONFIG.selectors.activityTable
+    );
     if (activityTable) {
       const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
       for (const [i, record] of records.entries()) {
@@ -897,7 +965,9 @@
         identifier: 'home',
         exec: async () => {
           console.debug('Tracking card data on Home');
-          const cards = document.querySelectorAll(CONFIG.selectors.activityCard);
+          const cards = document.querySelectorAll(
+            CONFIG.selectors.activityCard
+          );
           await trackActivityCards(cards);
         },
       },
