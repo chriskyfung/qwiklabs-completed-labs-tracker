@@ -1002,13 +1002,20 @@
             "passed": true
           }
         */
-        const type =
-          record.type
-            .match(/activity="(?<type>\w+)"/)
-            ?.groups?.type.toLowerCase() || 'unknown';
-        const name =
-          record.name.match(/>(?<name>[^<]+)</)?.groups?.name || record.name;
-        const id = record.name.match(/\/\w+\/(?<id>\d+)/)?.groups?.id || null;
+        const tempContainer = document.createElement('div');
+
+        tempContainer.innerHTML = record.type;
+        const typeLabel = tempContainer.querySelector('ql-activity-label');
+        const type = typeLabel
+          ? typeLabel.getAttribute('activity').toLowerCase()
+          : 'unknown';
+
+        tempContainer.innerHTML = record.name;
+        const link = tempContainer.querySelector('a');
+        const name = link ? link.textContent.trim() : record.name;
+        const id = link
+          ? link.href.match(/\/\w+\/(?<id>\d+)/)?.groups?.id || null
+          : null;
         const passed = record.passed;
         const row = rows[i];
         const handler = activityTypeHandler(type);
