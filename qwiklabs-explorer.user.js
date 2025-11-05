@@ -23,9 +23,18 @@
 (function () {
   'use strict';
 
-  const CONFIG = {
+  /**
+   * ----------------------------------------------------------------
+   * CONFIGURATION
+   * @namespace Config
+   * ----------------------------------------------------------------
+   */
+  const Config = {
+    /** @type {boolean} */
     isDebugMode: false,
+    /** @type {string} */
     dbName: 'qwiklabs-db-test-1',
+    /** @type {Object.<string, string>} */
     selectors: {
       activityCard: 'ql-activity-card',
       activityTable: '.activities-table',
@@ -41,9 +50,11 @@
       h1: 'h1',
       h3: 'h3',
     },
+    /** @type {Object.<string, string>} */
     urls: {
       cloudSkillsBoost: 'https://www.skills.google',
     },
+    /** @type {Object.<string, (string|string[])>} */
     cssClasses: {
       updateButton:
         'db-update-button mdl-button mdl-button--icon' +
@@ -63,10 +74,12 @@
       newLab: 'new-lab',
       newCourse: 'new-course',
     },
+    /** @type {{defaultPerPage: number, perPageOptions: number[]}} */
     pagination: {
       defaultPerPage: 25,
       perPageOptions: [25, 50, 100, 200],
     },
+    /** @type {Object.<string, string>} */
     colors: {
       darkGreen: '#008000',
       darkOrange: '#ff8c00',
@@ -75,6 +88,7 @@
       purple: '#fef',
       red: '#fdd',
     },
+    /** @type {Object.<string, Object.<number, string>>} */
     icons: {
       check: {
         0: '<i class="fas fa-check-circle" style="color:green"></i>',
@@ -98,968 +112,713 @@
       },
     },
   };
-  const db = new Dexie(CONFIG.dbName);
-
-  // In-memory cache for database tables to reduce DB queries.
-  let databaseCache = { labs: null, courses: null };
 
   /**
-   * Initializes the Dexie database with tables and initial data if it doesn't exist.
+   * ----------------------------------------------------------------
+   * DATABASE MODULE
+   * @namespace Database
+   * ----------------------------------------------------------------
    */
-  async function initDB() {
-    console.debug('initDB - start');
-    // Define database schema.
-    db.version(2).stores({
-      labs: '&id,name,status',
-      courses: '&id,name,status',
-    });
-    console.debug('Using Dexie v' + Dexie.semVer);
+  const Database = (function () {
+    const db = new Dexie(Config.dbName);
+    /** @type {{labs: Object[]|null, courses: Object[]|null}} */
+    let cache = { labs: null, courses: null };
 
-    // These are for demonstration and testing purposes.
-    const initialData = {
-      labs: [
-        { id: 3563, name: 'Creating a Virtual Machine', status: '' },
-        {
-          id: 563,
-          name: 'Getting Started with Cloud Shell and gcloud',
-          status: '',
-        },
-        {
-          id: 565,
-          name: 'Provision Services with GCP Marketplace',
-          status: '',
-        },
-        { id: 1753, name: 'Creating a Persistent Disk', status: '' },
-        { id: 564, name: 'Hello Node Kubernetes', status: '' },
-      ],
-      courses: [
-        { id: 621, name: 'Google Cloud Essentials', status: '' },
-        { id: 735, name: 'Google Developer Essentials', status: '' },
-        { id: 767, name: 'Optimize Your Google Cloud Costs', status: '' },
-      ],
-    };
+    /**
+     * Gets the table name for a given record type.
+     * @param {string} type - The type of record ('lab' or 'course').
+     * @return {string} The name of the database table.
+     */
+    function getTableName(type) {
+      return type + 's';
+    }
 
-    // Populate the database with initial data.
-    const qldata = initialData;
-
-    const lastLab = await db.labs.bulkAdd(qldata.labs);
-    console.log(`Done adding ${qldata.labs.length} labs to the Dexie database`);
-    console.log(`Last lab's id was: ${lastLab}`);
-    const lastCourse = await db.courses.bulkAdd(qldata.courses);
-    console.log(
-      `Done adding ${qldata.courses.length} courses to the Dexie database`
-    );
-    console.log(`Last course's id was: ${lastCourse}`);
-  }
-
-  /**
-   * Loads the database and caches its tables into memory.
-   * Initializes the database if it doesn't exist.
-   */
-  async function loadDB() {
-    if (!(await Dexie.exists(db.name))) {
-      console.debug('Database does not exist. Initializing a new one...');
-      await initDB().catch(Dexie.BulkError, function (e) {
-        // Log errors for failed additions, but commit successful ones.
-        console.error(e.failures.length + ' items did not succeed.');
+    /**
+     * Initializes the Dexie database with tables.
+     * @return {Promise<void>}
+     */
+    async function init() {
+      console.debug('initDB - start');
+      db.version(2).stores({
+        labs: '&id,name,status',
+        courses: '&id,name,status',
       });
+      console.debug('Using Dexie v' + Dexie.semVer);
     }
-    if (!db.isOpen()) {
-      await db.open();
-      if (CONFIG.isDebugMode) {
-        console.log('Database opened: ' + db.name);
-        console.log('Database version: ' + db.verno);
-      }
-    }
-    // Cache the entire tables into memory for faster access.
-    databaseCache.labs = await db.table('labs').toArray();
-    databaseCache.courses = await db.table('courses').toArray();
-  }
 
-  /**
-   * Creates a new record in the specified database table.
-   * @param {string} type - The type of record ('lab' or 'course').
-   * @param {number} id - The unique identifier for the record.
-   * @param {Object} data - The data to be stored.
-   * @return {Promise<number>} The id of the newly created record.
-   */
-  async function createRecord(type, id, data) {
-    data.id = parseInt(id);
-    const added = await db.table(type + 's').add(data);
-    if (added) {
-      console.log(
-        `Added a ${type} record with ${JSON.stringify(data)} to the database.`
+    /**
+     * Loads the database and caches its tables into memory.
+     * Initializes the database if it doesn't exist.
+     * @return {Promise<void>}
+     */
+    async function load() {
+      if (!(await Dexie.exists(db.name))) {
+        console.debug('Database does not exist. Initializing a new one...');
+        await init().catch(Dexie.BulkError, function (e) {
+          console.error(e.failures.length + ' items did not succeed.');
+        });
+      }
+      if (!db.isOpen()) {
+        await db.open();
+        if (Config.isDebugMode) {
+          console.log('Database opened: ' + db.name);
+          console.log('Database version: ' + db.verno);
+        }
+      }
+      cache.labs = await db.table('labs').toArray();
+      cache.courses = await db.table('courses').toArray();
+    }
+
+    /**
+     * Clears the in-memory cache.
+     */
+    function clearCache() {
+      cache = { labs: null, courses: null };
+    }
+
+    /**
+     * Retrieves a record from the cache by its ID.
+     * @param {string} type - The type of record ('lab' or 'course').
+     * @param {number|string} id - The ID of the record to retrieve.
+     * @return {Promise<Object>} The record, or an object with a null status if not found.
+     */
+    async function getRecord(type, id) {
+      const tableName = getTableName(type);
+      return (
+        cache[tableName].find((record) => id == record.id) || { status: null }
       );
     }
-    return added;
-  }
 
-  /**
-   * Updates a single record in the database by its ID.
-   * @param {string} type - The type of record ('lab' or 'course').
-   * @param {number} id - The ID of the record to update.
-   * @param {Object} data - An object containing the properties to update.
-   * @return {Promise<number>} A promise that resolves with the number of updated records (0 or 1).
-   */
-  async function updateRecordById(type, id, data) {
-    id = parseInt(id);
-    const updated = await db.table(type + 's').update(id, data);
-    if (updated) {
-      console.log(
-        `Updated a ${type} record:${id} with ${JSON.stringify(data)} to the database.`
-      );
-    }
-    return updated;
-  }
-
-  /**
-   * Batch creates new records in the database from an array of records.
-   * @param {Array} records - Array of records to be created, each with a type and record data.
-   */
-  async function batchCreateRecords(records) {
-    const newRecordsByType = records.reduce((acc, { type, record }) => {
-      const tableName = `${type}s`;
-      if (!acc[tableName]) {
-        acc[tableName] = [];
+    /**
+     * Creates a new record in the specified database table.
+     * @param {string} type - The type of record ('lab' or 'course').
+     * @param {number|string} id - The unique identifier for the record.
+     * @param {Object} data - The data to be stored.
+     * @return {Promise<number>} The id of the newly created record.
+     */
+    async function createRecord(type, id, data) {
+      data.id = parseInt(id);
+      const tableName = getTableName(type);
+      const added = await db.table(tableName).add(data);
+      if (added) {
+        console.log(
+          `Added a ${type} record with ${JSON.stringify(data)} to the database.`
+        );
       }
-      acc[tableName].push(record);
-      return acc;
-    }, {});
+      return added;
+    }
 
-    for (const tableName in newRecordsByType) {
-      if (Object.prototype.hasOwnProperty.call(newRecordsByType, tableName)) {
-        const newRecordsArray = newRecordsByType[tableName];
-        if (newRecordsArray.length > 0) {
-          try {
-            const lastKey = await db.table(tableName).bulkAdd(newRecordsArray);
-            console.log(
-              `Bulk added ${newRecordsArray.length} new records to ${tableName}. Last key: ${lastKey}.`
-            );
-          } catch (e) {
-            console.error(`Error bulk adding to ${tableName}:`, e);
+    /**
+     * Updates a single record in the database by its ID.
+     * @param {string} type - The type of record ('lab' or 'course').
+     * @param {number|string} id - The ID of the record to update.
+     * @param {Object} data - An object containing the properties to update.
+     * @return {Promise<number>} A promise that resolves with the number of updated records (0 or 1).
+     */
+    async function updateRecord(type, id, data) {
+      id = parseInt(id);
+      const tableName = getTableName(type);
+      const updated = await db.table(tableName).update(id, data);
+      if (updated) {
+        console.log(
+          `Updated a ${type} record:${id} with ${JSON.stringify(
+            data
+          )} to the database.`
+        );
+      }
+      return updated;
+    }
+
+    /**
+     * Batch creates new records in the database from an array of records.
+     * @param {Array<{type: string, record: Object}>} records - Array of records to be created.
+     * @return {Promise<void>}
+     */
+    async function batchCreate(records) {
+      const newRecordsByType = records.reduce((acc, { type, record }) => {
+        const tableName = getTableName(type);
+        if (!acc[tableName]) {
+          acc[tableName] = [];
+        }
+        acc[tableName].push(record);
+        return acc;
+      }, {});
+
+      for (const tableName in newRecordsByType) {
+        if (Object.prototype.hasOwnProperty.call(newRecordsByType, tableName)) {
+          const newRecordsArray = newRecordsByType[tableName];
+          if (newRecordsArray.length > 0) {
+            try {
+              const lastKey = await db
+                .table(tableName)
+                .bulkAdd(newRecordsArray);
+              console.log(
+                `Bulk added ${newRecordsArray.length} new records to ${tableName}. Last key: ${lastKey}.`
+              );
+            } catch (e) {
+              console.error(`Error bulk adding to ${tableName}:`, e);
+            }
           }
         }
       }
     }
-  }
 
-  /**
-   * Batch updates records in the database from an array of records.
-   * @param {Array} records - Array of records to be updated.
-   * @return {Promise<Object>} An object with counts of updated labs and courses.
-   */
-  async function batchUpdateRecords(records) {
-    console.log('Batch Update - start', records);
-    const labsToUpdate = records
-      .filter((r) => r.type === 'lab')
-      .map((r) => ({ ...r, status: 'finished' }));
-    const coursesToUpdate = records
-      .filter((r) => r.type === 'course')
-      .map((r) => ({ ...r, status: 'finished' }));
+    /**
+     * Batch updates records in the database from an array of records.
+     * @param {Array<Object>} records - Array of records to be updated.
+     * @return {Promise<{labs: number, courses: number}>} An object with counts of updated labs and courses.
+     */
+    async function batchUpdate(records) {
+      console.log('Batch Update - start', records);
+      const labsToUpdate = records
+        .filter((r) => r.type === 'lab')
+        .map((r) => ({ ...r, status: 'finished' }));
+      const coursesToUpdate = records
+        .filter((r) => r.type === 'course')
+        .map((r) => ({ ...r, status: 'finished' }));
 
-    if (labsToUpdate.length > 0) {
-      await db.table('labs').bulkPut(labsToUpdate);
-    }
-    if (coursesToUpdate.length > 0) {
-      await db.table('courses').bulkPut(coursesToUpdate);
-    }
-
-    console.log(
-      `Number of items updated: ${coursesToUpdate.length} courses and ${labsToUpdate.length} labs`
-    );
-    return { labs: labsToUpdate.length, courses: coursesToUpdate.length };
-  }
-
-  /**
-   * Shows a snackbar notification at the top of the page.
-   * @param {object} options - The options for the snackbar.
-   * @param {string} options.message - The message to display.
-   * @param {string} [options.actionText] - The text for the action button.
-   * @param {Function} [options.onAction] - The callback for when the action button is clicked.
-   * @param {number} [options.autoDismissDelay=10000] - Delay in milliseconds to auto-dismiss the snackbar.
-   */
-  function showSnackbar({
-    message,
-    actionText,
-    onAction,
-    autoDismissDelay = 10000,
-  }) {
-    const snackbar = document.createElement('div');
-    snackbar.id = 'snackbar';
-    snackbar.classList.add(...CONFIG.cssClasses.snackbar);
-    // Using Material Design-like styles for the snackbar.
-    Object.assign(snackbar.style, {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '14px 24px',
-      color: '#FFFFFF',
-      borderRadius: '4px',
-      position: 'fixed',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      minWidth: '344px',
-      maxWidth: '568px',
-      zIndex: '1000',
-    });
-
-    const messageEl = document.createElement('p');
-    messageEl.classList.add(...CONFIG.cssClasses.snackbarMessage);
-    messageEl.style.margin = '0';
-    messageEl.style.flexGrow = '1';
-
-    const actionEl = document.createElement('a');
-    actionEl.classList.add(...CONFIG.cssClasses.snackbarClose);
-    actionEl.href = '#'; // Necessary for accessibility.
-    actionEl.textContent = actionText || '✕';
-    if (actionText) {
-      messageEl.style.marginRight = '16px';
-      Object.assign(actionEl.style, {
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        cursor: 'pointer',
-      });
-    } else {
-      actionEl.style.cursor = 'pointer';
-    }
-    actionEl.addEventListener('click', (e) => {
-      e.preventDefault();
-      onAction ? onAction() : snackbar.remove();
-    });
-
-    messageEl.textContent = message;
-    snackbar.appendChild(messageEl);
-    snackbar.appendChild(actionEl);
-
-    document.body.appendChild(snackbar);
-
-    setTimeout(
-      () => (onAction ? onAction() : snackbar.remove()),
-      autoDismissDelay
-    );
-  }
-
-  /**
-   * Batch updates the status of untracked activity records to 'finished' in the database.
-   */
-  const batchUpdateToDb = async () => {
-    const updateButton = document.querySelector(
-      `button${CONFIG.selectors.updateButton}`
-    );
-    if (!updateButton) {
-      console.error('Update button not found.');
-      return;
-    }
-    const untrackedRecordsJSON = updateButton.dataset.untrackedRecords;
-    const recordsToUpdate = untrackedRecordsJSON
-      ? JSON.parse(untrackedRecordsJSON)
-      : [];
-    if (!recordsToUpdate || recordsToUpdate.length === 0) {
-      console.warn('No untracked records found to update.');
-      showSnackbar({ message: '0 items to update' });
-      return;
-    }
-
-    const counts = await batchUpdateRecords(recordsToUpdate);
-
-    const totalUpdates = counts.labs + counts.courses;
-
-    if (totalUpdates === 0) {
-      showSnackbar({ message: '0 items to update' });
-    } else {
-      let notificationText = '';
-      notificationText += counts.courses > 0 ? `${counts.courses} course` : '';
-      notificationText += counts.courses > 0 && counts.labs > 0 ? ' and ' : '';
-      notificationText += counts.labs > 0 ? `${counts.labs} lab` : '';
-      notificationText += totalUpdates > 1 ? ' records' : ' record';
-      showSnackbar({
-        message: `Updated ${notificationText}`,
-        actionText: 'Refresh',
-        onAction: () => location.reload(),
-      });
-    }
-    console.log('Batch updated - finished');
-  };
-
-  /**
-   * Standardizes a title string by correcting spacing after colons and removing extra spaces.
-   * @param {string} title - The lab or course title.
-   * @return {string} The formatted title.
-   */
-  function formatTitle(title) {
-    return title.replace(/:\S/g, ': ').replace(/\s\s+/g, ' ').trim();
-  }
-
-  /**
-   * Retrieves a lab record from the cache by its ID.
-   * @param {number} id - The ID of the lab to retrieve.
-   * @return {Object} The lab record, or an object with a null status if not found.
-   */
-  async function getLabFromDbById(id) {
-    return (
-      databaseCache.labs.find((record) => id == record.id) || { status: null }
-    );
-  }
-
-  /**
-   * Retrieves a course record from the cache by its ID.
-   * @param {number} id - The ID of the course.
-   * @return {Object} The course record, or an object with a null status if not found.
-   */
-  function getCourseFromDbById(id) {
-    return (
-      databaseCache.courses.find((record) => id == record.id) || {
-        status: null,
+      if (labsToUpdate.length > 0) {
+        await db.table('labs').bulkPut(labsToUpdate);
       }
-    );
-  }
-
-  //
-  // Annotation Methods
-  //
-
-  /**
-   * Sets the background color of a DOM element.
-   * @param {HTMLElement} element - The DOM element to style.
-   * @param {string} colorKey - A key from the internal colorMap (e.g., 'green', 'yellow').
-   * @return {string|null} The hex color code if the key is valid, otherwise null.
-   */
-  function setBackgroundColor(element, colorKey) {
-    if (!(colorKey in CONFIG.colors)) {
-      return null;
-    }
-    const color = CONFIG.colors[colorKey];
-    element.style.background = color;
-    return color;
-  }
-
-  /**
-   * Appends a status icon to a DOM element.
-   * @param {HTMLElement} element - The DOM element to append the icon to.
-   * @param {string} iconKey - A key from the internal iconMap (e.g., 'check', 'new').
-   * @param {Object} [options={format_key: 0, elementType: 'p'}] - Options for the icon.
-   * @return {string|null} The SVG/HTML string of the icon if the key is valid, otherwise null.
-   */
-  function appendIcon(
-    element,
-    iconKey,
-    options = {
-      format_key: 0,
-      elementType: 'p',
-    }
-  ) {
-    const formatKey = options.format_key;
-    const elementType = options.elementType;
-    if (!(iconKey in CONFIG.icons)) {
-      return null;
-    }
-    const icon = CONFIG.icons[iconKey][formatKey];
-    const iconElement = document.createElement(elementType);
-    iconElement.classList = CONFIG.cssClasses.qcltIcon;
-    iconElement.setAttribute('aria-hidden', 'true');
-    options.tooltip !== undefined &&
-      iconElement.setAttribute('title', options.tooltip);
-    options.style && iconElement.setAttribute('style', options.style);
-    options.beforeIcon && (iconElement.innerText = options.beforeIcon);
-    iconElement.innerHTML += icon;
-    element.append(iconElement);
-    return icon;
-  }
-
-  /**
-   * Scans through activity cards on the page, retrieves completion status from the database,
-   * and annotates the cards accordingly.
-   * @param {NodeListOf<Element>} cards - A list of ql-activity-card elements.
-   */
-  async function trackActivityCards(cards) {
-    for (const card of cards) {
-      // This script relies on the internal structure of the ql-activity-card
-      // web component. If the site updates this component, the selectors below may break.
-      if (!card.shadowRoot) {
-        console.warn('No shadowRoot found for this card element. Skipping.');
-        continue;
+      if (coursesToUpdate.length > 0) {
+        await db.table('courses').bulkPut(coursesToUpdate);
       }
-      const params = {
-        id: null,
-        name: null,
-        type: null,
-      };
-      // The card component has two structures, one with attributes on the host
-      // and one with attributes on the first child of the shadowRoot.
-      if (card.attributes.length === 0) {
-        const { href, title } = card.shadowRoot.firstElementChild.attributes;
-        const type = card.shadowRoot
-          .querySelector('ql-activity-label')
-          .getAttribute('activity')
-          .toLowerCase();
-        params.id = href.value.match(/\/(\d+)/)[1];
-        params.name = title.value;
-        params.type = type;
-      } else {
-        params.id = card.getAttribute('path').match(/\/(\d+)/)[1];
-        params.name = card.getAttribute('title');
-        params.type = card.getAttribute('type').toLowerCase();
-      }
-      const cardTitle = card.shadowRoot.querySelector('h3');
-      const options = {
-        format_key: 1,
-        elementType: 'span',
-        style: 'margin-left: 4px',
-      };
-      switch (params.type) {
-        case 'lab':
-          const record = await getLabFromDbById(params.id);
-          console.log(
-            `Lab ID: ${params.id}, Title: "${params.name}", Record: ${JSON.stringify(record)}`
-          );
-          switch (record.status) {
-            case 'finished':
-              appendIcon(cardTitle, 'check', options);
-              break;
-            case null:
-              appendIcon(cardTitle, 'new', options);
-              break;
-          }
-          break;
-        case 'course':
-          const courseRecord = await getCourseFromDbById(params.id);
-          console.log(
-            `Course ID: ${params.id}, Title: "${params.name}", Record: ${JSON.stringify(courseRecord)}`
-          );
-          switch (courseRecord.status) {
-            case 'finished':
-              appendIcon(cardTitle, 'check', options);
-              break;
-            case null:
-              appendIcon(cardTitle, 'new', options);
-              break;
-          }
-          break;
-        default:
-          break;
-      }
-    }
-  }
 
-  /**
-   * Annotates the title on a detail page (lab or course) based on its completion status.
-   * @param {string} type - The type of detail page ('lab' or 'course').
-   * @param {number} id - The ID of the lab or course.
-   */
-  async function trackTitleOnDetailPage(type, id) {
-    const isLab = type === 'lab';
-    const selector = isLab
-      ? CONFIG.selectors.labPageTitle
-      : CONFIG.selectors.coursePageTitle;
-    const pageTitleEl = document.querySelector(selector);
-    if (!pageTitleEl) {
-      console.warn(`Element '${selector}' not found.`);
-      return;
+      console.log(
+        `Number of items updated: ${coursesToUpdate.length} courses and ${labsToUpdate.length} labs`
+      );
+      return { labs: labsToUpdate.length, courses: coursesToUpdate.length };
     }
-    const h1 = pageTitleEl.querySelector(CONFIG.selectors.h1);
-    if (!h1) {
-      console.warn(`h1 not found in '${selector}'.`);
-      return;
-    }
-    const title = h1.innerText;
-    const getRecord = isLab ? getLabFromDbById : getCourseFromDbById;
-    const record = await getRecord(id);
 
-    const options = {
-      format_key: 1,
-      elementType: 'span',
-      style: isLab ? 'display: inline-block; vertical-align:super;' : '',
+    return {
+      load,
+      clearCache,
+      getRecord,
+      createRecord,
+      updateRecord,
+      batchCreate,
+      batchUpdate,
     };
-
-    console.log(
-      `${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
-    );
-
-    switch (record.status) {
-      case 'finished':
-        setBackgroundColor(h1, isLab ? 'green' : 'darkGreen');
-        appendIcon(isLab ? h1 : pageTitleEl, 'check', options);
-        updateRecordById(type, id, { name: formatTitle(title) });
-        break;
-      case null:
-        setBackgroundColor(h1, isLab ? 'yellow' : 'darkOrange');
-        appendIcon(isLab ? h1 : pageTitleEl, 'new', options);
-        createRecord(type, id, { name: formatTitle(title), status: '' });
-        break;
-    }
-  }
+  })();
 
   /**
-   * Annotates a list of titles (e.g., in a catalog) based on their completion status.
-   * @param {NodeListOf<Element>} titles - A list of DOM elements containing titles.
+   * ----------------------------------------------------------------
+   * UI MODULE
+   * @namespace UI
+   * ----------------------------------------------------------------
    */
-  async function trackListOfTitles(titles) {
-    for (const title of titles) {
-      const matches = title.innerHTML.match(/data-type="(.+)" \D+(\d+)/);
-      if (matches == null) {
-        continue;
+  const UI = (function () {
+    /**
+     * Sets the background color of a DOM element.
+     * @param {HTMLElement} element - The DOM element to style.
+     * @param {string} colorKey - A key from the Config.colors object.
+     * @return {string|null} The hex color code if the key is valid, otherwise null.
+     */
+    function setBackgroundColor(element, colorKey) {
+      if (!(colorKey in Config.colors)) {
+        return null;
       }
-      const id = matches[2];
-      const type = matches[1].toLowerCase();
-      const options = { beforeIcon: ' ' };
-      switch (type) {
-        case 'lab':
-          const record = await getLabFromDbById(id);
-          console.log(
-            `Lab ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
-          );
-          switch (record.status) {
-            case 'finished':
-              setBackgroundColor(title, 'green');
-              appendIcon(title, 'check', options);
-              break;
-            case null:
-              setBackgroundColor(title, 'yellow');
-              appendIcon(title, 'new', options);
-              break;
-          }
-          break;
-        case 'course':
-          const courseRecord = await getCourseFromDbById(id);
-          console.log(
-            `Course ID: ${id}, Title: "${title}", Record: ${JSON.stringify(courseRecord)}`
-          );
-          switch (courseRecord.status) {
-            case 'finished':
-              setBackgroundColor(title, 'green');
-              appendIcon(title, 'check', options);
-              break;
-            case null:
-              setBackgroundColor(title, 'yellow');
-              appendIcon(title, 'new', options);
-              break;
-          }
-          break;
+      const color = Config.colors[colorKey];
+      element.style.background = color;
+      return color;
+    }
+
+    /**
+     * Appends a status icon to a DOM element.
+     * @param {HTMLElement} element - The DOM element to append the icon to.
+     * @param {string} iconKey - A key from the Config.icons object.
+     * @param {Object} [options={format_key: 0, elementType: 'p'}] - Options for the icon.
+     * @param {number} [options.format_key=0] - The format key for the icon.
+     * @param {string} [options.elementType='p'] - The type of element to create for the icon.
+     * @param {string} [options.tooltip] - Tooltip text for the icon.
+     * @param {string} [options.style] - Inline style for the icon element.
+     * @param {string} [options.beforeIcon] - Text to add before the icon.
+     * @return {string|null} The SVG/HTML string of the icon if the key is valid, otherwise null.
+     */
+    function appendIcon(
+      element,
+      iconKey,
+      options = {
+        format_key: 0,
+        elementType: 'p',
       }
-    }
-  }
-
-  /**
-   * Creates an HTML element with specified attributes and children.
-   * @param {string} tag - The HTML tag for the element.
-   * @param {object} [attributes={}] - An object of attributes to set on the element.
-   * @param {Array<Node|string>} [children=[]] - An array of child nodes or strings to append.
-   * @return {HTMLElement} The created element.
-   */
-  function createElement(tag, attributes = {}, children = []) {
-    const element = document.createElement(tag);
-    for (const [key, value] of Object.entries(attributes)) {
-      if (key === 'style') {
-        Object.assign(element.style, value);
-      } else if (key === 'dataset') {
-        Object.assign(element.dataset, value);
-      } else {
-        element[key] = value;
+    ) {
+      const formatKey = options.format_key;
+      const elementType = options.elementType;
+      if (!(iconKey in Config.icons)) {
+        return null;
       }
-    }
-    for (const child of children) {
-      element.append(child);
-    }
-    return element;
-  }
-
-  /**
-   * Creates the "Update Database" button.
-   * @param {Object} activityData - Data object from trackAndAnnotateActivities.
-   * @return {HTMLButtonElement} A button element for triggering the database update.
-   */
-  const createUpdateButton = (activityData) => {
-    const icon = createElement('i', {
-      className: CONFIG.cssClasses.materialIcons,
-      textContent: 'sync',
-    });
-    return createElement(
-      'button',
-      {
-        type: 'button',
-        id: 'db-update',
-        className: CONFIG.cssClasses.updateButton,
-        title: 'Update Database Records',
-        disabled: activityData.counts.untrackedRecords === 0,
-        dataset: {
-          untrackedRecords: JSON.stringify(activityData.data.untrackedRecords),
-          unregisteredRecords: JSON.stringify(
-            activityData.data.unregisteredRecords
-          ),
-        },
-        onclick: batchUpdateToDb,
-      },
-      [icon]
-    );
-  };
-
-  /**
-   * Creates a button group container.
-   * @return {HTMLDivElement} The button group element.
-   */
-  const createButtonGroup = () => {
-    return createElement('div', {
-      className: CONFIG.cssClasses.buttonGroup,
-      style: { marginLeft: 'auto' },
-    });
-  };
-
-  /**
-   * Creates a pagination link, either as a span if disabled or as a link.
-   * @param {string} label - The aria-label for the link.
-   * @param {string} iconContent - The text content for the material icon.
-   * @param {URLSearchParams} newParams - The URL search parameters for the link.
-   * @param {boolean} isDisabled - Whether the link should be disabled.
-   * @param {string} rel - The rel attribute for the link.
-   * @return {HTMLAnchorElement|HTMLSpanElement}
-   */
-  function createPaginationLink(
-    label,
-    iconContent,
-    newParams,
-    isDisabled,
-    rel
-  ) {
-    const createIcon = (label, content) => {
-      const icon = createElement('i', {
-        className: CONFIG.cssClasses.materialIcons,
-        textContent: content,
-      });
-      icon.setAttribute('aria-label', label);
+      const icon = Config.icons[iconKey][formatKey];
+      const iconElement = document.createElement(elementType);
+      iconElement.classList = Config.cssClasses.qcltIcon;
+      iconElement.setAttribute('aria-hidden', 'true');
+      options.tooltip !== undefined &&
+        iconElement.setAttribute('title', options.tooltip);
+      options.style && iconElement.setAttribute('style', options.style);
+      options.beforeIcon && (iconElement.innerText = options.beforeIcon);
+      iconElement.innerHTML += icon;
+      element.append(iconElement);
       return icon;
-    };
+    }
 
-    if (isDisabled) {
-      const span = createElement(
-        'span',
+    /**
+     * Shows a snackbar notification at the bottom of the page.
+     * @param {Object} options - The options for the snackbar.
+     * @param {string} options.message - The message to display.
+     * @param {string} [options.actionText] - The text for the action button.
+     * @param {Function} [options.onAction] - The callback for when the action button is clicked.
+     * @param {number} [options.autoDismissDelay=10000] - Delay in milliseconds to auto-dismiss the snackbar.
+     */
+    function showSnackbar({
+      message,
+      actionText,
+      onAction,
+      autoDismissDelay = 10000,
+    }) {
+      const snackbar = document.createElement('div');
+      snackbar.id = 'snackbar';
+      snackbar.classList.add(...Config.cssClasses.snackbar);
+      Object.assign(snackbar.style, {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '14px 24px',
+        color: '#FFFFFF',
+        borderRadius: '4px',
+        position: 'fixed',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        minWidth: '344px',
+        maxWidth: '568px',
+        zIndex: '1000',
+      });
+
+      const messageEl = document.createElement('p');
+      messageEl.classList.add(...Config.cssClasses.snackbarMessage);
+      messageEl.style.margin = '0';
+      messageEl.style.flexGrow = '1';
+
+      const actionEl = document.createElement('a');
+      actionEl.classList.add(...Config.cssClasses.snackbarClose);
+      actionEl.href = '#';
+      actionEl.textContent = actionText || '✕';
+      if (actionText) {
+        messageEl.style.marginRight = '16px';
+        Object.assign(actionEl.style, {
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          color: '#BB86FC',
+        });
+      } else {
+        actionEl.style.cursor = 'pointer';
+      }
+      actionEl.addEventListener('click', (e) => {
+        e.preventDefault();
+        onAction ? onAction() : snackbar.remove();
+      });
+
+      messageEl.textContent = message;
+      snackbar.appendChild(messageEl);
+      snackbar.appendChild(actionEl);
+
+      document.body.appendChild(snackbar);
+
+      setTimeout(
+        () => (onAction ? onAction() : snackbar.remove()),
+        autoDismissDelay
+      );
+    }
+
+    return {
+      setBackgroundColor,
+      appendIcon,
+      showSnackbar,
+    };
+  })();
+
+  /**
+   * ----------------------------------------------------------------
+   * COMPONENT FACTORY MODULE
+   * @namespace ComponentFactory
+   * ----------------------------------------------------------------
+   */
+  const ComponentFactory = (function () {
+    /**
+     * Creates an HTML element with specified attributes and children.
+     * @param {string} tag - The HTML tag for the element.
+     * @param {Object} [attributes={}] - An object of attributes to set on the element.
+     * @param {Array<Node|string>} [children=[]] - An array of child nodes or strings to append.
+     * @return {HTMLElement} The created element.
+     */
+    function createElement(tag, attributes = {}, children = []) {
+      const element = document.createElement(tag);
+      for (const [key, value] of Object.entries(attributes)) {
+        if (key === 'style') {
+          Object.assign(element.style, value);
+        } else if (key === 'dataset') {
+          Object.assign(element.dataset, value);
+        } else {
+          element[key] = value;
+        }
+      }
+      for (const child of children) {
+        element.append(child);
+      }
+      return element;
+    }
+
+    /**
+     * Creates the "Update Database" button.
+     * @param {Object} activityData - Data object from trackAndAnnotateActivities.
+     * @return {HTMLButtonElement} A button element for triggering the database update.
+     */
+    function createUpdateButton(activityData) {
+      const icon = createElement('i', {
+        className: Config.cssClasses.materialIcons,
+        textContent: 'sync',
+      });
+      return createElement(
+        'button',
         {
-          className: `${rel}_page disabled`,
+          type: 'button',
+          id: 'db-update',
+          className: Config.cssClasses.updateButton,
+          title: 'Update Database Records',
+          disabled: activityData.counts.untrackedRecords === 0,
+          dataset: {
+            untrackedRecords: JSON.stringify(
+              activityData.data.untrackedRecords
+            ),
+            unregisteredRecords: JSON.stringify(
+              activityData.data.unregisteredRecords
+            ),
+          },
+          onclick: PageHandlers.batchUpdateToDb,
+        },
+        [icon]
+      );
+    }
+
+    /**
+     * Creates a button group container.
+     * @return {HTMLDivElement} The button group element.
+     */
+    function createButtonGroup() {
+      return createElement('div', {
+        className: Config.cssClasses.buttonGroup,
+        style: { marginLeft: 'auto' },
+      });
+    }
+
+    /**
+     * Creates a pagination link, either as a span if disabled or as a link.
+     * @param {string} label - The aria-label for the link.
+     * @param {string} iconContent - The text content for the material icon.
+     * @param {URLSearchParams} newParams - The URL search parameters for the link.
+     * @param {boolean} isDisabled - Whether the link should be disabled.
+     * @param {string} rel - The rel attribute for the link.
+     * @return {HTMLAnchorElement|HTMLSpanElement}
+     */
+    function createPaginationLink(
+      label,
+      iconContent,
+      newParams,
+      isDisabled,
+      rel
+    ) {
+      const createIcon = (label, content) => {
+        const icon = createElement('i', {
+          className: Config.cssClasses.materialIcons,
+          textContent: content,
+        });
+        icon.setAttribute('aria-label', label);
+        return icon;
+      };
+
+      if (isDisabled) {
+        const span = createElement(
+          'span',
+          {
+            className: `${rel}_page disabled`,
+          },
+          [createIcon(label, iconContent)]
+        );
+        span.setAttribute('aria-disabled', 'true');
+        return span;
+      }
+
+      const newUrl = new URL(window.location.href);
+      newUrl.search = newParams.toString();
+
+      return createElement(
+        'a',
+        {
+          className: `${rel}_page`,
+          rel: rel,
+          href: newUrl.toString(),
         },
         [createIcon(label, iconContent)]
       );
-      span.setAttribute('aria-disabled', 'true');
-      return span;
     }
 
-    const newUrl = new URL(window.location.href);
-    newUrl.search = newParams.toString();
+    /**
+     * Creates the per-page dropdown menu for pagination.
+     * @param {number} currentPerPage - The currently selected number of items per page.
+     * @param {URLSearchParams} params - The current URL search parameters.
+     * @return {HTMLSelectElement}
+     */
+    function createPerPageDropdown(currentPerPage, params) {
+      const perPageOptions = Config.pagination.perPageOptions;
+      const defaultPerPage = Config.pagination.defaultPerPage;
 
-    return createElement(
-      'a',
-      {
-        className: `${rel}_page`,
-        rel: rel,
-        href: newUrl.toString(),
-      },
-      [createIcon(label, iconContent)]
-    );
-  }
-
-  /**
-   * Creates the per-page dropdown menu for pagination.
-   * @param {number} currentPerPage - The currently selected number of items per page.
-   * @param {URLSearchParams} params - The current URL search parameters.
-   * @return {HTMLSelectElement}
-   */
-  function createPerPageDropdown(currentPerPage, params) {
-    const perPageOptions = CONFIG.pagination.perPageOptions;
-    const defaultPerPage = CONFIG.pagination.defaultPerPage;
-
-    return createElement(
-      'select',
-      {
-        className: 'per-page-dropdown',
-        style: {
-          fontSize: '14px',
-          marginLeft: '10px',
-          borderRadius: '8px',
-          height: 'auto',
+      return createElement(
+        'select',
+        {
+          className: 'per-page-dropdown',
+          style: {
+            fontSize: '14px',
+            marginLeft: '10px',
+            borderRadius: '8px',
+            height: 'auto',
+          },
+          onchange: (event) => {
+            const newPerPage = parseInt(event.target.value);
+            const newParams = new URLSearchParams(params);
+            newParams.set('page', 1); // Reset to first page
+            if (newPerPage !== defaultPerPage) {
+              newParams.set('per_page', newPerPage);
+            } else {
+              newParams.delete('per_page');
+            }
+            window.location.search = newParams.toString();
+          },
         },
-        onchange: (event) => {
-          const newPerPage = parseInt(event.target.value);
-          const newParams = new URLSearchParams(params);
-          newParams.set('page', 1); // Reset to first page
-          if (newPerPage !== defaultPerPage) {
-            newParams.set('per_page', newPerPage);
-          } else {
-            newParams.delete('per_page');
-          }
-          window.location.search = newParams.toString();
-        },
-      },
-      perPageOptions.map((optionValue) =>
-        createElement('option', {
-          value: optionValue,
-          textContent: `${optionValue} per page`,
-          selected: optionValue === currentPerPage,
-        })
-      )
-    );
-  }
-
-  /**
-   * Creates pagination controls for the activities page.
-   * @param {number} onPage - The number of items currently displayed on the page.
-   * @return {HTMLDivElement} The pagination container element.
-   */
-  const createActivitesPagination = (onPage) => {
-    const defaultPerPage = CONFIG.pagination.defaultPerPage;
-    const url = new URL(window.location.href);
-    const params = new URLSearchParams(url.search);
-    const perPage =
-      parseInt(params.get('per_page')) || CONFIG.pagination.defaultPerPage;
-    const currentPage = parseInt(params.get('page')) || 1;
-
-    const pagination = createElement('div', {
-      className: 'pagination__navigation',
-    });
-
-    const prevParams = new URLSearchParams(params);
-    prevParams.set('page', currentPage - 1);
-    if (perPage !== defaultPerPage) {
-      prevParams.set('per_page', perPage);
+        perPageOptions.map((optionValue) =>
+          createElement('option', {
+            value: optionValue,
+            textContent: `${optionValue} per page`,
+            selected: optionValue === currentPerPage,
+          })
+        )
+      );
     }
-    const prevLink = createPaginationLink(
-      'Previous page',
-      'navigate_before',
-      prevParams,
-      currentPage === 1,
-      'previous'
-    );
-    pagination.appendChild(prevLink);
 
-    const nextParams = new URLSearchParams(params);
-    nextParams.set('page', currentPage + 1);
-    if (perPage !== defaultPerPage) {
-      nextParams.set('per_page', perPage);
-    }
-    const nextLink = createPaginationLink(
-      'Next page',
-      'navigate_next',
-      nextParams,
-      perPage > onPage,
-      'next'
-    );
-    pagination.appendChild(nextLink);
+    /**
+     * Creates pagination controls for the activities page.
+     * @param {number} onPage - The number of items currently displayed on the page.
+     * @return {HTMLDivElement} The pagination container element.
+     */
+    function createActivitesPagination(onPage) {
+      const defaultPerPage = Config.pagination.defaultPerPage;
+      const url = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+      const perPage =
+        parseInt(params.get('per_page')) || Config.pagination.defaultPerPage;
+      const currentPage = parseInt(params.get('page')) || 1;
 
-    const perPageDropdown = createPerPageDropdown(perPage, params);
-    pagination.appendChild(perPageDropdown);
-
-    return pagination;
-  };
-
-  /**
-   * Creates and appends a search link to an element.
-   * @param {HTMLElement} element - The DOM element to append the link to.
-   * @param {string} searchTerm - The search query.
-   * @return {HTMLAnchorElement} The created anchor element.
-   */
-  const appendSeachLink = (element, searchTerm) => {
-    const aTag = createElement('a', {
-      href: `${
-        CONFIG.urls.cloudSkillsBoost
-      }/catalog?keywords=${encodeURIComponent(searchTerm)}`,
-      style: { paddingLeft: '0.25em' },
-    });
-    element.appendChild(aTag);
-    return aTag;
-  };
-
-  /**
-   * Parses the activity data from the table on the user's profile activity page.
-   * @return {Object[]|null} An array of activity data objects, or null if the table is not found.
-   */
-  const parseActivitiesOnProgressPage = () => {
-    // The activity data is conveniently stored on the table element's `data` property.
-    return document.querySelector(CONFIG.selectors.activityTable)?.data || null;
-  };
-
-  /**
-   * Handles the 'finished' status for an activity row.
-   * @param {HTMLElement} rowElement - The table row element.
-   * @param {string} type - The activity type ('lab' or 'course').
-   */
-  function handleFinishedStatus(rowElement, type) {
-    setBackgroundColor(rowElement, 'green');
-    rowElement.classList.add(`completed-${type}`);
-  }
-
-  /**
-   * Handles an untracked status for an activity row.
-   * @param {HTMLElement} rowElement - The table row element.
-   * @param {Object} record - The activity record.
-   * @param {string} type - The activity type.
-   * @param {Object} staging - The staging object for untracked records.
-   */
-  function handleUntrackedStatus(rowElement, record, type, staging) {
-    setBackgroundColor(rowElement, 'yellow');
-    rowElement.classList.add(`untracked-${type}`);
-    staging.untrackedRecords.push({ type, ...record });
-  }
-
-  /**
-   * Handles a null status (unregistered) for an activity row.
-   * @param {HTMLElement} rowElement - The table row element.
-   * @param {string} type - The activity type.
-   * @param {number} id - The activity ID.
-   * @param {string} name - The activity name.
-   * @param {Object} staging - The staging object for unregistered records.
-   */
-  function handleNullStatus(rowElement, type, id, name, staging) {
-    const options = {
-      format_key: 1,
-      elementType: 'span',
-    };
-    setBackgroundColor(rowElement, 'yellow');
-    const col1 = rowElement.children[0];
-    appendIcon(col1, 'warning', {
-      ...options,
-      beforeIcon: ' ',
-      tooltip: 'Unregistered activity',
-    });
-    if (!col1.querySelector('a')) {
-      const searchIcon = appendSeachLink(col1, col1.innerText);
-      appendIcon(searchIcon, 'search', {
-        ...options,
-        tooltip: 'Search this activity',
+      const pagination = createElement('div', {
+        className: 'pagination__navigation',
       });
+
+      const prevParams = new URLSearchParams(params);
+      prevParams.set('page', currentPage - 1);
+      if (perPage !== defaultPerPage) {
+        prevParams.set('per_page', perPage);
+      }
+      const prevLink = createPaginationLink(
+        'Previous page',
+        'navigate_before',
+        prevParams,
+        currentPage === 1,
+        'previous'
+      );
+      pagination.appendChild(prevLink);
+
+      const nextParams = new URLSearchParams(params);
+      nextParams.set('page', currentPage + 1);
+      if (perPage !== defaultPerPage) {
+        nextParams.set('per_page', perPage);
+      }
+      const nextLink = createPaginationLink(
+        'Next page',
+        'navigate_next',
+        nextParams,
+        perPage > onPage,
+        'next'
+      );
+      pagination.appendChild(nextLink);
+
+      const perPageDropdown = createPerPageDropdown(perPage, params);
+      pagination.appendChild(perPageDropdown);
+
+      return pagination;
     }
-    rowElement.classList.add(`new-${type}`);
-    const newRecord = {
-      id: parseInt(id),
-      name: formatTitle(name),
-      status: '',
+
+    /**
+     * Creates and appends a search link to an element.
+     * @param {HTMLElement} element - The DOM element to append the link to.
+     * @param {string} searchTerm - The search query.
+     * @return {HTMLAnchorElement} The created anchor element.
+     */
+    function appendSeachLink(element, searchTerm) {
+      const aTag = createElement('a', {
+        href: `${
+          Config.urls.cloudSkillsBoost
+        }/catalog?keywords=${encodeURIComponent(searchTerm)}`,
+        style: { paddingLeft: '0.25em' },
+      });
+      element.appendChild(aTag);
+      return aTag;
+    }
+
+    return {
+      createUpdateButton,
+      createButtonGroup,
+      createActivitesPagination,
+      appendSeachLink,
     };
-    staging.unregisteredRecords.push({ type, record: newRecord });
-  }
+  })();
 
   /**
-   * Handles a lab activity.
-   * @param {HTMLElement} rowElement - The table row element.
-   * @param {number} id - The lab ID.
-   * @param {string} name - The lab name.
-   * @param {boolean} isPassed - Whether the lab was passed.
-   * @param {Object} statusHandler - The status handler object.
+   * ----------------------------------------------------------------
+   * PAGE HANDLERS
+   * @namespace PageHandlers
+   * ----------------------------------------------------------------
    */
-  async function handleLabActivity(
-    rowElement,
-    id,
-    name,
-    isPassed,
-    statusHandler
-  ) {
-    const record = await getLabFromDbById(id);
-    const statusUpdateHandler = statusHandler[record.status];
-    if (isPassed && statusUpdateHandler) {
-      statusUpdateHandler(rowElement, record, 'lab', id, name);
-    } else {
-      setBackgroundColor(rowElement, 'red');
+  const PageHandlers = (function () {
+    // --- Private Helper Functions ---
+
+    /**
+     * Standardizes a title string by correcting spacing and removing extra spaces.
+     * @param {string} title - The lab or course title.
+     * @return {string} The formatted title.
+     */
+    function formatTitle(title) {
+      return title.replace(/:\S/g, ': ').replace(/\s\s+/g, ' ').trim();
     }
-    return record;
-  }
 
-  /**
-   * Handles a course activity.
-   * @param {HTMLElement} rowElement - The table row element.
-   * @param {number} id - The course ID.
-   * @param {string} name - The course name.
-   * @param {boolean} isPassed - Whether the course was passed.
-   * @param {Object} statusHandler - The status handler object.
-   */
-  async function handleCourseActivity(
-    rowElement,
-    id,
-    name,
-    isPassed,
-    statusHandler
-  ) {
-    const record = await getCourseFromDbById(id);
-    const statusUpdateHandler = statusHandler[record.status];
-    if (statusUpdateHandler && (isPassed || isPassed === null)) {
-      statusUpdateHandler(rowElement, record, 'course', id, name);
-    } else {
-      setBackgroundColor(rowElement, 'yellow');
+    /**
+     * Parses a raw activity record from the page to extract structured data.
+     * @param {Object} record - The raw record object from the page.
+     * @return {{id: (string|null), name: string, type: string, passed: boolean}}
+     */
+    function parseActivityRecord(record) {
+      const tempContainer = document.createElement('div');
+
+      tempContainer.innerHTML = record.type;
+      const typeLabel = tempContainer.querySelector('ql-activity-label');
+      const type = typeLabel
+        ? typeLabel.getAttribute('activity').toLowerCase()
+        : 'unknown';
+
+      tempContainer.innerHTML = record.name;
+      const link = tempContainer.querySelector('a');
+      const name = link ? link.textContent.trim() : record.name;
+      const id = link
+        ? link.href.match(/\/\w+\/(?<id>\d+)/)?.groups?.id || null
+        : null;
+
+      return { id, name, type, passed: record.passed };
     }
-    return record;
-  }
 
-  /**
-   * Tracks and annotates each row in the activities table based on database records.
-   * @param {Object[]} records - An array of activity data from the page.
-   * @return {Promise<Object>} An object containing counts and data for untracked/unregistered records.
-   */
-  const trackAndAnnotateActivities = async (records) => {
-    const staging = {
-      untrackedRecords: [],
-      unregisteredRecords: [],
-    };
+    /**
+     * Annotates a single row in the activities table.
+     * @param {HTMLElement} rowElement - The table row element to annotate.
+     * @param {Object} rawRecord - The raw activity record corresponding to the row.
+     * @param {{untrackedRecords: Object[], unregisteredRecords: Object[]}} staging - Staging object for batch
+     *     operations.
+     * @return {Promise<void>}
+     */
+    async function annotateActivityRow(rowElement, rawRecord, staging) {
+      const { id, name, type, passed } = parseActivityRecord(rawRecord);
 
-    // Handlers for different completion statuses.
-    const statusHandler = {
-      finished: (rowElement, record, type) => {
-        handleFinishedStatus(rowElement, type);
-      },
-      '': (rowElement, record, type) => {
-        handleUntrackedStatus(rowElement, record, type, staging);
-      },
-      null: (rowElement, record, type, id, name) => {
-        handleNullStatus(rowElement, type, id, name, staging);
-      },
-    };
-
-    // Handlers for different activity types (lab, course, etc.).
-    const activityTypeHandler = (type) => {
-      const handlers = {
-        lab: (rowElement, id, name, isPassed) =>
-          handleLabActivity(rowElement, id, name, isPassed, statusHandler),
-        course: (rowElement, id, name, isPassed) =>
-          handleCourseActivity(rowElement, id, name, isPassed, statusHandler),
-      };
-      return handlers[type] || (() => null); // Return a dummy function for unknown types.
-    };
-
-    const activityTable = document.querySelector(
-      CONFIG.selectors.activityTable
-    );
-    if (activityTable) {
-      const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
-      for (const [i, record] of records.entries()) {
-        /**
-          Example of `record`:{
-            "name": "<a href=\"/quizzes/409\">Quiz: Getting Started with Go</a>",
-            "type": "<ql-activity-label activity=\"quiz\">Quiz: Getting Started with Go</ql-activity-label>",
-            "started": "2020-01-01T00:00:00.000-00:00",
-            "ended": "2020-01-01T00:01:00.000-00:00",
-            "score": "Assessment 100.0%",
-            "passed": true
-          }
-        */
-        const tempContainer = document.createElement('div');
-
-        tempContainer.innerHTML = record.type;
-        const typeLabel = tempContainer.querySelector('ql-activity-label');
-        const type = typeLabel
-          ? typeLabel.getAttribute('activity').toLowerCase()
-          : 'unknown';
-
-        tempContainer.innerHTML = record.name;
-        const link = tempContainer.querySelector('a');
-        const name = link ? link.textContent.trim() : record.name;
-        const id = link
-          ? link.href.match(/\/\w+\/(?<id>\d+)/)?.groups?.id || null
-          : null;
-        const passed = record.passed;
-        const row = rows[i];
-        const handler = activityTypeHandler(type);
-        await handler(row, id, name, passed);
+      if (type !== 'lab' && type !== 'course') {
+        return; // Skip if no ID or not a trackable type
       }
 
-      await batchCreateRecords(staging.unregisteredRecords);
+      const dbRecord = await Database.getRecord(type, id);
 
-      if (CONFIG.isDebugMode) {
+      const isPassed = passed || type === 'course' && passed === null;
+
+      if (isPassed) {
+        switch (dbRecord.status) {
+          case 'finished':
+            UI.setBackgroundColor(rowElement, 'green');
+            rowElement.classList.add(`completed-${type}`);
+            break;
+          case '': // Untracked but finished
+            UI.setBackgroundColor(rowElement, 'yellow');
+            rowElement.classList.add(`untracked-${type}`);
+            staging.untrackedRecords.push({ type, ...dbRecord });
+            break;
+          case null: // New record
+            UI.setBackgroundColor(rowElement, 'yellow');
+            rowElement.classList.add(`new-${type}`);
+            const newRecord = {
+              id: parseInt(id),
+              name: formatTitle(name),
+              status: '',
+            };
+            staging.unregisteredRecords.push({ type, record: newRecord });
+            const col1 = rowElement.children[0];
+            UI.appendIcon(col1, 'warning', {
+              format_key: 1,
+              elementType: 'span',
+              beforeIcon: ' ',
+              tooltip: 'Unregistered activity',
+            });
+            if (!col1.querySelector('a')) {
+              const searchIcon = ComponentFactory.appendSeachLink(
+                col1,
+                col1.innerText
+              );
+              UI.appendIcon(searchIcon, 'search', {
+                format_key: 1,
+                elementType: 'span',
+                tooltip: 'Search this activity',
+              });
+            }
+            break;
+        }
+      } else {
+        UI.setBackgroundColor(rowElement, 'red');
+      }
+    }
+
+    /**
+     * Tracks and annotates each row in the activities table based on database records.
+     * @param {Object[]} records - An array of activity data from the page.
+     * @return {Promise<{counts: {rows: number, untrackedRecords: number, unregisteredRecords: number},
+     *    data: {untrackedRecords: Object[], unregisteredRecords: Object[]}}>}
+     */
+    async function trackAndAnnotateActivities(records) {
+      const staging = { untrackedRecords: [], unregisteredRecords: [] };
+      const activityTable = document.querySelector(
+        Config.selectors.activityTable
+      );
+
+      if (!activityTable || !records) {
+        return {
+          counts: { rows: 0, untrackedRecords: 0, unregisteredRecords: 0 },
+          data: {},
+        };
+      }
+
+      const rows = activityTable.shadowRoot.querySelectorAll('tbody > tr');
+      for (const [i, row] of rows.entries()) {
+        await annotateActivityRow(row, records[i], staging);
+      }
+
+      if (staging.unregisteredRecords.length > 0) {
+        await Database.batchCreate(staging.unregisteredRecords);
+      }
+
+      if (Config.isDebugMode) {
         console.table(staging.untrackedRecords);
         console.table(staging.unregisteredRecords);
       }
+
       return {
         counts: {
           rows: rows.length,
@@ -1072,113 +831,321 @@
         },
       };
     }
+
+    /**
+     * Annotates a list of titles (e.g., in a catalog) based on their completion status.
+     * @param {NodeListOf<HTMLElement>} titles - A list of DOM elements containing titles.
+     * @return {Promise<void>}
+     */
+    async function trackListOfTitles(titles) {
+      for (const title of titles) {
+        const matches = title.innerHTML.match(/data-type="(.+)" \D+(\d+)/);
+        if (!matches) continue;
+
+        const [, type, id] = matches;
+        const record = await Database.getRecord(type.toLowerCase(), id);
+
+        console.log(
+          `${type} ID: ${id}, Title: "${title.innerText}", Record: ${JSON.stringify(record)}`
+        );
+
+        switch (record.status) {
+          case 'finished':
+            UI.setBackgroundColor(title, 'green');
+            UI.appendIcon(title, 'check', { beforeIcon: ' ' });
+            break;
+          case null:
+            UI.setBackgroundColor(title, 'yellow');
+            UI.appendIcon(title, 'new', { beforeIcon: ' ' });
+            break;
+        }
+      }
+    }
+
+    /**
+     * Scans through activity cards on the page and annotates them based on completion status.
+     * @param {NodeListOf<HTMLElement>} cards - A list of ql-activity-card elements.
+     * @return {Promise<void>}
+     */
+    async function trackActivityCards(cards) {
+      for (const card of cards) {
+        if (!card.shadowRoot) {
+          console.warn('No shadowRoot found for card:', card);
+          continue;
+        }
+
+        let id;
+        let name;
+        let type;
+        if (card.hasAttribute('path')) {
+          id = card.getAttribute('path').match(/\/(\d+)/)[1];
+          name = card.getAttribute('title');
+          type = card.getAttribute('type').toLowerCase();
+        } else {
+          const link = card.shadowRoot.firstElementChild;
+          const label = card.shadowRoot.querySelector('ql-activity-label');
+          if (!link || !label) continue;
+          id = link.getAttribute('href').match(/\/(\d+)/)[1];
+          name = link.getAttribute('title');
+          type = label.getAttribute('activity').toLowerCase();
+        }
+
+        if (!id || !type || type !== 'lab' && type !== 'course') continue;
+
+        const cardTitle = card.shadowRoot.querySelector('h3');
+        const record = await Database.getRecord(type, id);
+
+        console.log(
+          `${type} ID: ${id}, Title: "${name}", Record: ${JSON.stringify(record)}`
+        );
+
+        const options = {
+          format_key: 1,
+          elementType: 'span',
+          style: 'margin-left: 4px',
+        };
+        if (record.status === 'finished') {
+          UI.appendIcon(cardTitle, 'check', options);
+        } else if (record.status === null) {
+          UI.appendIcon(cardTitle, 'new', options);
+        }
+      }
+    }
+
+    /**
+     * Annotates the title on a detail page (lab or course) based on its completion status.
+     * @param {string} type - The type of detail page ('lab' or 'course').
+     * @param {string} id - The ID of the lab or course.
+     * @return {Promise<void>}
+     */
+    async function trackTitleOnDetailPage(type, id) {
+      const isLab = type === 'lab';
+      const selector = isLab
+        ? Config.selectors.labPageTitle
+        : Config.selectors.coursePageTitle;
+      const pageTitleEl = document.querySelector(selector);
+      if (!pageTitleEl) return console.warn(`Element '${selector}' not found.`);
+
+      const h1 = pageTitleEl.querySelector(Config.selectors.h1);
+      if (!h1) return console.warn(`h1 not found in '${selector}'.`);
+
+      const title = h1.innerText;
+      const record = await Database.getRecord(type, id);
+      const options = {
+        format_key: 1,
+        elementType: 'span',
+        style: isLab ? 'display: inline-block; vertical-align:super;' : '',
+      };
+
+      console.log(
+        `${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
+      );
+
+      switch (record.status) {
+        case 'finished':
+          UI.setBackgroundColor(h1, isLab ? 'green' : 'darkGreen');
+          UI.appendIcon(isLab ? h1 : pageTitleEl, 'check', options);
+          Database.updateRecord(type, id, { name: formatTitle(title) });
+          break;
+        case null:
+          UI.setBackgroundColor(h1, isLab ? 'yellow' : 'darkOrange');
+          UI.appendIcon(isLab ? h1 : pageTitleEl, 'new', options);
+          Database.createRecord(type, id, {
+            name: formatTitle(title),
+            status: '',
+          });
+          break;
+      }
+    }
+
+    // --- Public Functions ---
+
+    /**
+     * Handler for the home page.
+     * @return {Promise<void>}
+     */
+    async function home() {
+      console.debug('Tracking card data on Home');
+      const cards = document.querySelectorAll(Config.selectors.activityCard);
+      await trackActivityCards(cards);
+    }
+
+    /**
+     * Handler for the catalog page.
+     * @return {Promise<void>}
+     */
+    async function catalog() {
+      console.debug('Tracking data on Catalog');
+      const container = document.querySelector(
+        Config.selectors.searchResultContainer
+      );
+      if (container && container.shadowRoot) {
+        const cards = container.shadowRoot.querySelectorAll(
+          Config.selectors.activityCard
+        );
+        await trackActivityCards(cards);
+      } else {
+        console.warn(
+          `Element '${Config.selectors.searchResultContainer}' not found or has no shadowRoot.`
+        );
+      }
+    }
+
+    /**
+     * Handler for the lab detail page.
+     * @param {string} id - The ID of the lab.
+     * @return {Promise<void>}
+     */
+    async function lab(id) {
+      console.debug('Tracking a lab page');
+      await trackTitleOnDetailPage('lab', id);
+    }
+
+    /**
+     * Handler for the course detail page.
+     * @param {string} id - The ID of the course.
+     * @return {Promise<void>}
+     */
+    async function course(id) {
+      console.debug('Tracking a course page');
+      await trackTitleOnDetailPage('course', id);
+      const titles = document.querySelectorAll('.catalog-item__title');
+      await trackListOfTitles(titles);
+    }
+
+    /**
+     * Handler for the user profile activity page.
+     * @return {Promise<void>}
+     */
+    async function activity() {
+      console.debug('Tracking activity data on Profile');
+      const activitiesData =
+        document.querySelector(Config.selectors.activityTable)?.data || null;
+      const results = await trackAndAnnotateActivities(activitiesData);
+
+      const updateButton = ComponentFactory.createUpdateButton(results);
+      updateButton.style.cssText = 'margin: auto 0 auto auto';
+      const pagination = ComponentFactory.createActivitesPagination(
+        results.counts.rows
+      );
+      pagination.style.cssText = 'margin: auto 12px auto 36px';
+
+      const buttonGroup = ComponentFactory.createButtonGroup();
+      buttonGroup.appendChild(updateButton);
+      buttonGroup.appendChild(pagination);
+
+      const activityFilters = document.querySelector(
+        '#learning_activity_search .filters'
+      );
+      if (activityFilters) {
+        activityFilters.appendChild(buttonGroup);
+      } else {
+        console.warn("Element '#learning_activity_search .filters' not found.");
+      }
+    }
+
+    /**
+     * Batch updates the status of untracked activity records to 'finished' in the database.
+     * @return {Promise<void>}
+     */
+    async function batchUpdateToDb() {
+      const updateButton = document.querySelector(
+        `button${Config.selectors.updateButton}`
+      );
+      if (!updateButton) return console.error('Update button not found.');
+
+      const untrackedRecordsJSON = updateButton.dataset.untrackedRecords;
+      const recordsToUpdate = untrackedRecordsJSON
+        ? JSON.parse(untrackedRecordsJSON)
+        : [];
+
+      if (recordsToUpdate.length === 0) {
+        return UI.showSnackbar({ message: '0 items to update' });
+      }
+
+      const counts = await Database.batchUpdate(recordsToUpdate);
+      const totalUpdates = counts.labs + counts.courses;
+
+      if (totalUpdates === 0) {
+        UI.showSnackbar({ message: '0 items to update' });
+      } else {
+        const coursesStr = counts.courses > 0 ? `${counts.courses} course` : '';
+        const labsStr = counts.labs > 0 ? `${counts.labs} lab` : '';
+        const andStr = coursesStr && labsStr ? ' and ' : '';
+        const plural = totalUpdates > 1 ? 's' : '';
+        const message = `Updated ${coursesStr}${andStr}${labsStr} record${plural}`;
+
+        UI.showSnackbar({
+          message: message,
+          actionText: 'Refresh',
+          onAction: () => location.reload(),
+        });
+      }
+      console.log('Batch updated - finished');
+    }
+
     return {
-      counts: { rows: 0, untrackedRecords: 0, unregisteredRecords: 0 },
-      data: {},
+      home,
+      catalog,
+      lab,
+      course,
+      activity,
+      batchUpdateToDb,
     };
-  };
+  })();
 
   /**
-   * Determines which function to run based on the current URL path.
-   * @param {string} path - The path name from the URL (e.g., '/', '/catalog').
-   * @return {Object|null} The handler object for the current route, or null if no match.
+   * ----------------------------------------------------------------
+   * ROUTER
+   * @namespace Router
+   * ----------------------------------------------------------------
    */
-  const router = (path) => {
-    const matches = path.match(/^(?<route>\/\w+)\/(?<id>\d+)$/);
-    const route = matches?.groups?.route || path;
-    const id = matches?.groups?.id || null;
-    const handlers = {
-      '/': {
-        identifier: 'home',
-        exec: async () => {
-          console.debug('Tracking card data on Home');
-          const cards = document.querySelectorAll(
-            CONFIG.selectors.activityCard
-          );
-          await trackActivityCards(cards);
-        },
-      },
-      '/catalog': {
-        identifier: 'catalog',
-        exec: async () => {
-          console.debug('Tracking data on Catalog');
-          const container = document.querySelector(
-            CONFIG.selectors.searchResultContainer
-          );
-          if (container && container.shadowRoot) {
-            const cards = container.shadowRoot.querySelectorAll(
-              CONFIG.selectors.activityCard
-            );
-            await trackActivityCards(cards);
-          } else {
-            console.warn(
-              `Element '${CONFIG.selectors.searchResultContainer}' not found or has no shadowRoot.`
-            );
-          }
-        },
-      },
-      '/focuses': {
-        identifier: 'lab',
-        exec: async () => {
-          console.debug('Tracking a lab page');
-          await trackTitleOnDetailPage('lab', id);
-        },
-      },
-      '/profile/activity': {
-        identifier: 'activities',
-        exec: async () => {
-          console.debug('Tracking activity data on Profile');
-          const activitiesData = parseActivitiesOnProgressPage();
-          const results = await trackAndAnnotateActivities(activitiesData);
-          // Add UI elements for batch updating and pagination.
-          const updateButton = createUpdateButton(results);
-          updateButton.style.cssText = 'margin: auto 0 auto auto';
-          const pagination = createActivitesPagination(results.counts.rows);
-          pagination.style.cssText = 'margin: auto 12px auto 36px';
+  const Router = (function () {
+    /**
+     * Determines which function to run based on the current URL path.
+     * @return {Function|null} The handler function for the current route, or null if no match.
+     */
+    function getRoute() {
+      const path = window.location.pathname;
+      const matches = path.match(/^(?<route>\/\w+)\/(?<id>\d+)$/);
+      const route = matches?.groups?.route || path;
+      const id = matches?.groups?.id || null;
 
-          const buttonGroup = createButtonGroup();
-          buttonGroup.appendChild(updateButton);
-          buttonGroup.appendChild(pagination);
-          const activityFilters = document.querySelector(
-            '#learning_activity_search .filters'
-          );
-          if (activityFilters) {
-            activityFilters.appendChild(buttonGroup);
-          } else {
-            console.warn(
-              "Element '#learning_activity_search .filters' not found."
-            );
-          }
-        },
-      },
-      '/course_templates': {
-        identifier: 'course',
-        exec: async () => {
-          console.debug('Tracking a course page');
-          await trackTitleOnDetailPage('course', id);
-          const titles = document.querySelectorAll('.catalog-item__title');
-          await trackListOfTitles(titles);
-        },
-      },
+      const handlers = {
+        '/': () => PageHandlers.home(),
+        '/catalog': () => PageHandlers.catalog(),
+        '/focuses': () => PageHandlers.lab(id),
+        '/course_templates': () => PageHandlers.course(id),
+        '/profile/activity': () => PageHandlers.activity(),
+      };
+
+      return route in handlers ? handlers[route] : null;
+    }
+
+    return {
+      getRoute,
     };
-    return route in handlers ? handlers[route] : null;
-  };
+  })();
 
+  /**
+   * ----------------------------------------------------------------
+   * MAIN EXECUTION
+   * ----------------------------------------------------------------
+   */
   /**
    * Main function for the userscript.
+   * @return {Promise<void>}
    */
   async function main() {
-    await loadDB();
-    const url = new URL(window.location.href);
-    const routeHandler = router(url.pathname);
+    await Database.load();
+    const routeHandler = Router.getRoute();
     if (routeHandler) {
-      await routeHandler.exec();
+      await routeHandler();
     }
-    databaseCache = {}; // Clear cache after use.
+    Database.clearCache();
     console.debug('Tracking - end');
   }
 
-  // Run the main function and catch any errors.
   main().catch((e) => {
     try {
       if (e.name === 'MissingAPIError') {
