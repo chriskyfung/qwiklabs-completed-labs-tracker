@@ -752,7 +752,7 @@
 
       const dbRecord = await Database.getRecord(type, id);
 
-      const isPassed = passed || type === 'course' && passed === null;
+      const isPassed = passed || (type === 'course' && passed === null);
 
       if (isPassed) {
         switch (dbRecord.status) {
@@ -886,7 +886,7 @@
           console.warn('No shadowRoot found for card:', card);
           continue;
         }
-        
+
         let id;
         let name;
         let type;
