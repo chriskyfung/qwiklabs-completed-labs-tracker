@@ -991,10 +991,18 @@
         const observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-              const newCards = container.shadowRoot.querySelectorAll(
-                Config.selectors.activityCard
-              );
-              trackActivityCards(newCards);
+              const newCards = [];
+              for (const node of mutation.addedNodes) {
+                if (
+                  node.nodeType === Node.ELEMENT_NODE &&
+                  node.matches(Config.selectors.activityCard)
+                ) {
+                  newCards.push(node);
+                }
+              }
+              if (newCards.length > 0) {
+                trackActivityCards(newCards);
+              }
             }
           }
         });
