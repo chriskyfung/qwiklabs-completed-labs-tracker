@@ -979,11 +979,30 @@
       const container = document.querySelector(
         Config.selectors.searchResultContainer
       );
+
       if (container && container.shadowRoot) {
-        const cards = container.shadowRoot.querySelectorAll(
+        // Initial tracking
+        const initialCards = container.shadowRoot.querySelectorAll(
           Config.selectors.activityCard
         );
-        await trackActivityCards(cards);
+        await trackActivityCards(initialCards);
+
+        // Observe for future changes (e.g., pagination)
+        const observer = new MutationObserver((mutations) => {
+          for (const mutation of mutations) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+              const newCards = container.shadowRoot.querySelectorAll(
+                Config.selectors.activityCard
+              );
+              trackActivityCards(newCards);
+            }
+          }
+        });
+
+        observer.observe(container.shadowRoot, {
+          childList: true,
+          subtree: true,
+        });
       } else {
         console.warn(
           `Element '${Config.selectors.searchResultContainer}' not found or has no shadowRoot.`
