@@ -903,13 +903,25 @@
           type = label.getAttribute('activity').toLowerCase();
         }
 
-        if (!id || !type || type !== 'lab' && type !== 'course') continue;
+        if (!id || !type || (type !== 'lab' && type !== 'course')) continue;
 
         const cardTitle = card.shadowRoot.querySelector('h3');
+        if (!cardTitle) continue;
+
+        // Remove any existing icon before adding a new one
+        const existingIcon = cardTitle.querySelector(
+          `.${Config.cssClasses.qcltIcon}`
+        );
+        if (existingIcon) {
+          existingIcon.remove();
+        }
+
         const record = await Database.getRecord(type, id);
 
         console.log(
-          `${type} ID: ${id}, Title: "${name}", Record: ${JSON.stringify(record)}`
+          `${type} ID: ${id}, Title: "${name}", Record: ${JSON.stringify(
+            record
+          )}`
         );
 
         const options = {
@@ -1002,21 +1014,23 @@
 
         // Observe for future changes (e.g., pagination)
         const observer = new MutationObserver((mutations) => {
-          for (const mutation of mutations) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-              const newCards = [];
-              for (const node of mutation.addedNodes) {
-                if (
-                  node.nodeType === Node.ELEMENT_NODE &&
-                  node.matches(Config.selectors.activityCard)
-                ) {
-                  newCards.push(node);
-                }
-              }
-              if (newCards.length > 0) {
-                trackActivityCards(newCards);
-              }
-            }
+          console.debug('MutationObserver detected changes:', mutations);
+          const hasChildListMutation = mutations.some(
+            (m) => m.type === 'childList'
+          );
+
+          if (hasChildListMutation) {
+            console.debug(
+              'childList mutation detected. Re-scanning for all cards after a short delay.'
+            );
+            // Use a timeout to wait for the DOM to settle after pagination
+            setTimeout(async () => {
+              const allCards = container.shadowRoot.querySelectorAll(
+                Config.selectors.activityCard
+              );
+              console.debug(`Found ${allCards.length} cards after mutation.`);
+              await trackActivityCards(allCards);
+            }, 500); // 500ms delay
           }
         });
 
