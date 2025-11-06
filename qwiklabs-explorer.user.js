@@ -661,7 +661,7 @@
      * @param {string} searchTerm - The search query.
      * @return {HTMLAnchorElement} The created anchor element.
      */
-    function appendSeachLink(element, searchTerm) {
+    function appendSearchLink(element, searchTerm) {
       const aTag = createElement('a', {
         href: `${
           Config.urls.cloudSkillsBoost
@@ -676,7 +676,7 @@
       createUpdateButton,
       createButtonGroup,
       createActivitesPagination,
-      appendSeachLink,
+      appendSearchLink,
     };
   })();
 
@@ -769,7 +769,7 @@
               tooltip: 'Unregistered activity',
             });
             if (!col1.querySelector('a')) {
-              const searchIcon = ComponentFactory.appendSeachLink(
+              const searchIcon = ComponentFactory.appendSearchLink(
                 col1,
                 col1.innerText
               );
