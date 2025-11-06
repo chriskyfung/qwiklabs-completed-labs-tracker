@@ -858,7 +858,7 @@
         const [, type, id] = matches;
         const record = await Database.getRecord(type.toLowerCase(), id);
 
-        console.log(
+        console.debug(
           `${type} ID: ${id}, Title: "${title.innerText}", Record: ${JSON.stringify(record)}`
         );
 
@@ -886,7 +886,7 @@
           console.warn('No shadowRoot found for card:', card);
           continue;
         }
-
+        
         let id;
         let name;
         let type;
@@ -918,7 +918,7 @@
 
         const record = await Database.getRecord(type, id);
 
-        console.log(
+        console.debug(
           `${type} ID: ${id}, Title: "${name}", Record: ${JSON.stringify(
             record
           )}`
@@ -962,7 +962,7 @@
         style: isLab ? 'display: inline-block; vertical-align:super;' : '',
       };
 
-      console.log(
+      console.debug(
         `${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
       );
 
