@@ -152,6 +152,7 @@
      * @return {Promise<void>}
      */
     async function load() {
+      if (isCacheLoaded()) return;
       if (!(await Dexie.exists(db.name))) {
         console.debug('Database does not exist. Initializing a new one...');
         await init().catch(Dexie.BulkError, function (e) {
@@ -177,12 +178,23 @@
     }
 
     /**
+     * Checks if the cache is loaded.
+     * @return {boolean}
+     */
+    function isCacheLoaded() {
+      return cache.labs !== null && cache.courses !== null;
+    }
+
+    /**
      * Retrieves a record from the cache by its ID.
      * @param {string} type - The type of record ('lab' or 'course').
      * @param {number|string} id - The ID of the record to retrieve.
      * @return {Promise<Object>} The record, or an object with a null status if not found.
      */
     async function getRecord(type, id) {
+      if (!isCacheLoaded()) {
+        await load();
+      }
       const tableName = getTableName(type);
       return (
         cache[tableName].find((record) => id == record.id) || { status: null }
@@ -293,6 +305,7 @@
     return {
       load,
       clearCache,
+      isCacheLoaded,
       getRecord,
       createRecord,
       updateRecord,
@@ -1183,7 +1196,6 @@
   async function main() {
     await Database.load();
     await Router.handle();
-    Database.clearCache();
     console.debug('Tracking - end');
   }
 
