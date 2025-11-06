@@ -1012,6 +1012,8 @@
         );
         await trackActivityCards(initialCards);
 
+        let debounceTimer;
+
         // Observe for future changes (e.g., pagination)
         const observer = new MutationObserver((mutations) => {
           console.debug('MutationObserver detected changes:', mutations);
@@ -1020,17 +1022,17 @@
           );
 
           if (hasChildListMutation) {
-            console.debug(
-              'childList mutation detected. Re-scanning for all cards after a short delay.'
-            );
-            // Use a timeout to wait for the DOM to settle after pagination
-            setTimeout(async () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+              console.debug(
+                'Debounced mutation processing. Re-scanning for all cards.'
+              );
               const allCards = container.shadowRoot.querySelectorAll(
                 Config.selectors.activityCard
               );
               console.debug(`Found ${allCards.length} cards after mutation.`);
               await trackActivityCards(allCards);
-            }, 500); // 500ms delay
+            }, 500); // 500ms debounce delay
           }
         });
 
