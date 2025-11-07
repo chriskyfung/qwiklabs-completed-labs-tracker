@@ -152,6 +152,7 @@
      * @return {Promise<void>}
      */
     async function load() {
+      if (isCacheLoaded()) return;
       if (!(await Dexie.exists(db.name))) {
         console.debug('Database does not exist. Initializing a new one...');
         await init().catch(Dexie.BulkError, function (e) {
@@ -177,12 +178,23 @@
     }
 
     /**
+     * Checks if the cache is loaded.
+     * @return {boolean}
+     */
+    function isCacheLoaded() {
+      return cache.labs !== null && cache.courses !== null;
+    }
+
+    /**
      * Retrieves a record from the cache by its ID.
      * @param {string} type - The type of record ('lab' or 'course').
      * @param {number|string} id - The ID of the record to retrieve.
      * @return {Promise<Object>} The record, or an object with a null status if not found.
      */
     async function getRecord(type, id) {
+      if (!isCacheLoaded()) {
+        await load();
+      }
       const tableName = getTableName(type);
       return (
         cache[tableName].find((record) => id == record.id) || { status: null }
@@ -293,6 +305,7 @@
     return {
       load,
       clearCache,
+      isCacheLoaded,
       getRecord,
       createRecord,
       updateRecord,
@@ -739,7 +752,7 @@
 
       const dbRecord = await Database.getRecord(type, id);
 
-      const isPassed = passed || type === 'course' && passed === null;
+      const isPassed = passed || (type === 'course' && passed === null);
 
       if (isPassed) {
         switch (dbRecord.status) {
@@ -845,7 +858,7 @@
         const [, type, id] = matches;
         const record = await Database.getRecord(type.toLowerCase(), id);
 
-        console.log(
+        console.debug(
           `${type} ID: ${id}, Title: "${title.innerText}", Record: ${JSON.stringify(record)}`
         );
 
@@ -890,13 +903,25 @@
           type = label.getAttribute('activity').toLowerCase();
         }
 
-        if (!id || !type || type !== 'lab' && type !== 'course') continue;
+        if (!id || !type || (type !== 'lab' && type !== 'course')) continue;
 
         const cardTitle = card.shadowRoot.querySelector('h3');
+        if (!cardTitle) continue;
+
+        // Remove any existing icon before adding a new one
+        const existingIcon = cardTitle.querySelector(
+          `.${Config.cssClasses.qcltIcon}`
+        );
+        if (existingIcon) {
+          existingIcon.remove();
+        }
+
         const record = await Database.getRecord(type, id);
 
-        console.log(
-          `${type} ID: ${id}, Title: "${name}", Record: ${JSON.stringify(record)}`
+        console.debug(
+          `${type} ID: ${id}, Title: "${name}", Record: ${JSON.stringify(
+            record
+          )}`
         );
 
         const options = {
@@ -937,7 +962,7 @@
         style: isLab ? 'display: inline-block; vertical-align:super;' : '',
       };
 
-      console.log(
+      console.debug(
         `${type} ID: ${id}, Title: "${title}", Record: ${JSON.stringify(record)}`
       );
 
@@ -979,11 +1004,42 @@
       const container = document.querySelector(
         Config.selectors.searchResultContainer
       );
+
       if (container && container.shadowRoot) {
-        const cards = container.shadowRoot.querySelectorAll(
+        // Initial tracking
+        const initialCards = container.shadowRoot.querySelectorAll(
           Config.selectors.activityCard
         );
-        await trackActivityCards(cards);
+        await trackActivityCards(initialCards);
+
+        let debounceTimer;
+
+        // Observe for future changes (e.g., pagination)
+        const observer = new MutationObserver((mutations) => {
+          console.debug('MutationObserver detected changes:', mutations);
+          const hasChildListMutation = mutations.some(
+            (m) => m.type === 'childList'
+          );
+
+          if (hasChildListMutation) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+              console.debug(
+                'Debounced mutation processing. Re-scanning for all cards.'
+              );
+              const allCards = container.shadowRoot.querySelectorAll(
+                Config.selectors.activityCard
+              );
+              console.debug(`Found ${allCards.length} cards after mutation.`);
+              await trackActivityCards(allCards);
+            }, 500); // 500ms debounce delay
+          }
+        });
+
+        observer.observe(container.shadowRoot, {
+          childList: true,
+          subtree: true,
+        });
       } else {
         console.warn(
           `Element '${Config.selectors.searchResultContainer}' not found or has no shadowRoot.`
@@ -1156,7 +1212,6 @@
   async function main() {
     await Database.load();
     await Router.handle();
-    Database.clearCache();
     console.debug('Tracking - end');
   }
 
