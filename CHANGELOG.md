@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v3.3.0] - 2025-11-07
+
+### Features
+- Dynamically track and annotate activity cards in search results.
+
+### Fixes
+- Improve database cache handling to prevent redundant loads.
+
+### Refactoring
+- Modularize the entire codebase into distinct, encapsulated modules.
+- Centralize all constants and selectors into a single configuration object.
+- Replace brittle regex HTML parsing with robust DOM parsing.
+- Decompose large functions into smaller, single-responsibility functions.
+- Add JSDoc comments across all modules for better documentation.
+- Refactor router logic to be more declarative.
+- Use `console.debug` for internal logging to reduce console noise.
+
 ## [v3.2.0] - 2025-10-27
 
 ### Features
