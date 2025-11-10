@@ -1179,16 +1179,16 @@
      * Matches the current URL against the defined routes and executes the corresponding handler.
      * @return {Promise<void>}
      */
-    async function handle() {
+    async function handle(mockPageHandlers = PageHandlers) {
       const currentPath = window.location.pathname;
       for (const route of routes) {
         const match = currentPath.match(route.path);
         if (match) {
           const id = match.groups?.id;
           if (id) {
-            await route.handler(id);
+            await mockPageHandlers[route.handler.name](id);
           } else {
-            await route.handler();
+            await mockPageHandlers[route.handler.name]();
           }
           return;
         }
