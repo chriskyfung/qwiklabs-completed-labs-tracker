@@ -1228,4 +1228,16 @@
       console.error(err);
     }
   });
+
+  // Expose modules for testing
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+    window.qwiklabs_testing = {
+      Config,
+      Database,
+      UI,
+      ComponentFactory,
+      PageHandlers,
+      Router,
+    };
+  }
 })();
