@@ -1177,6 +1177,7 @@
 
     /**
      * Matches the current URL against the defined routes and executes the corresponding handler.
+     * @param {Object} [mockPageHandlers=PageHandlers] - Optional PageHandlers object for testing.
      * @return {Promise<void>}
      */
     async function handle(mockPageHandlers = PageHandlers) {
