@@ -16,7 +16,7 @@
 // @match        https://*.skills.google/focuses/*
 // @match        https://*.skills.google/quests/*
 // @match        https://*.skills.google/profile/activity*
-// @require      https://unpkg.com/dexie@4.2.0/dist/dexie.js
+// @require      https://unpkg.com/dexie@4.2.1/dist/dexie.js
 // @grant        none
 // ==/UserScript==
 
