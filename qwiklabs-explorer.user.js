@@ -1177,18 +1177,19 @@
 
     /**
      * Matches the current URL against the defined routes and executes the corresponding handler.
+     * @param {Object} [mockPageHandlers=PageHandlers] - Optional PageHandlers object for testing.
      * @return {Promise<void>}
      */
-    async function handle() {
+    async function handle(mockPageHandlers = PageHandlers) {
       const currentPath = window.location.pathname;
       for (const route of routes) {
         const match = currentPath.match(route.path);
         if (match) {
           const id = match.groups?.id;
           if (id) {
-            await route.handler(id);
+            await mockPageHandlers[route.handler.name](id);
           } else {
-            await route.handler();
+            await mockPageHandlers[route.handler.name]();
           }
           return;
         }
@@ -1228,4 +1229,16 @@
       console.error(err);
     }
   });
+
+  // Expose modules for testing
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+    window.qwiklabs_testing = {
+      Config,
+      Database,
+      UI,
+      ComponentFactory,
+      PageHandlers,
+      Router,
+    };
+  }
 })();
