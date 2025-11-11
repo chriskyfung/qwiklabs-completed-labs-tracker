@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v3.4.0] - 2025-11-11
+
+### Features
+- Remove deprecated Qwiklabs Catalog Scraper files and migrate functionality to a dedicated repository.
+- Allow mocking PageHandlers in the handle function for improved testability.
+
+### Dependencies
+- Bump Dexie.js from 4.2.0 to 4.2.1.
+
+### Chores
+- Introduce Vitest as the new testing framework and configure it for unit testing.
+
+### Tests
+- Add comprehensive unit tests for Database, ComponentFactory, and PageHandlers modules.
+
 ## [v3.3.0] - 2025-11-07
 
 ### Features
