@@ -31,8 +31,8 @@ describe('Router Module', () => {
   afterEach(() => {
     // Restore window.location
     Object.defineProperty(window, 'location', {
-        writable: true,
-        value: originalLocation,
+      writable: true,
+      value: originalLocation,
     });
   });
 

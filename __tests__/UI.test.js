@@ -119,18 +119,18 @@ describe('UI Module', () => {
     });
 
     it('should call onAction when auto-dismissing if provided', () => {
-        const onActionMock = vi.fn();
-        UI.showSnackbar({
-          message: 'Action test',
-          actionText: 'Click Me',
-          onAction: onActionMock,
-        });
-  
-        // Advance time to trigger auto-dismiss
-        vi.advanceTimersByTime(10000);
-  
-        expect(onActionMock).toHaveBeenCalledTimes(1);
+      const onActionMock = vi.fn();
+      UI.showSnackbar({
+        message: 'Action test',
+        actionText: 'Click Me',
+        onAction: onActionMock,
       });
+
+      // Advance time to trigger auto-dismiss
+      vi.advanceTimersByTime(10000);
+
+      expect(onActionMock).toHaveBeenCalledTimes(1);
+    });
 
     it('should remove the snackbar when the default close button is clicked', () => {
       UI.showSnackbar({ message: 'Close test' });

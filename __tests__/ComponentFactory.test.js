@@ -42,13 +42,13 @@ describe('ComponentFactory Module', () => {
     });
 
     it('should assign the batchUpdateToDb handler to onclick', () => {
-        const activityData = {
-            counts: { untrackedRecords: 1 },
-            data: { untrackedRecords: [{ id: 1 }], unregisteredRecords: [] },
-        };
-        const button = ComponentFactory.createUpdateButton(activityData);
-        button.click();
-        expect(PageHandlers.batchUpdateToDb).toHaveBeenCalledTimes(1);
+      const activityData = {
+        counts: { untrackedRecords: 1 },
+        data: { untrackedRecords: [{ id: 1 }], unregisteredRecords: [] },
+      };
+      const button = ComponentFactory.createUpdateButton(activityData);
+      button.click();
+      expect(PageHandlers.batchUpdateToDb).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -64,9 +64,11 @@ describe('ComponentFactory Module', () => {
     it('should append a correctly formatted search link to an element', () => {
       const searchTerm = 'Test Lab';
       const link = ComponentFactory.appendSearchLink(testElement, searchTerm);
-      
+
       expect(link.tagName).toBe('A');
-      expect(link.href).toBe(`${Config.urls.cloudSkillsBoost}/catalog?keywords=Test%20Lab`);
+      expect(link.href).toBe(
+        `${Config.urls.cloudSkillsBoost}/catalog?keywords=Test%20Lab`
+      );
       expect(testElement.contains(link)).toBe(true);
     });
   });
@@ -76,59 +78,61 @@ describe('ComponentFactory Module', () => {
 
     // Helper to mock window.location
     const mockLocation = (search) => {
-        Object.defineProperty(window, 'location', {
-            writable: true,
-            value: new URL(`https://example.com/profile/activity${search}`),
-        });
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        value: new URL(`https://example.com/profile/activity${search}`),
+      });
     };
 
     afterEach(() => {
-        Object.defineProperty(window, 'location', {
-            writable: true,
-            value: originalLocation,
-        });
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        value: originalLocation,
+      });
     });
 
     it('should create pagination with "previous" disabled on page 1', () => {
-        mockLocation('?page=1');
-        const pagination = ComponentFactory.createActivitesPagination(25);
-        const prevLink = pagination.querySelector('.previous_page');
-        expect(prevLink.tagName).toBe('SPAN');
-        expect(prevLink.classList.contains('disabled')).toBe(true);
+      mockLocation('?page=1');
+      const pagination = ComponentFactory.createActivitesPagination(25);
+      const prevLink = pagination.querySelector('.previous_page');
+      expect(prevLink.tagName).toBe('SPAN');
+      expect(prevLink.classList.contains('disabled')).toBe(true);
     });
 
     it('should create pagination with "next" disabled if onPage is less than perPage', () => {
-        mockLocation('?page=2&per_page=50');
-        // We have 49 items on a page that fits 50, so this is the last page.
-        const pagination = ComponentFactory.createActivitesPagination(49);
-        const nextLink = pagination.querySelector('.next_page');
-        expect(nextLink.tagName).toBe('SPAN');
-        expect(nextLink.classList.contains('disabled')).toBe(true);
+      mockLocation('?page=2&per_page=50');
+      // We have 49 items on a page that fits 50, so this is the last page.
+      const pagination = ComponentFactory.createActivitesPagination(49);
+      const nextLink = pagination.querySelector('.next_page');
+      expect(nextLink.tagName).toBe('SPAN');
+      expect(nextLink.classList.contains('disabled')).toBe(true);
     });
 
     it('should create enabled "previous" and "next" links when appropriate', () => {
-        mockLocation('?page=2&per_page=25');
-        const pagination = ComponentFactory.createActivitesPagination(25);
-        const prevLink = pagination.querySelector('.previous_page');
-        const nextLink = pagination.querySelector('.next_page');
+      mockLocation('?page=2&per_page=25');
+      const pagination = ComponentFactory.createActivitesPagination(25);
+      const prevLink = pagination.querySelector('.previous_page');
+      const nextLink = pagination.querySelector('.next_page');
 
-        expect(prevLink.tagName).toBe('A');
-        expect(prevLink.classList.contains('disabled')).toBe(false);
-        expect(prevLink.href).toContain('page=1');
+      expect(prevLink.tagName).toBe('A');
+      expect(prevLink.classList.contains('disabled')).toBe(false);
+      expect(prevLink.href).toContain('page=1');
 
-        expect(nextLink.tagName).toBe('A');
-        expect(nextLink.classList.contains('disabled')).toBe(false);
-        expect(nextLink.href).toContain('page=3');
+      expect(nextLink.tagName).toBe('A');
+      expect(nextLink.classList.contains('disabled')).toBe(false);
+      expect(nextLink.href).toContain('page=3');
     });
 
     it('should create a per-page dropdown with the correct value selected', () => {
-        mockLocation('?per_page=50');
-        const pagination = ComponentFactory.createActivitesPagination(50);
-        const dropdown = pagination.querySelector('.per-page-dropdown');
+      mockLocation('?per_page=50');
+      const pagination = ComponentFactory.createActivitesPagination(50);
+      const dropdown = pagination.querySelector('.per-page-dropdown');
 
-        expect(dropdown.tagName).toBe('SELECT');
-        expect(dropdown.value).toBe('50');
-        expect(dropdown.options.length).toBe(Config.pagination.perPageOptions.length);
+      expect(dropdown.tagName).toBe('SELECT');
+      expect(dropdown.value).toBe('50');
+      expect(dropdown.options.length).toBe(
+        Config.pagination.perPageOptions.length
+      );
     });
   });
 });

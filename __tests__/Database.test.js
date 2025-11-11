@@ -70,15 +70,13 @@ describe('Database Module', () => {
       { id: 2, type: 'lab', name: 'Lab 2', status: '' },
       { id: 101, type: 'course', name: 'Course 1', status: '' },
     ];
-    
+
     // First, add them to the DB
     await db.labs.bulkAdd([
-        { id: 1, name: 'Lab 1', status: '' },
-        { id: 2, name: 'Lab 2', status: '' }
+      { id: 1, name: 'Lab 1', status: '' },
+      { id: 2, name: 'Lab 2', status: '' },
     ]);
-    await db.courses.bulkAdd([
-        { id: 101, name: 'Course 1', status: '' }
-    ]);
+    await db.courses.bulkAdd([{ id: 101, name: 'Course 1', status: '' }]);
 
     const counts = await Database.batchUpdate(recordsToUpdate);
 

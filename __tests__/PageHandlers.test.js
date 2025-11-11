@@ -13,26 +13,32 @@ vi.spyOn(Database, 'batchUpdate').mockResolvedValue({ labs: 0, courses: 0 });
 vi.spyOn(UI, 'setBackgroundColor').mockReturnValue('');
 vi.spyOn(UI, 'appendIcon').mockReturnValue('');
 vi.spyOn(UI, 'showSnackbar').mockImplementation(() => {});
-vi.spyOn(ComponentFactory, 'createUpdateButton').mockImplementation((...args) => {
+vi.spyOn(ComponentFactory, 'createUpdateButton').mockImplementation(
+  (...args) => {
     const button = document.createElement('button');
     // Pass through dataset for batchUpdateToDb test
     if (args[0] && args[0].data && args[0].data.untrackedRecords) {
-        button.dataset.untrackedRecords = JSON.stringify(args[0].data.untrackedRecords);
+      button.dataset.untrackedRecords = JSON.stringify(
+        args[0].data.untrackedRecords
+      );
     }
     return button;
-});
-vi.spyOn(ComponentFactory, 'createActivitesPagination').mockReturnValue(document.createElement('div'));
-vi.spyOn(ComponentFactory, 'createButtonGroup').mockImplementation((...children) => {
+  }
+);
+vi.spyOn(ComponentFactory, 'createActivitesPagination').mockReturnValue(
+  document.createElement('div')
+);
+vi.spyOn(ComponentFactory, 'createButtonGroup').mockImplementation(
+  (...children) => {
     const div = document.createElement('div');
-    for(const child of children) {
-        if(child) div.appendChild(child);
+    for (const child of children) {
+      if (child) div.appendChild(child);
     }
     return div;
-});
-
+  }
+);
 
 describe('PageHandlers Module', () => {
-
   beforeEach(() => {
     // Reset mocks and DOM before each test
     vi.clearAllMocks();
@@ -46,7 +52,8 @@ describe('PageHandlers Module', () => {
      * @return {HTMLElement} The created table element.
      */
     function setupActivityPage(records) {
-            document.body.innerHTML = '<div id="learning_activity_search"><div class="filters"></div></div>';
+      document.body.innerHTML =
+        '<div id="learning_activity_search"><div class="filters"></div></div>';
 
       const table = document.createElement('div');
       table.className = 'activities-table'; // Use the class selector the handler looks for
@@ -67,13 +74,19 @@ describe('PageHandlers Module', () => {
     }
 
     it('should annotate a completed, untracked lab', async () => {
-            const records = [{
+      const records = [
+        {
           name: '<a href="/focuses/1">Lab 1</a>',
           type: '<ql-activity-label activity="Lab"></ql-activity-label>',
-                passed: true
-            }];
+          passed: true,
+        },
+      ];
       const table = setupActivityPage(records);
-            Database.getRecord.mockResolvedValue({ id: 1, name: 'Lab 1', status: '' });
+      Database.getRecord.mockResolvedValue({
+        id: 1,
+        name: 'Lab 1',
+        status: '',
+      });
 
       await PageHandlers.activity();
 
@@ -83,11 +96,13 @@ describe('PageHandlers Module', () => {
     });
 
     it('should annotate a new, completed course', async () => {
-            const records = [{
+      const records = [
+        {
           name: '<a href="/course_templates/101">Course 1</a>',
           type: '<ql-activity-label activity="Course"></ql-activity-label>',
-                passed: true
-            }];
+          passed: true,
+        },
+      ];
       const table = setupActivityPage(records);
       Database.getRecord.mockResolvedValue({ status: null });
 
@@ -100,16 +115,26 @@ describe('PageHandlers Module', () => {
         expect.arrayContaining([
           expect.objectContaining({
             type: 'course',
-                        record: expect.objectContaining({ id: 101, name: 'Course 1' })
-                    })
+            record: expect.objectContaining({ id: 101, name: 'Course 1' }),
+          }),
         ])
       );
     });
 
     it('should annotate a previously finished lab', async () => {
-            const records = [{ name: '<a href="/focuses/2">Lab 2</a>', type: '<ql-activity-label activity="Lab"></ql-activity-label>', passed: true }];
+      const records = [
+        {
+          name: '<a href="/focuses/2">Lab 2</a>',
+          type: '<ql-activity-label activity="Lab"></ql-activity-label>',
+          passed: true,
+        },
+      ];
       const table = setupActivityPage(records);
-            Database.getRecord.mockResolvedValue({ id: 2, name: 'Lab 2', status: 'finished' });
+      Database.getRecord.mockResolvedValue({
+        id: 2,
+        name: 'Lab 2',
+        status: 'finished',
+      });
 
       await PageHandlers.activity();
 
@@ -129,13 +154,15 @@ describe('PageHandlers Module', () => {
       await PageHandlers.batchUpdateToDb();
 
       expect(Database.batchUpdate).not.toHaveBeenCalled();
-            expect(UI.showSnackbar).toHaveBeenCalledWith({ message: '0 items to update' });
+      expect(UI.showSnackbar).toHaveBeenCalledWith({
+        message: '0 items to update',
+      });
     });
 
     it('should call batchUpdate and show a success snackbar with correct counts', async () => {
       const records = [
         { id: 1, type: 'lab' },
-                { id: 101, type: 'course' }
+        { id: 101, type: 'course' },
       ];
       const button = document.createElement('button');
       button.id = 'db-update';
@@ -150,7 +177,7 @@ describe('PageHandlers Module', () => {
       expect(UI.showSnackbar).toHaveBeenCalledWith({
         message: 'Updated 1 course and 1 lab records',
         actionText: 'Refresh',
-                onAction: expect.any(Function)
+        onAction: expect.any(Function),
       });
     });
   });
