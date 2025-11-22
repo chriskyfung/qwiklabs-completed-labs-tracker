@@ -1,38 +1,35 @@
-import { defineConfig, globalIgnores } from "eslint/config";
+import js from "@eslint/js";
 import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-import path from "path";
-import { fileURLToPath } from "url";
+import prettierConfig from "eslint-config-prettier";
 
-// To get __dirname in ES module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export default [
+    // Global ignores
+    {
+        ignores: [
+            "**/.DS_Store",
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/package-lock.json",
+            "**/coverage/**",
+            "!**/.*.js",
+        ],
+    },
 
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all,
-});
-
-export default defineConfig([
+    // Base configuration for all JS files
+    js.configs.recommended,
     {
         languageOptions: {
+            ecmaVersion: "latest",
+            sourceType: "module",
             globals: {
                 ...globals.browser,
+                ...globals.greasemonkey,
             },
-            ecmaVersion: 12,
-            sourceType: "module",
-            parserOptions: {},
         },
-
-        extends: compat.extends("prettier"),
-
         plugins: {
             jsdoc,
         },
-
         rules: {
             "jsdoc/check-alignment": "warn",
             "jsdoc/check-param-names": "error",
@@ -48,11 +45,29 @@ export default defineConfig([
             ],
         },
     },
-    globalIgnores([
-        "**/.DS_Store",
-        "**/node_modules/*",
-        "**/dist/*",
-        "**/package-lock.json",
-        "!**/.*.js",
-    ]),
-]);
+
+    // Configuration for the main UserScript file
+    {
+        files: ["qwiklabs-explorer.user.js"],
+        languageOptions: {
+            globals: {
+                Dexie: "readonly",
+                process: "readonly",
+            },
+        },
+    },
+
+    // Configuration for test files
+    {
+        files: ["__tests__/**/*.js", "vitest.setup.js"],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+                ...globals.vitest,
+            },
+        },
+    },
+
+    // Prettier config to disable conflicting rules
+    prettierConfig,
+];
