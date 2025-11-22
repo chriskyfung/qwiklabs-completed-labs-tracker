@@ -23,7 +23,7 @@
   "scripts": {
     "lint": "npm run eslint && npm run prettier",
     "eslint": "eslint --ext .js --fix .",
-    "prettier": "prettier \"**/*.js\" --write --ignore-path .eslintignore",
+    "prettier": "prettier \"**/*.js\" --write --ignore-path .prettierignore",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
