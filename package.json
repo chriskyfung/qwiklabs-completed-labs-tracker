@@ -7,11 +7,15 @@
     "dexie": "4.2.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
     "@vitest/coverage-v8": "^4.0.8",
-    "eslint": "^8.57.0",
+    "eslint": "^9.39.1",
     "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsdoc": "^61.4.0",
     "fake-indexeddb": "^6.2.5",
+    "globals": "^16.5.0",
     "jsdom": "^27.1.0",
     "prettier": "^3.2.5",
     "vitest": "^4.0.8"
