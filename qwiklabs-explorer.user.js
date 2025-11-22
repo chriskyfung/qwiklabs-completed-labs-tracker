@@ -765,7 +765,8 @@
             rowElement.classList.add(`untracked-${type}`);
             staging.untrackedRecords.push({ type, ...dbRecord });
             break;
-          case null: // New record
+          case null: {
+            // New record
             UI.setBackgroundColor(rowElement, 'yellow');
             rowElement.classList.add(`new-${type}`);
             const newRecord = {
@@ -793,6 +794,7 @@
               });
             }
             break;
+          }
         }
       } else {
         UI.setBackgroundColor(rowElement, 'red');
