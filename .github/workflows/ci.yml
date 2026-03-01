@@ -7,6 +7,46 @@ on:
     branches: [ master ]
 
 jobs:
+  lint:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Use Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: '20'
+    - name: Install dependencies
+      run: npm install
+
+    - name: Get changed files (eslint)
+      id: changed-files-eslint
+      uses: tj-actions/changed-files@v46
+      with:
+        files: |
+          **/*.js
+
+    - name: Run eslint on changed files
+      if: steps.changed-files-eslint.outputs.any_changed == 'true'
+      env:
+        CHANGED_FILES: ${{ steps.changed-files-eslint.outputs.all_changed_files }}
+      run: npx eslint --ext .js $CHANGED_FILES
+
+    - name: Get changed files (prettier)
+      id: changed-files-prettier
+      uses: tj-actions/changed-files@v46
+      with:
+        files: |
+          **/*.js
+
+    - name: Run prettier on changed files
+      if: steps.changed-files-prettier.outputs.any_changed == 'true'
+      env:
+        CHANGED_FILES: ${{ steps.changed-files-prettier.outputs.all_changed_files }}
+      run: npx prettier $CHANGED_FILES --check --ignore-path .prettierignore
+
   test:
     permissions:
       contents: read
@@ -20,5 +60,5 @@ jobs:
         node-version: '20'
     - name: Install dependencies
       run: npm install
-    - name: Run tests
-      run: npm test
+    - name: Run tests with coverage
+      run: npm run test:coverage
