@@ -2,7 +2,7 @@
 // @name         Qwiklabs Completed Labs Tracker
 // @name:ja      Qwiklabsラボ完成トラッカー
 // @namespace    https://chriskyfung.github.io/
-// @version      3.4.0
+// @version      3.5.0
 // @author       chriskyfung
 // @description  Label completed courses and labs on the Catalog page(s) and Lab pages on Google Skills (https://www.skills.google/catalog)
 // @homepage     https://chriskyfung.github.io/blog/qwiklabs/Userscript-for-Labelling-Completed-Qwiklabs
