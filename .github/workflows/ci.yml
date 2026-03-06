@@ -23,7 +23,7 @@ jobs:
 
     - name: Get changed files (eslint)
       id: changed-files-eslint
-      uses: tj-actions/changed-files@v46
+      uses: tj-actions/changed-files@v47
       with:
         files: |
           **/*.js
@@ -36,7 +36,7 @@ jobs:
 
     - name: Get changed files (prettier)
       id: changed-files-prettier
-      uses: tj-actions/changed-files@v46
+      uses: tj-actions/changed-files@v47
       with:
         files: |
           **/*.js
