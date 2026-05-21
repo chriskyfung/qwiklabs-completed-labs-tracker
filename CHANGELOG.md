@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5.1] - 2026-05-21
+
+### CI
+
+- Bump `tj-actions/changed-files` from v46 to v47 (#58)
+
+### Dependencies
+
+- Bump Dexie from 4.3.0 to 4.4.2 (#66)
+- Bump various development dependencies.
+
 ## [v3.5.0] - 2026-03-01
 
 ### CI
