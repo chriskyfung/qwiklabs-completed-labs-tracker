@@ -4,7 +4,7 @@
   "description": "Label completed labs and quests on Google Skills",
   "main": "qwiklabs-explorer.user.js",
   "dependencies": {
-    "dexie": "4.4.4"
+    "dexie": "4.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
